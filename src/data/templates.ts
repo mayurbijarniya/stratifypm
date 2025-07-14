@@ -6,7 +6,7 @@ export const templates: Template[] = [
     name: 'Market Entry Analysis',
     description: 'Comprehensive analysis for entering a new market',
     category: 'strategy',
-    prompt: `As Marcus Chen, analyze the market entry opportunity for {PRODUCT} in the {INDUSTRY} industry.
+    prompt: `Analyze the market entry opportunity for {PRODUCT} in the {INDUSTRY} industry.
 
 ## Executive Summary
 Provide a strategic overview of the market entry opportunity.
@@ -50,7 +50,7 @@ Provide a strategic overview of the market entry opportunity.
     name: 'Product Requirements Document (PRD)',
     description: 'Comprehensive PRD template for new features',
     category: 'execution',
-    prompt: `As Marcus Chen, create a comprehensive PRD for {FEATURE_NAME}.
+    prompt: `Create a comprehensive PRD for {FEATURE_NAME}.
 
 ## 1. Executive Summary
 **Problem**: {PROBLEM_STATEMENT}
@@ -111,7 +111,7 @@ Provide a strategic overview of the market entry opportunity.
     name: 'User Research Study Design',
     description: 'Design comprehensive user research studies',
     category: 'research',
-    prompt: `As Marcus Chen, design a user research study for {RESEARCH_TOPIC}.
+    prompt: `Design a user research study for {RESEARCH_TOPIC}.
 
 ## Research Objectives
 ### Primary Questions
