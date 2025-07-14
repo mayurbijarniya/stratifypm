@@ -108,7 +108,71 @@ export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId })
               </div>
             )}
             
-            {!['feature-prioritization', 'competitive-analysis', 'user-persona', 'kpi-dashboard'].includes(feature.id) && (
+            {feature.id === 'market-opportunity' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> The market or industry you want to analyze for opportunities.</p>
+                <p><strong>Example:</strong> "Assess market opportunity for AI-powered customer service tools in healthcare."</p>
+                <p><strong>You'll get:</strong> TAM/SAM/SOM analysis, growth potential assessment, and market entry strategies.</p>
+              </div>
+            )}
+
+            {feature.id === 'business-model-canvas' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your business concept, product idea, or existing business model to analyze.</p>
+                <p><strong>Example:</strong> "Create business model canvas for a subscription-based meal planning app."</p>
+                <p><strong>You'll get:</strong> Complete canvas with value propositions, revenue streams, and validation framework.</p>
+              </div>
+            )}
+
+            {feature.id === 'roadmap-timeline' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your product vision, key features, or initiatives you want to roadmap.</p>
+                <p><strong>Example:</strong> "Create 6-month roadmap for mobile app with user profiles, payments, and analytics."</p>
+                <p><strong>You'll get:</strong> Quarterly timeline, milestone planning, and dependency mapping.</p>
+              </div>
+            )}
+
+            {feature.id === 'sprint-planning' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your sprint goals, team size, and stories or features to plan.</p>
+                <p><strong>Example:</strong> "Plan 2-week sprint for 5-person team focusing on checkout flow improvements."</p>
+                <p><strong>You'll get:</strong> Capacity planning, story estimation, and sprint optimization recommendations.</p>
+              </div>
+            )}
+
+            {feature.id === 'customer-journey' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your product/service and the customer experience you want to map.</p>
+                <p><strong>Example:</strong> "Map customer journey for online banking app from sign-up to first transaction."</p>
+                <p><strong>You'll get:</strong> End-to-end journey map, touchpoint analysis, and optimization opportunities.</p>
+              </div>
+            )}
+
+            {feature.id === 'interview-guide' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your research objectives and what you want to learn from users.</p>
+                <p><strong>Example:</strong> "Create interview guide to understand how remote workers use productivity tools."</p>
+                <p><strong>You'll get:</strong> Structured questions, research methodology, and analysis framework.</p>
+              </div>
+            )}
+
+            {feature.id === 'cohort-analysis' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> Your product type and the user behavior you want to analyze.</p>
+                <p><strong>Example:</strong> "Analyze retention cohorts for SaaS platform focusing on feature adoption."</p>
+                <p><strong>You'll get:</strong> Cohort tables, retention patterns, and actionable insights for growth.</p>
+              </div>
+            )}
+
+            {feature.id === 'ab-test-planner' && (
+              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                <p><strong>What to provide:</strong> The feature or hypothesis you want to test with your goals.</p>
+                <p><strong>Example:</strong> "Test new onboarding flow to improve user activation rates by 15%."</p>
+                <p><strong>You'll get:</strong> Experiment design, statistical framework, and success measurement plan.</p>
+              </div>
+            )}
+            
+            {!['feature-prioritization', 'competitive-analysis', 'user-persona', 'kpi-dashboard', 'market-opportunity', 'business-model-canvas', 'roadmap-timeline', 'sprint-planning', 'customer-journey', 'interview-guide', 'cohort-analysis', 'ab-test-planner'].includes(feature.id) && (
               <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
                 <p><strong>What to provide:</strong> Context about your product, business, or specific challenge you're facing.</p>
                 <p><strong>You'll get:</strong> Strategic analysis, actionable recommendations, and implementation guidance.</p>
