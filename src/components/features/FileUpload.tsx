@@ -20,9 +20,27 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onClose, onFileProcessed
         const processedFile = await processFile(file);
         addFile(processedFile);
         
-        // File uploaded successfully - no notification needed, just close upload UI
-        if (onFileProcessed) {
-          onFileProcessed(''); // Empty string to close upload UI without adding message
+        // Generate analysis insights and send to chat
+        if (onFileProcessed && processedFile.insights) {
+          const analysisPrompt = `I've uploaded a file: ${processedFile.name}
+
+**File Details:**
+- Size: ${(processedFile.size / 1024).toFixed(1)} KB
+- Records: ${processedFile.content.length}
+- Type: ${processedFile.type}
+
+**Data Insights:**
+${processedFile.insights.map(insight => `• ${insight}`).join('\n')}
+
+Please analyze this data from a product management perspective. What insights can you provide about:
+1. Key patterns and trends in the data
+2. Product opportunities or concerns
+3. Recommended actions based on the data
+4. Metrics and KPIs we should track
+
+${processedFile.content.length > 0 ? `Here's a sample of the data structure: ${JSON.stringify(processedFile.content[0], null, 2)}` : ''}`;
+
+          onFileProcessed(analysisPrompt);
         }
       } catch (error) {
         console.error('Error processing file:', error);
@@ -142,11 +160,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onClose, onFileProcessed
                         )}
                       </div>
                       
-                      <div className="mt-2">
-                        <p className="text-xs text-success-light dark:text-success-dark bg-success-light/10 dark:bg-success-dark/10 px-2 py-1 rounded-lg">
-                          📎 Ready for analysis - Ask me questions about this data
-                        </p>
-                      </div>
+                      {file.insights && file.insights.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {file.insights.slice(0, 2).map((insight, index) => (
+                            <p key={index} className="text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-lg">
+                              • {insight}
+                            </p>
+                          ))}
+                          {file.insights.length > 2 && (
+                            <p className="text-xs text-light-text-muted dark:text-dark-text-muted">
+                              +{file.insights.length - 2} more insights
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

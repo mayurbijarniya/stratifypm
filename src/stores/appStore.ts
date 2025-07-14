@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Conversation, Message, FileData, Theme } from '../types';
+import type { AIModel } from '../components/ui/ModelSelector';
 
 interface AppState {
   // UI State
   sidebarOpen: boolean;
   theme: 'light' | 'dark';
   selectedFeature: string | null;
+  selectedModel: AIModel;
   
   // Conversations
   conversations: Conversation[];
@@ -26,6 +28,7 @@ interface AppState {
   setSidebarOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setSelectedFeature: (feature: string | null) => void;
+  setSelectedModel: (model: AIModel) => void;
   
   // Conversation actions
   createConversation: (title?: string) => string;
@@ -88,21 +91,17 @@ export const useAppStore = create<AppState>()(
       sidebarOpen: true,
       theme: 'light',
       selectedFeature: null,
+      selectedModel: 'claude' as AIModel,
       conversations: [],
       currentConversationId: null,
       conversationStates: {},
       uploadedFiles: [],
       
-      // Expose store globally for AI service access
-      ...(typeof window !== 'undefined' && (() => {
-        (window as any).__APP_STORE__ = { getState: get };
-        return {};
-      })()),
-      
       // Actions
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setTheme: (theme) => set({ theme }),
       setSelectedFeature: (feature) => set({ selectedFeature: feature }),
+      setSelectedModel: (model) => set({ selectedModel: model }),
       
       createConversation: (title = 'New Conversation') => {
         const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

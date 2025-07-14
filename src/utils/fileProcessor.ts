@@ -1,6 +1,5 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { geminiService } from './geminiService';
 import type { FileData } from '../types';
 
 export const processFile = async (file: File): Promise<FileData> => {
@@ -10,6 +9,7 @@ export const processFile = async (file: File): Promise<FileData> => {
     type: file.type,
     content: [],
     processed: false,
+    insights: [],
   };
 
   try {
@@ -31,6 +31,7 @@ export const processFile = async (file: File): Promise<FileData> => {
     }
 
     fileData.processed = true;
+    fileData.insights = generateInsights(fileData.content);
     
     return fileData;
   } catch (error) {
@@ -92,37 +93,10 @@ const processJSON = (file: File): Promise<any[]> => {
     
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string;
-        
-        try {
-          // Try standard JSON parsing first
-          const jsonData = JSON.parse(text);
-          // Ensure we return an array
-          const data = Array.isArray(jsonData) ? jsonData : [jsonData];
-          resolve(data);
-        } catch (parseError) {
-          // If standard parsing fails, try JSON Lines (JSONL) format
-          console.warn('Standard JSON parsing failed, trying JSONL format:', parseError);
-          
-          const lines = text.split('\n').filter(line => line.trim());
-          const jsonObjects: any[] = [];
-          
-          for (const line of lines) {
-            try {
-              const obj = JSON.parse(line.trim());
-              jsonObjects.push(obj);
-            } catch (lineError) {
-              console.warn(`Failed to parse line as JSON: ${line.substring(0, 50)}...`, lineError);
-              // Continue processing other lines
-            }
-          }
-          
-          if (jsonObjects.length > 0) {
-            resolve(jsonObjects);
-          } else {
-            reject(new Error(`JSON parsing error: ${parseError.message}`));
-          }
-        }
+        const jsonData = JSON.parse(e.target?.result as string);
+        // Ensure we return an array
+        const data = Array.isArray(jsonData) ? jsonData : [jsonData];
+        resolve(data);
       } catch (error) {
         reject(new Error(`JSON parsing error: ${error}`));
       }
@@ -143,42 +117,10 @@ const processText = (file: File): Promise<any[]> => {
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        
-        // Try to detect if it's structured data (JSON-like, CSV-like, etc.)
+        // Split by lines and create array of objects
         const lines = text.split('\n').filter(line => line.trim());
-        
-        // Check if it looks like CSV data
-        if (lines.length > 1 && lines[0].includes(',')) {
-          // Try to parse as CSV
-          try {
-            const result = Papa.parse(text, {
-              header: true,
-              skipEmptyLines: true,
-            });
-            if (result.data && result.data.length > 0) {
-              resolve(result.data);
-              return;
-            }
-          } catch (csvError) {
-            console.warn('Failed to parse as CSV, treating as plain text');
-          }
-        }
-        
-        // Check if it looks like JSON
-        if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
-          try {
-            const jsonData = JSON.parse(text);
-            const data = Array.isArray(jsonData) ? jsonData : [jsonData];
-            resolve(data);
-            return;
-          } catch (jsonError) {
-            console.warn('Failed to parse as JSON, treating as plain text');
-          }
-        }
-        
-        // Fallback: treat as plain text with line-by-line structure
         const data = lines.map((line, index) => ({
-          line_number: index + 1,
+          line: index + 1,
           content: line.trim(),
         }));
         resolve(data);
@@ -193,6 +135,51 @@ const processText = (file: File): Promise<any[]> => {
     
     reader.readAsText(file);
   });
+};
+
+const generateInsights = (data: any[]): string[] => {
+  const insights: string[] = [];
+  
+  if (data.length === 0) {
+    insights.push('No data found in file');
+    return insights;
+  }
+
+  // Basic statistics
+  insights.push(`Dataset contains ${data.length} records`);
+  
+  // Column analysis for structured data
+  if (typeof data[0] === 'object' && data[0] !== null) {
+    const columns = Object.keys(data[0]);
+    insights.push(`${columns.length} columns detected: ${columns.slice(0, 5).join(', ')}${columns.length > 5 ? '...' : ''}`);
+    
+    // Detect potential numeric columns
+    const numericColumns = columns.filter(col => {
+      const sample = data.slice(0, 100).map(row => row[col]);
+      const numericValues = sample.filter(val => !isNaN(Number(val)) && val !== '');
+      return numericValues.length > sample.length * 0.8;
+    });
+    
+    if (numericColumns.length > 0) {
+      insights.push(`Numeric columns found: ${numericColumns.join(', ')}`);
+    }
+    
+    // Detect potential date columns
+    const dateColumns = columns.filter(col => {
+      const sample = data.slice(0, 20).map(row => row[col]);
+      const dateValues = sample.filter(val => {
+        const parsed = new Date(val);
+        return !isNaN(parsed.getTime()) && val !== '';
+      });
+      return dateValues.length > sample.length * 0.5;
+    });
+    
+    if (dateColumns.length > 0) {
+      insights.push(`Date columns found: ${dateColumns.join(', ')}`);
+    }
+  }
+  
+  return insights;
 };
 
 export const exportData = (data: any[], filename: string, format: 'csv' | 'json' | 'xlsx') => {

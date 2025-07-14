@@ -109,7 +109,7 @@ export const ChatContainer: React.FC = () => {
               </div>
               
               {/* Compact Pro Tip Section */}
-              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 sm:p-6 rounded-xl border border-blue-200/50 dark:border-blue-800/50 mx-4 mb-4 shadow-lg backdrop-blur-sm max-w-3xl mx-auto">
+              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 sm:p-6 rounded-xl border border-blue-200/50 dark:border-blue-800/50 mb-4 shadow-lg backdrop-blur-sm max-w-3xl mx-auto">
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md mr-3">
                     <Lightbulb className="w-4 h-4 text-white" />

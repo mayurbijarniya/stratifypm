@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Square } from 'lucide-react';
-import { FileSpreadsheet, FileText, File as FileIcon } from 'lucide-react';
+import { Send, Paperclip, Square, Sparkles, Zap } from 'lucide-react';
+import { Button } from '../ui/Button';
 import { FileUpload } from '../features/FileUpload';
+import { ModelSelector } from '../ui/ModelSelector';
 import { useAppStore } from '../../stores/appStore';
-import { geminiService } from '../../utils/geminiService';
+import { aiService } from '../../utils/aiService';
 
 interface MessageInputProps {
   conversationId: string;
@@ -22,8 +23,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
     stopConversationAI,
     getConversationState,
     getCurrentConversation,
-    uploadedFiles,
-    removeFile
+    selectedModel,
+    setSelectedModel
   } = useAppStore();
   
   // Get conversation-specific state
@@ -71,10 +72,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
         }));
 
         // Stream AI response
-        const response = await geminiService.sendMessage(
+        const response = await aiService.sendMessage(
           lastMessage.content,
+          selectedModel,
           conversationHistory,
-          (streamContent) => {
+          (streamContent: string) => {
             // Check if request was aborted
             if (abortController.signal.aborted) return;
             setConversationStreaming(conversationId, streamContent);
@@ -118,15 +120,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
     };
 
     handleAIResponse();
-  }, [isLoading, conversationId]);
+  }, [isLoading, conversationId]); // Simplified dependencies to prevent unnecessary re-runs
 
-  const handleSubmit = async () => {
-    const hasContent = message.trim() || uploadedFiles.length > 0;
-    if (!hasContent || isLoading) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || isLoading) return;
 
-    console.log("Submit triggered", { message: message.trim(), uploadedFiles: uploadedFiles.length, isLoading });
-
-    const userMessage = message.trim() || "I've uploaded files for analysis. Please analyze the data and provide insights.";
+    const userMessage = message.trim();
     setMessage('');
     
     // Reset textarea height
@@ -159,7 +159,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      handleSubmit(e as any);
     }
   };
 
@@ -167,7 +167,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 80)}px`; // Reduced max height
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
     }
   };
 
@@ -177,119 +177,63 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
   };
 
   const handleFileProcessed = (analysisPrompt: string) => {
+    setMessage(analysisPrompt);
     setShowFileUpload(false);
-    // Just close the upload UI, files are now attached
+    // Auto-focus the textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
   };
 
-  const getFileIcon = (type: string) => {
-    if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) {
-      return FileSpreadsheet;
-    }
-    if (type.includes('text') || type.includes('json')) {
-      return FileText;
-    }
-    return FileIcon;
-  };
-
-  const getFileTypeLabel = (type: string, name: string) => {
-    if (type.includes('csv') || name.endsWith('.csv')) return 'Spreadsheet';
-    if (type.includes('excel') || name.endsWith('.xlsx') || name.endsWith('.xls')) return 'Spreadsheet';
-    if (type.includes('json') || name.endsWith('.json')) return 'File';
-    if (type.includes('text') || name.endsWith('.txt')) return 'Document';
-    return 'File';
-  };
-
-  const getFileIconColor = (type: string, name: string) => {
-    if (type.includes('csv') || name.endsWith('.csv')) return 'bg-green-500';
-    if (type.includes('excel') || name.endsWith('.xlsx') || name.endsWith('.xls')) return 'bg-green-600';
-    if (type.includes('json') || name.endsWith('.json')) return 'bg-blue-500';
-    if (type.includes('text') || name.endsWith('.txt')) return 'bg-red-500';
-    return 'bg-gray-500';
-  };
-
-  const handleFileUploadClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("File upload button clicked", { showFileUpload });
-    setShowFileUpload(!showFileUpload);
-  };
-
-  const handleSendClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Send button clicked", { message: message.trim(), isLoading, uploadedFiles: uploadedFiles.length });
-    
-    if (isLoading) {
-      handleStop();
-    } else {
-      handleSubmit();
-    }
-  };
-
-  // Button enable condition - works with files OR message
-  const hasContent = message.trim() || uploadedFiles.length > 0;
-  const canSend = hasContent && !isLoading;
+  const quickSuggestions = [
+    'Create a competitive analysis',
+    'Help me prioritize features',
+    'Design user research study',
+    'Build KPI dashboard',
+  ];
 
   return (
     <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-        {/* File Attachments - Compact Mobile Style */}
-        {uploadedFiles.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {uploadedFiles.map((file) => {
-              const IconComponent = getFileIcon(file.type);
-              const typeLabel = getFileTypeLabel(file.type, file.name);
-              const iconColor = getFileIconColor(file.type, file.name);
-              
-              return (
-                <div
-                  key={file.name}
-                  className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200 group max-w-xs"
-                >
-                  <div className={`w-6 h-6 sm:w-8 sm:h-8 ${iconColor} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {typeLabel}
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={() => removeFile(file.name)}
-                    className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* File Upload Modal */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 py-4 sm:py-6">
         {showFileUpload && (
-          <div className="mb-3">
+          <div className="mb-4">
             <FileUpload 
               onClose={() => setShowFileUpload(false)} 
               onFileProcessed={handleFileProcessed}
             />
           </div>
         )}
+
+        {/* Model Selector */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              AI Model
+            </label>
+          </div>
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            disabled={isLoading}
+          />
+        </div>
         
-        {/* Compact Input Container */}
-        <div className="relative">
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl border-2 border-blue-200 dark:border-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-400 overflow-hidden">
-            
-            {/* Message Input - Compact */}
-            <div className="flex items-end gap-2 sm:gap-3 p-3 sm:p-4">
-              <div className="flex-1 relative">
+        <form onSubmit={handleSubmit} className="relative">
+          <div className="flex items-center gap-3">
+            {/* File Upload Button - Same height as input, centered */}
+            <button
+              type="button"
+              onClick={() => setShowFileUpload(!showFileUpload)}
+              disabled={isLoading}
+              className="flex-shrink-0 w-12 h-12 flex items-center justify-center text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 shadow-md hover:shadow-lg hover:scale-105 border border-gray-200 dark:border-gray-700"
+            >
+              <Paperclip className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+            </button>
+
+            {/* Message Input Container */}
+            <div className="flex-1 relative">
+              <div className="relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10 opacity-0 focus-within:opacity-100 transition-opacity duration-300"></div>
                 <textarea
                   ref={textareaRef}
                   value={message}
@@ -297,59 +241,61 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about product strategy, roadmapping, user research, or any PM topic..."
                   disabled={isLoading}
-                  className="relative w-full resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 transition-all duration-200 text-sm sm:text-base leading-relaxed min-h-[20px] py-1 z-10"
+                  className="relative w-full px-6 py-3 pr-14 resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 transition-all duration-200 text-base leading-relaxed min-h-[48px]"
                   rows={1}
-                  style={{ maxHeight: '80px' }}
+                  style={{ maxHeight: '120px' }}
                 />
-              </div>
-            </div>
-
-            {/* Action Buttons Row - Below Input */}
-            <div className="flex items-center justify-between px-3 sm:px-4 pb-3 sm:pb-4 relative z-20">
-              {/* Left side - File upload */}
-              <div className="flex items-center space-x-2">
+                
+                {/* Send/Stop Button - Same size as paperclip */}
                 <button
-                  onClick={handleFileUploadClick}
-                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 relative z-30"
-                  type="button"
+                  type={isLoading ? 'button' : 'submit'}
+                  onClick={isLoading ? handleStop : undefined}
+                  disabled={!isLoading && !message.trim()}
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md ${
+                    isLoading
+                      ? 'text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
+                      : message.trim()
+                      ? 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 focus:ring-blue-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
+                      : 'text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
+                  }`}
                 >
-                  <Paperclip className="w-3 h-3 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform duration-200" />
+                  {isLoading ? (
+                    <Square className="w-4 h-4 fill-current" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </button>
-
-                {/* File Upload Icon - Show when files attached */}
-                {uploadedFiles.length > 0 && (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                    <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                  </div>
-                )}
               </div>
-
-              {/* Right side - Send button */}
-              <button
-                onClick={handleSendClick}
-                disabled={!canSend}
-                className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md relative z-30 ${
-                  isLoading
-                    ? 'text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
-                    : canSend
-                    ? 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 focus:ring-blue-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
-                    : 'text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
-                }`}
-                type="button"
-              >
-                {isLoading ? (
-                  <Square className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
-                ) : (
-                  <Send className="w-3 h-3 sm:w-4 sm:h-4" />
-                )}
-              </button>
             </div>
           </div>
-        </div>
+        </form>
 
-        {/* Compact Footer - Reduced spacing */}
-        <div className="flex items-center justify-center mt-2 text-xs text-gray-500 dark:text-gray-400">
-          AI can make mistakes. Always verify important information and strategic decisions.
+        {/* Quick suggestions - HIDDEN on mobile (sm and below), visible on tablet+ */}
+        {!isLoading && (
+          <div className="mt-3 hidden md:flex flex-wrap gap-2">
+            {quickSuggestions.map((suggestion, index) => (
+              <button
+                key={suggestion}
+                onClick={() => setMessage(suggestion)}
+                disabled={isLoading}
+                className={`px-3 py-1.5 text-xs font-medium bg-gradient-to-r ${
+                  index === 0 ? 'from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 border-blue-200' :
+                  index === 1 ? 'from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-700 border-purple-200' :
+                  index === 2 ? 'from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-green-700 border-green-200' :
+                  'from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 text-orange-700 border-orange-200'
+                } dark:from-gray-800 dark:to-gray-700 dark:hover:from-gray-700 dark:hover:to-gray-600 dark:text-gray-300 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900`}
+              >
+                <Sparkles className="w-3 h-3 inline mr-1.5" />
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Compact Footer info */}
+        <div className="flex items-center justify-center mt-3 text-xs text-gray-500 dark:text-gray-400">
+          <Zap className="w-3 h-3 mr-1" />
+          Powered by {selectedModel === 'claude' ? 'Claude 4.0 Sonnet' : 'Gemini 2.5 Pro'}. AI can make mistakes. Always verify important information and strategic decisions.
         </div>
       </div>
     </div>
