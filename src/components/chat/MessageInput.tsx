@@ -255,7 +255,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
 
   return (
     <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-      <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 py-4 sm:py-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
         {showFileUpload && (
           <div className="mb-4">
             <FileUpload 
