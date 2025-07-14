@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Bot } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { StreamingMessage } from './StreamingMessage';
 import { useAppStore } from '../../stores/appStore';
@@ -27,7 +28,7 @@ export const MessageList: React.FC<MessageListProps> = ({ conversation }) => {
         {conversation.messages.length === 0 && !isLoading && !streamingMessage ? (
           <div className="text-center py-8 sm:py-12">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-light-surface dark:bg-dark-surface rounded-full flex items-center justify-center mx-auto mb-4 shadow-light dark:shadow-dark">
-              <span className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400">AI</span>
+              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 dark:text-primary-400" />
             </div>
             <p className="text-sm sm:text-base text-light-text-secondary dark:text-dark-text-secondary">
               Start the conversation! Ask me anything about product management.
@@ -46,7 +47,7 @@ export const MessageList: React.FC<MessageListProps> = ({ conversation }) => {
             {isLoading && !streamingMessage && (
               <div className="flex items-start space-x-3 sm:space-x-4">
                 <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary-600 dark:bg-primary-400 flex items-center justify-center shadow-light dark:shadow-dark">
-                  <span className="text-white dark:text-dark-primary font-bold text-xs sm:text-sm">AI</span>
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-dark-primary" />
                 </div>
                 <div className="flex items-center space-x-2 text-light-text-muted dark:text-dark-text-muted">
                   <div className="flex space-x-1">
