@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Square, Sparkles, Zap, ChevronDown } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Send, Paperclip, Square, ChevronDown, Zap } from 'lucide-react';
 import { FileUpload } from '../features/FileUpload';
-import { ModelSelector } from '../ui/ModelSelector';
 import { useAppStore } from '../../stores/appStore';
 import { aiService } from '../../utils/aiService';
 
@@ -15,6 +13,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelSelectorRef = useRef<HTMLDivElement>(null);
   
   const { 
     addMessage, 
@@ -29,7 +28,70 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
   } = useAppStore();
   
   // Get conversation-specific state
-  const { isLoading, streamingMessage } = getConversationState(conversationId);
+  const { isLoading } = getConversationState(conversationId);
+
+  const quickSuggestions = [
+    'Create a competitive analysis',
+    'Help me prioritize features',
+    'Design user research study',
+    'Build KPI dashboard',
+  ];
+
+  // Check if this is a new conversation (no messages yet)
+  const conversation = getCurrentConversation();
+  const isNewConversation = !conversation || conversation.messages.length === 0;
+
+  // Animated suggestions for "Try:" section
+  const [currentSuggestion, setCurrentSuggestion] = useState(0);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [isSuggestionTyping, setIsSuggestionTyping] = useState(true);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showModelSelector && modelSelectorRef.current && !modelSelectorRef.current.contains(event.target as Node)) {
+        setShowModelSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModelSelector]);
+
+  // Animation for suggestions
+  useEffect(() => {
+    if (!isNewConversation) return; // Don't animate if not a new conversation
+
+    const currentSuggestionText = quickSuggestions[currentSuggestion];
+    
+    if (isSuggestionTyping) {
+      if (suggestionText.length < currentSuggestionText.length) {
+        const timer = setTimeout(() => {
+          setSuggestionText(currentSuggestionText.slice(0, suggestionText.length + 1));
+        }, 80);
+        return () => clearTimeout(timer);
+      } else {
+        // Finished typing, wait then start deleting
+        const timer = setTimeout(() => {
+          setIsSuggestionTyping(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      if (suggestionText.length > 0) {
+        const timer = setTimeout(() => {
+          setSuggestionText(suggestionText.slice(0, -1));
+        }, 50);
+        return () => clearTimeout(timer);
+      } else {
+        // Finished deleting, move to next suggestion
+        setCurrentSuggestion((prev) => (prev + 1) % quickSuggestions.length);
+        setIsSuggestionTyping(true);
+      }
+    }
+  }, [suggestionText, isSuggestionTyping, currentSuggestion, isNewConversation]);
 
   // Auto-trigger AI response when loading state changes and there's a new user message
   useEffect(() => {
@@ -191,54 +253,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
     }, 100);
   };
 
-  const quickSuggestions = [
-    'Create a competitive analysis',
-    'Help me prioritize features',
-    'Design user research study',
-    'Build KPI dashboard',
-  ];
-
-  // Check if this is a new conversation (no messages yet)
-  const conversation = getCurrentConversation();
-  const isNewConversation = !conversation || conversation.messages.length === 0;
-
-  // Animated suggestions for "Try suggestions:" section
-  const [currentSuggestion, setCurrentSuggestion] = useState(0);
-  const [suggestionText, setSuggestionText] = useState('');
-  const [isSuggestionTyping, setIsSuggestionTyping] = useState(true);
-
-  useEffect(() => {
-    if (!isNewConversation) return; // Don't animate if not a new conversation
-
-    const currentSuggestionText = quickSuggestions[currentSuggestion];
-    
-    if (isSuggestionTyping) {
-      if (suggestionText.length < currentSuggestionText.length) {
-        const timer = setTimeout(() => {
-          setSuggestionText(currentSuggestionText.slice(0, suggestionText.length + 1));
-        }, 80);
-        return () => clearTimeout(timer);
-      } else {
-        // Finished typing, wait then start deleting
-        const timer = setTimeout(() => {
-          setIsSuggestionTyping(false);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-    } else {
-      if (suggestionText.length > 0) {
-        const timer = setTimeout(() => {
-          setSuggestionText(suggestionText.slice(0, -1));
-        }, 50);
-        return () => clearTimeout(timer);
-      } else {
-        // Finished deleting, move to next suggestion
-        setCurrentSuggestion((prev) => (prev + 1) % quickSuggestions.length);
-        setIsSuggestionTyping(true);
-      }
-    }
-  }, [suggestionText, isSuggestionTyping, currentSuggestion, isNewConversation]);
-
   return (
     <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 py-4 sm:py-6">
@@ -269,9 +283,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
         
         <form onSubmit={handleSubmit} className="relative">
           {/* Unified Container */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent relative">
             {/* Text Input Area - Top Section */}
-            <div className="relative">
+            <div className="relative overflow-hidden rounded-t-2xl">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10 opacity-0 focus-within:opacity-100 transition-opacity duration-300"></div>
               <textarea
                 ref={textareaRef}
@@ -302,7 +316,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
               <div className="flex-1"></div>
 
               {/* Model Selector */}
-              <div className="relative mr-2">
+              <div ref={modelSelectorRef} className="relative mr-2">
                 <button
                   type="button"
                   onClick={() => setShowModelSelector(!showModelSelector)}
@@ -314,6 +328,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                       src={selectedModel === 'claude' ? '/claude-color.svg' : '/gemini-color.svg'}
                       alt={selectedModel === 'claude' ? 'Claude' : 'Gemini'}
                       className="w-4 h-4 mr-2"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                     <span>{selectedModel === 'claude' ? 'Claude 4.0 Sonnet' : 'Gemini 2.5 Pro'}</span>
                   </div>
@@ -321,16 +339,24 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                 </button>
                 
                 {showModelSelector && (
-                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-[100]">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedModel('claude');
                         setShowModelSelector(false);
                       }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
                     >
-                      <img src="/claude-color.svg" alt="Claude" className="w-4 h-4 mr-2" />
+                      <img 
+                        src="/claude-color.svg" 
+                        alt="Claude" 
+                        className="w-4 h-4 mr-2"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                       <span>Claude 4.0 Sonnet</span>
                       {selectedModel === 'claude' && <div className="w-2 h-2 bg-blue-600 rounded-full ml-auto"></div>}
                     </button>
@@ -340,9 +366,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                         setSelectedModel('gemini');
                         setShowModelSelector(false);
                       }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-b-lg"
                     >
-                      <img src="/gemini-color.svg" alt="Gemini" className="w-4 h-4 mr-2" />
+                      <img 
+                        src="/gemini-color.svg" 
+                        alt="Gemini" 
+                        className="w-4 h-4 mr-2"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                       <span>Gemini 2.5 Pro</span>
                       {selectedModel === 'gemini' && <div className="w-2 h-2 bg-blue-600 rounded-full ml-auto"></div>}
                     </button>
@@ -355,7 +389,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                 type={isLoading ? 'button' : 'submit'}
                 onClick={isLoading ? handleStop : undefined}
                 disabled={!isLoading && !message.trim()}
-                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 transform active:scale-95 ${
                   isLoading
                     ? 'text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
                     : message.trim()
