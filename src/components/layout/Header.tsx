@@ -33,7 +33,7 @@ export const Header: React.FC = () => {
               Product Manager AI
             </h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
-              Senior PM Assistant
+              Your PM Brainstorming Buddy
             </p>
           </div>
           <div className="xs:hidden">
