@@ -37,7 +37,7 @@ export const ChatContainer: React.FC = () => {
               </h2>
               
               <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-4">
-                Your senior PM assistant for strategic insights, data-driven recommendations, 
+                Your brainstorming buddy for product decisions, data-driven recommendations, 
                 and actionable frameworks for product success.
               </p>
               
