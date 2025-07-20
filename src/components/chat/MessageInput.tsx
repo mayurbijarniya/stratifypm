@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Square, ChevronDown, Zap } from 'lucide-react';
+import { FileSpreadsheet, FileText, File as FileIcon } from 'lucide-react';
 import { FileUpload } from '../features/FileUpload';
 import { useAppStore } from '../../stores/appStore';
 import { aiService } from '../../utils/aiService';
@@ -24,7 +25,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
     getConversationState,
     getCurrentConversation,
     selectedModel,
-    setSelectedModel
+    setSelectedModel,
+    uploadedFiles,
+    removeFile
   } = useAppStore();
   
   // Get conversation-specific state
@@ -187,9 +190,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isLoading) return;
+    const hasContent = message.trim() || uploadedFiles.length > 0;
+    if (!hasContent || isLoading) return;
 
-    const userMessage = message.trim();
+    console.log("Submit triggered", { message: message.trim(), uploadedFiles: uploadedFiles.length, isLoading });
+
+    const userMessage = message.trim() || "I've uploaded files for analysis. Please analyze the data and provide insights.";
     setMessage('');
     
     // Reset textarea height
@@ -245,17 +251,79 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
   };
 
   const handleFileProcessed = (analysisPrompt: string) => {
-    setMessage(analysisPrompt);
     setShowFileUpload(false);
-    // Auto-focus the textarea
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 100);
+    // Just close the upload UI, files are now attached
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) {
+      return FileSpreadsheet;
+    }
+    if (type.includes('text') || type.includes('json')) {
+      return FileText;
+    }
+    return FileIcon;
+  };
+
+  const getFileTypeLabel = (type: string, name: string) => {
+    if (type.includes('csv') || name.endsWith('.csv')) return 'Spreadsheet';
+    if (type.includes('excel') || name.endsWith('.xlsx') || name.endsWith('.xls')) return 'Spreadsheet';
+    if (type.includes('json') || name.endsWith('.json')) return 'File';
+    if (type.includes('text') || name.endsWith('.txt')) return 'Document';
+    return 'File';
+  };
+
+  const getFileIconColor = (type: string, name: string) => {
+    if (type.includes('csv') || name.endsWith('.csv')) return 'bg-green-500';
+    if (type.includes('excel') || name.endsWith('.xlsx') || name.endsWith('.xls')) return 'bg-green-600';
+    if (type.includes('json') || name.endsWith('.json')) return 'bg-blue-500';
+    if (type.includes('text') || name.endsWith('.txt')) return 'bg-red-500';
+    return 'bg-gray-500';
   };
 
   return (
     <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
       <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
+        {/* File Attachments - Compact Mobile Style */}
+        {uploadedFiles.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {uploadedFiles.map((file) => {
+              const IconComponent = getFileIcon(file.type);
+              const typeLabel = getFileTypeLabel(file.type, file.name);
+              const iconColor = getFileIconColor(file.type, file.name);
+              
+              return (
+                <div
+                  key={file.name}
+                  className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200 group max-w-xs"
+                >
+                  <div className={`w-6 h-6 sm:w-8 sm:h-8 ${iconColor} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {typeLabel} • {file.content.length} records
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={() => removeFile(file.name)}
+                    className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {showFileUpload && (
           <div className="mb-4">
             <FileUpload 
@@ -384,15 +452,22 @@ export const MessageInput: React.FC<MessageInputProps> = ({ conversationId }) =>
                 )}
               </div>
 
+              {/* File Upload Icon - Show when files attached */}
+              {uploadedFiles.length > 0 && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center mr-2">
+                  <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </div>
+              )}
+
               {/* Send/Stop Button */}
               <button
                 type={isLoading ? 'button' : 'submit'}
                 onClick={isLoading ? handleStop : undefined}
-                disabled={!isLoading && !message.trim()}
+                disabled={!isLoading && !message.trim() && uploadedFiles.length === 0}
                 className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 transform active:scale-95 ${
                   isLoading
                     ? 'text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
-                    : message.trim()
+                    : (message.trim() || uploadedFiles.length > 0)
                     ? 'text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 focus:ring-blue-500 focus:ring-offset-white dark:focus:ring-offset-gray-800'
                     : 'text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
                 }`}

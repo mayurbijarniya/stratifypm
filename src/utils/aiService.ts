@@ -65,6 +65,15 @@ export class UnifiedAIService {
     console.log('✅ Unified AI service initialized with both Gemini and Claude');
   }
 
+  // Method to get uploaded files from the app store
+  private getUploadedFiles() {
+    // Access the store directly to get uploaded files
+    if (typeof window !== 'undefined' && (window as any).__APP_STORE__) {
+      return (window as any).__APP_STORE__.getState().uploadedFiles || [];
+    }
+    return [];
+  }
+
   static getInstance(): UnifiedAIService {
     if (!UnifiedAIService.instance) {
       UnifiedAIService.instance = new UnifiedAIService();
@@ -240,6 +249,24 @@ Answer (one word only):`;
     if (model === 'claude') {
       return `You are a Senior Product Manager AI assistant with 10+ years of experience at leading tech companies like Google, Amazon, and successful startups. Your expertise spans:
 
+🚨 **CRITICAL DATA ANALYSIS RULES:**
+
+1. **ONLY ANALYZE REAL DATA**: When users upload files, you will receive the actual parsed data in JSON format. Use ONLY this data for all analysis.
+
+2. **NEVER FABRICATE**: Do not create fictional products, metrics, or insights. If a product name, category, or metric doesn't exist in the uploaded data, do not mention it.
+
+3. **CALCULATE FROM ACTUAL DATA**: 
+   - Sum actual quantities and prices for revenue calculations
+   - Calculate real averages from actual review scores
+   - Count actual occurrences for percentages
+   - Use actual product names from the data
+
+4. **NO TEMPLATES OR EXAMPLES**: Do not use template responses or example data. Every number, product name, and insight must come from the real uploaded file.
+
+5. **VERIFY DATA EXISTENCE**: Before mentioning any product, category, or metric, confirm it exists in the provided dataset.
+
+6. **DATA ACCURACY FIRST**: If you cannot find specific data in the uploaded file, say "This data is not available in the uploaded file" rather than making assumptions.
+
 🎯 **Core PM Competencies:**
 - Product Strategy & Vision
 - User Research & Customer Development  
@@ -292,6 +319,24 @@ You help product managers make better decisions faster through strategic thinkin
     } else {
       // Gemini system prompt (simpler, no persona)
       return `You are a senior Product Manager AI assistant with 10+ years of experience at top tech companies. You maintain conversation context and provide personalized, actionable advice.
+
+🚨 **CRITICAL DATA ANALYSIS RULES:**
+
+1. **ONLY ANALYZE REAL DATA**: When users upload files, you will receive the actual parsed data in JSON format. Use ONLY this data for all analysis.
+
+2. **NEVER FABRICATE**: Do not create fictional products, metrics, or insights. If a product name, category, or metric doesn't exist in the uploaded data, do not mention it.
+
+3. **CALCULATE FROM ACTUAL DATA**: 
+   - Sum actual quantities and prices for revenue calculations
+   - Calculate real averages from actual review scores
+   - Count actual occurrences for percentages
+   - Use actual product names from the data
+
+4. **NO TEMPLATES OR EXAMPLES**: Do not use template responses or example data. Every number, product name, and insight must come from the real uploaded file.
+
+5. **VERIFY DATA EXISTENCE**: Before mentioning any product, category, or metric, confirm it exists in the provided dataset.
+
+6. **DATA ACCURACY FIRST**: If you cannot find specific data in the uploaded file, say "This data is not available in the uploaded file" rather than making assumptions.
 
 PERSONALITY & APPROACH:
 - Professional but approachable
@@ -360,6 +405,9 @@ Remember: You're having an ongoing conversation, not answering isolated question
     onStream?: (chunk: string) => void,
     abortSignal?: AbortSignal
   ): Promise<string> {
+    // Get uploaded files from store for context
+    const uploadedFiles = this.getUploadedFiles();
+    
     try {
       // Check if request was aborted before starting
       if (abortSignal?.aborted) {
@@ -373,7 +421,11 @@ Remember: You're having an ongoing conversation, not answering isolated question
       // STEP 1: Classify if question is PM-related
       let isPMRelated = true;
 
-      if (!hasHistory) {
+      // Skip classification for file upload analysis - always allow
+      if (message.includes('uploaded and analyzed a file') || message.includes('File Details:')) {
+        console.log('🔄 File upload detected - skipping classification');
+        isPMRelated = true;
+      } else if (!hasHistory) {
         console.log('🔍 Classifying new question...');
         isPMRelated = await this.classifyPMQuestion(message, model);
       }
@@ -469,10 +521,56 @@ Remember: You're having an ongoing conversation, not answering isolated question
 IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop at headers or partial content. Include at least 3-5 competitors/items with detailed information in every column. Complete the entire table before adding any additional commentary.`;
     }
 
-    // Add current message
+    // Add current message with file context
+    let enhancedMessageWithFiles = enhancedMessage;
+    
+    // Get uploaded files from store for context
+    const uploadedFiles = this.getUploadedFiles();
+    
+    // If there are uploaded files, include their data in the context
+    if (uploadedFiles.length > 0) {
+      let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES - ANALYZE ONLY THIS DATA:**\n';
+      
+      uploadedFiles.forEach(file => {
+        fileContext += `\n📊 **File: ${file.name}**\n`;
+        fileContext += `📈 **Total Records: ${file.content.length}**\n`;
+        fileContext += `📋 **File Type: ${file.type}**\n`;
+        
+        // Include sample data for better analysis - show more for smaller files
+        const sampleSize = file.content.length <= 100 ? Math.min(file.content.length, 50) : 20;
+        if (file.content.length > 0) {
+          fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
+          fileContext += '```json\n';
+          fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
+          fileContext += '\n```\n';
+          
+          // Show column structure for better understanding
+          if (file.content.length > 0) {
+            const firstRow = file.content[0];
+            const columns = Object.keys(firstRow);
+            fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
+          }
+          
+          // For large datasets, emphasize full analysis
+          if (file.content.length > sampleSize) {
+            fileContext += `\n⚠️ **IMPORTANT:** This shows only the first ${sampleSize} rows for context. Your analysis must consider ALL ${file.content.length} records in the dataset. Calculate real totals, averages, and insights from the complete dataset.\n`;
+          }
+        }
+      });
+      
+      fileContext += `\n🚨 **CRITICAL REMINDER:** 
+- Use ONLY the product names, categories, and values shown in this real data
+- Calculate ALL metrics from this actual dataset
+- Do NOT create fictional examples or template responses
+- If data doesn't exist in the file, explicitly state it's not available
+- Every number and insight must be derived from this real data\n`;
+      
+      enhancedMessageWithFiles = `${enhancedMessage}${fileContext}`;
+    }
+    
     contents.push({
       role: 'user',
-      parts: [{ text: enhancedMessage }]
+      parts: [{ text: enhancedMessageWithFiles }]
     });
 
     const requestBody = {
@@ -601,10 +699,56 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
       });
     });
 
-    // Add current message
+    // Add current message with file context
+    let enhancedMessageWithFiles = message;
+    
+    // Get uploaded files from store for context
+    const uploadedFiles = this.getUploadedFiles();
+    
+    // If there are uploaded files, include their data in the context
+    if (uploadedFiles.length > 0) {
+      let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES - ANALYZE ONLY THIS DATA:**\n';
+      
+      uploadedFiles.forEach(file => {
+        fileContext += `\n📊 **File: ${file.name}**\n`;
+        fileContext += `📈 **Total Records: ${file.content.length}**\n`;
+        fileContext += `📋 **File Type: ${file.type}**\n`;
+        
+        // Include sample data for better analysis - show more for smaller files
+        const sampleSize = file.content.length <= 100 ? Math.min(file.content.length, 50) : 20;
+        if (file.content.length > 0) {
+          fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
+          fileContext += '```json\n';
+          fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
+          fileContext += '\n```\n';
+          
+          // Show column structure for better understanding
+          if (file.content.length > 0) {
+            const firstRow = file.content[0];
+            const columns = Object.keys(firstRow);
+            fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
+          }
+          
+          // For large datasets, emphasize full analysis
+          if (file.content.length > sampleSize) {
+            fileContext += `\n⚠️ **IMPORTANT:** This shows only the first ${sampleSize} rows for context. Your analysis must consider ALL ${file.content.length} records in the dataset. Calculate real totals, averages, and insights from the complete dataset.\n`;
+          }
+        }
+      });
+      
+      fileContext += `\n🚨 **CRITICAL REMINDER:** 
+- Use ONLY the product names, categories, and values shown in this real data
+- Calculate ALL metrics from this actual dataset
+- Do NOT create fictional examples or template responses
+- If data doesn't exist in the file, explicitly state it's not available
+- Every number and insight must be derived from this real data\n`;
+      
+      enhancedMessageWithFiles = `${message}${fileContext}`;
+    }
+    
     messages.push({
       role: 'user',
-      content: message
+      content: enhancedMessageWithFiles
     });
 
     // Enhanced prompt for table requests

@@ -93,10 +93,37 @@ const processJSON = (file: File): Promise<any[]> => {
     
     reader.onload = (e) => {
       try {
-        const jsonData = JSON.parse(e.target?.result as string);
-        // Ensure we return an array
-        const data = Array.isArray(jsonData) ? jsonData : [jsonData];
-        resolve(data);
+        const text = e.target?.result as string;
+        
+        try {
+          // Try standard JSON parsing first
+          const jsonData = JSON.parse(text);
+          // Ensure we return an array
+          const data = Array.isArray(jsonData) ? jsonData : [jsonData];
+          resolve(data);
+        } catch (parseError) {
+          // If standard parsing fails, try JSON Lines (JSONL) format
+          console.warn('Standard JSON parsing failed, trying JSONL format:', parseError);
+          
+          const lines = text.split('\n').filter(line => line.trim());
+          const jsonObjects: any[] = [];
+          
+          for (const line of lines) {
+            try {
+              const obj = JSON.parse(line.trim());
+              jsonObjects.push(obj);
+            } catch (lineError) {
+              console.warn(`Failed to parse line as JSON: ${line.substring(0, 50)}...`, lineError);
+              // Continue processing other lines
+            }
+          }
+          
+          if (jsonObjects.length > 0) {
+            resolve(jsonObjects);
+          } else {
+            reject(new Error(`JSON parsing error: ${parseError.message}`));
+          }
+        }
       } catch (error) {
         reject(new Error(`JSON parsing error: ${error}`));
       }
@@ -117,10 +144,42 @@ const processText = (file: File): Promise<any[]> => {
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        // Split by lines and create array of objects
+        
+        // Try to detect if it's structured data (JSON-like, CSV-like, etc.)
         const lines = text.split('\n').filter(line => line.trim());
+        
+        // Check if it looks like CSV data
+        if (lines.length > 1 && lines[0].includes(',')) {
+          // Try to parse as CSV
+          try {
+            const result = Papa.parse(text, {
+              header: true,
+              skipEmptyLines: true,
+            });
+            if (result.data && result.data.length > 0) {
+              resolve(result.data);
+              return;
+            }
+          } catch (csvError) {
+            console.warn('Failed to parse as CSV, treating as plain text');
+          }
+        }
+        
+        // Check if it looks like JSON
+        if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
+          try {
+            const jsonData = JSON.parse(text);
+            const data = Array.isArray(jsonData) ? jsonData : [jsonData];
+            resolve(data);
+            return;
+          } catch (jsonError) {
+            console.warn('Failed to parse as JSON, treating as plain text');
+          }
+        }
+        
+        // Fallback: treat as plain text with line-by-line structure
         const data = lines.map((line, index) => ({
-          line: index + 1,
+          line_number: index + 1,
           content: line.trim(),
         }));
         resolve(data);

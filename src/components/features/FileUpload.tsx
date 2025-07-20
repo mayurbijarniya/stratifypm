@@ -20,27 +20,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onClose, onFileProcessed
         const processedFile = await processFile(file);
         addFile(processedFile);
         
-        // Generate analysis insights and send to chat
-        if (onFileProcessed && processedFile.insights) {
-          const analysisPrompt = `I've uploaded a file: ${processedFile.name}
-
-**File Details:**
-- Size: ${(processedFile.size / 1024).toFixed(1)} KB
-- Records: ${processedFile.content.length}
-- Type: ${processedFile.type}
-
-**Data Insights:**
-${processedFile.insights.map(insight => `• ${insight}`).join('\n')}
-
-Please analyze this data from a product management perspective. What insights can you provide about:
-1. Key patterns and trends in the data
-2. Product opportunities or concerns
-3. Recommended actions based on the data
-4. Metrics and KPIs we should track
-
-${processedFile.content.length > 0 ? `Here's a sample of the data structure: ${JSON.stringify(processedFile.content[0], null, 2)}` : ''}`;
-
-          onFileProcessed(analysisPrompt);
+        // File uploaded successfully - no notification needed, just close upload UI
+        if (onFileProcessed) {
+          onFileProcessed(''); // Empty string to close upload UI without adding message
         }
       } catch (error) {
         console.error('Error processing file:', error);
