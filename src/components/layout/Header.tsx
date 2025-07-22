@@ -15,7 +15,19 @@ export const Header: React.FC = () => {
           variant="ghost"
           size="sm"
           icon={Menu}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={() => {
+            // On mobile, use click to toggle
+            if (window.innerWidth < 1024) {
+              setSidebarOpen(!sidebarOpen);
+            }
+            // On desktop, hover handles it automatically
+          }}
+          onMouseEnter={() => {
+            // On desktop, show sidebar on hover
+            if (window.innerWidth >= 1024) {
+              setSidebarOpen(true);
+            }
+          }}
           className={`hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-2 w-10 h-10 transition-all duration-200 border ${
             sidebarOpen 
               ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' 

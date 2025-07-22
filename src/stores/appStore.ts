@@ -9,50 +9,50 @@ interface AppState {
   theme: 'light' | 'dark';
   selectedFeature: string | null;
   selectedModel: AIModel;
-  
+
   // Conversations
   conversations: Conversation[];
   currentConversationId: string | null;
-  
+
   // Per-conversation AI state
   conversationStates: Record<string, {
     isLoading: boolean;
     streamingMessage: string | null;
     abortController: AbortController | null;
   }>;
-  
+
   // Files
   uploadedFiles: FileData[];
-  
+
   // Actions
   setSidebarOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setSelectedFeature: (feature: string | null) => void;
   setSelectedModel: (model: AIModel) => void;
-  
+
   // Conversation actions
   createConversation: (title?: string) => string;
   updateConversation: (id: string, updates: Partial<Conversation>) => void;
   deleteConversation: (id: string) => void;
   clearAllConversations: () => void;
   setCurrentConversation: (id: string | null) => void;
-  
+
   // Message actions
   addMessage: (conversationId: string, message: Omit<Message, 'id' | 'timestamp'>) => void;
   updateMessage: (conversationId: string, messageId: string, updates: Partial<Message>) => void;
-  
+
   // Per-conversation AI state actions
   setConversationLoading: (conversationId: string, loading: boolean) => void;
   setConversationStreaming: (conversationId: string, content: string | null) => void;
   setConversationAbortController: (conversationId: string, controller: AbortController | null) => void;
   stopConversationAI: (conversationId: string) => void;
   getConversationState: (conversationId: string) => { isLoading: boolean; streamingMessage: string | null; };
-  
+
   // File actions
   addFile: (file: FileData) => void;
   removeFile: (fileName: string) => void;
   updateFile: (fileName: string, updates: Partial<FileData>) => void;
-  
+
   // Utility
   getCurrentConversation: () => Conversation | null;
 }
@@ -62,7 +62,7 @@ const customStorage = {
   getItem: (name: string) => {
     const str = localStorage.getItem(name);
     if (!str) return null;
-    
+
     try {
       return JSON.parse(str, (key, value) => {
         // Convert timestamp, createdAt, and updatedAt strings back to Date objects
@@ -96,19 +96,19 @@ export const useAppStore = create<AppState>()(
       currentConversationId: null,
       conversationStates: {},
       uploadedFiles: [],
-      
+
       // Expose store globally for AI service access
       ...(typeof window !== 'undefined' && (() => {
         (window as any).__APP_STORE__ = { getState: get };
         return {};
       })()),
-      
+
       // Actions
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setTheme: (theme) => set({ theme }),
       setSelectedFeature: (feature) => set({ selectedFeature: feature }),
       setSelectedModel: (model) => set({ selectedModel: model }),
-      
+
       createConversation: (title = 'New Conversation') => {
         const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const newConversation: Conversation = {
@@ -118,7 +118,7 @@ export const useAppStore = create<AppState>()(
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
+
         set((state) => ({
           conversations: [newConversation, ...state.conversations],
           currentConversationId: id,
@@ -133,20 +133,20 @@ export const useAppStore = create<AppState>()(
             }
           }
         }));
-        
+
         return id;
       },
-      
+
       updateConversation: (id, updates) => {
         set((state) => ({
           conversations: state.conversations.map((conv) =>
-            conv.id === id 
+            conv.id === id
               ? { ...conv, ...updates, updatedAt: new Date() }
               : conv
           ),
         }));
       },
-      
+
       deleteConversation: (id) => {
         set((state) => {
           // Clean up conversation state
@@ -155,7 +155,7 @@ export const useAppStore = create<AppState>()(
             newConversationStates[id].abortController.abort();
           }
           delete newConversationStates[id];
-          
+
           return {
             conversations: state.conversations.filter((conv) => conv.id !== id),
             currentConversationId: state.currentConversationId === id ? null : state.currentConversationId,
@@ -172,7 +172,7 @@ export const useAppStore = create<AppState>()(
               convState.abortController.abort();
             }
           });
-          
+
           return {
             conversations: [],
             currentConversationId: null,
@@ -180,7 +180,7 @@ export const useAppStore = create<AppState>()(
           };
         });
       },
-      
+
       setCurrentConversation: (id) => {
         set((state) => {
           // Initialize conversation state if it doesn't exist
@@ -192,55 +192,55 @@ export const useAppStore = create<AppState>()(
               abortController: null,
             };
           }
-          
+
           return {
             currentConversationId: id,
             conversationStates: newConversationStates,
           };
         });
       },
-      
-      
+
+
       addMessage: (conversationId, message) => {
         const newMessage: Message = {
           ...message,
           id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           timestamp: new Date(),
         };
-        
+
         set((state) => ({
           conversations: state.conversations.map((conv) =>
             conv.id === conversationId
               ? {
-                  ...conv,
-                  messages: [...conv.messages, newMessage],
-                  updatedAt: new Date(),
-                  // Update title based on first user message
-                  title: conv.messages.length === 0 && message.role === 'user' 
-                    ? message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '')
-                    : conv.title
-                }
+                ...conv,
+                messages: [...conv.messages, newMessage],
+                updatedAt: new Date(),
+                // Update title based on first user message
+                title: conv.messages.length === 0 && message.role === 'user'
+                  ? message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '')
+                  : conv.title
+              }
               : conv
           ),
         }));
       },
-      
+
       updateMessage: (conversationId, messageId, updates) => {
         set((state) => ({
           conversations: state.conversations.map((conv) =>
             conv.id === conversationId
               ? {
-                  ...conv,
-                  messages: conv.messages.map((msg) =>
-                    msg.id === messageId ? { ...msg, ...updates } : msg
-                  ),
-                  updatedAt: new Date(),
-                }
+                ...conv,
+                messages: conv.messages.map((msg) =>
+                  msg.id === messageId ? { ...msg, ...updates } : msg
+                ),
+                updatedAt: new Date(),
+              }
               : conv
           ),
         }));
       },
-      
+
       // Per-conversation AI state management
       setConversationLoading: (conversationId, loading) => {
         set((state) => ({
@@ -253,7 +253,7 @@ export const useAppStore = create<AppState>()(
           }
         }));
       },
-      
+
       setConversationStreaming: (conversationId, content) => {
         set((state) => ({
           conversationStates: {
@@ -265,7 +265,7 @@ export const useAppStore = create<AppState>()(
           }
         }));
       },
-      
+
       setConversationAbortController: (conversationId, controller) => {
         set((state) => ({
           conversationStates: {
@@ -277,18 +277,18 @@ export const useAppStore = create<AppState>()(
           }
         }));
       },
-      
+
       stopConversationAI: (conversationId) => {
         set((state) => {
           const conversationState = state.conversationStates[conversationId];
-          
+
           console.log(`Stopping AI for conversation ${conversationId}`, conversationState);
-          
+
           if (conversationState?.abortController) {
             console.log('Aborting request...');
             conversationState.abortController.abort();
           }
-          
+
           return {
             conversationStates: {
               ...state.conversationStates,
@@ -302,7 +302,7 @@ export const useAppStore = create<AppState>()(
           };
         });
       },
-      
+
       getConversationState: (conversationId) => {
         const state = get();
         const conversationState = state.conversationStates[conversationId];
@@ -311,19 +311,19 @@ export const useAppStore = create<AppState>()(
           streamingMessage: conversationState?.streamingMessage || null,
         };
       },
-      
+
       addFile: (file) => {
         set((state) => ({
           uploadedFiles: [...state.uploadedFiles, file],
         }));
       },
-      
+
       removeFile: (fileName) => {
         set((state) => ({
           uploadedFiles: state.uploadedFiles.filter((file) => file.name !== fileName),
         }));
       },
-      
+
       updateFile: (fileName, updates) => {
         set((state) => ({
           uploadedFiles: state.uploadedFiles.map((file) =>
@@ -331,7 +331,7 @@ export const useAppStore = create<AppState>()(
           ),
         }));
       },
-      
+
       getCurrentConversation: () => {
         const state = get();
         return state.conversations.find((conv) => conv.id === state.currentConversationId) || null;
@@ -343,7 +343,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         conversations: state.conversations,
         theme: state.theme,
-        sidebarOpen: state.sidebarOpen,
+        // Don't persist sidebar state - always start with sidebar visible
         // Don't persist conversation states (they should reset on app restart)
       }),
     }
