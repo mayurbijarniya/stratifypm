@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  MessageSquare, 
-  Target, 
-  TrendingUp, 
-  Users, 
-  BarChart3, 
+import React, { useState } from "react";
+import {
+  Plus,
+  MessageSquare,
+  Target,
+  TrendingUp,
+  Users,
+  BarChart3,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -13,45 +13,79 @@ import {
   Trash2,
   Zap,
   Sparkles,
-  Rocket
-} from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { useAppStore } from '../../stores/appStore';
-import { quickActions } from '../../data/quickActions';
-import type { PMCategory } from '../../types';
-import { format } from 'date-fns';
+  Rocket,
+} from "lucide-react";
+import { Button } from "../ui/Button";
+import { useAppStore } from "../../stores/appStore";
+import { quickActions } from "../../data/quickActions";
+import type { PMCategory } from "../../types";
+import { format } from "date-fns";
 
 const categoryConfig = {
-  strategy: { icon: Target, label: 'Strategy', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
-  execution: { icon: TrendingUp, label: 'Execution', color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
-  research: { icon: Users, label: 'Research', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30' },
-  analytics: { icon: BarChart3, label: 'Analytics', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
-  technical: { icon: Settings, label: 'Technical', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-900/30' },
-  stakeholder: { icon: MessageSquare, label: 'Stakeholder', color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-100 dark:bg-indigo-900/30' },
+  strategy: {
+    icon: Target,
+    label: "Strategy",
+    color: "text-blue-600 dark:text-blue-400",
+    bgColor: "bg-blue-100 dark:bg-blue-900/30",
+  },
+  execution: {
+    icon: TrendingUp,
+    label: "Execution",
+    color: "text-orange-600 dark:text-orange-400",
+    bgColor: "bg-orange-100 dark:bg-orange-900/30",
+  },
+  research: {
+    icon: Users,
+    label: "Research",
+    color: "text-purple-600 dark:text-purple-400",
+    bgColor: "bg-purple-100 dark:bg-purple-900/30",
+  },
+  analytics: {
+    icon: BarChart3,
+    label: "Analytics",
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-100 dark:bg-green-900/30",
+  },
+  technical: {
+    icon: Settings,
+    label: "Technical",
+    color: "text-gray-600 dark:text-gray-400",
+    bgColor: "bg-gray-100 dark:bg-gray-900/30",
+  },
+  stakeholder: {
+    icon: MessageSquare,
+    label: "Stakeholder",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
+  },
 };
 
 export const Sidebar: React.FC = () => {
-  const { 
-    sidebarOpen, 
-    setSidebarOpen, 
-    conversations, 
-    createConversation, 
-    setCurrentConversation, 
+  const {
+    sidebarOpen,
+    setSidebarOpen,
+    conversations,
+    createConversation,
+    setCurrentConversation,
     currentConversationId,
     deleteConversation,
     clearAllConversations,
     setSelectedFeature,
-    selectedFeature
+    selectedFeature,
   } = useAppStore();
-  
-  const [expandedCategories, setExpandedCategories] = useState<PMCategory[]>(['strategy', 'execution']);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  const [expandedCategories, setExpandedCategories] = useState<PMCategory[]>([
+    "strategy",
+    "execution",
+  ]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
 
   const toggleCategory = (category: PMCategory) => {
-    setExpandedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
+    setExpandedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
   };
@@ -59,10 +93,8 @@ export const Sidebar: React.FC = () => {
   const handleFeatureClick = (actionId: string) => {
     setSelectedFeature(actionId);
     setCurrentConversation(null);
-    // Auto-close sidebar on mobile after selection
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    // Auto-close sidebar after selection
+    setSidebarOpen(false);
   };
 
   const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
@@ -76,7 +108,11 @@ export const Sidebar: React.FC = () => {
   };
 
   const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to delete all conversations? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete all conversations? This action cannot be undone."
+      )
+    ) {
       clearAllConversations();
     }
   };
@@ -84,35 +120,31 @@ export const Sidebar: React.FC = () => {
   const handleNewConversation = () => {
     setSelectedFeature(null);
     createConversation();
-    // Auto-close sidebar on mobile after creating conversation
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    // Auto-close sidebar after creating conversation
+    setSidebarOpen(false);
   };
 
   const handleConversationSelect = (conversationId: string) => {
     setSelectedFeature(null);
     setCurrentConversation(conversationId);
-    // Auto-close sidebar on mobile after selection
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
+    // Auto-close sidebar after selection
+    setSidebarOpen(false);
   };
 
   if (!sidebarOpen) return null;
 
   return (
     <>
-      {/* Mobile overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
         onClick={() => setSidebarOpen(false)}
       />
 
       {/* Sidebar */}
-      <div className="fixed lg:relative inset-y-0 left-0 w-80 sm:w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 z-50 flex flex-col shadow-2xl">
+      <div className="fixed inset-y-0 left-0 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <MessageSquare className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
@@ -123,19 +155,21 @@ export const Sidebar: React.FC = () => {
                 <button
                   onClick={handleClearAll}
                   className="w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                  title="Clear all conversations"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 lg:hidden focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                title="Close sidebar"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
-          
+
           <Button
             onClick={handleNewConversation}
             variant="primary"
@@ -194,9 +228,10 @@ export const Sidebar: React.FC = () => {
                     <button
                       onClick={() => handleConversationSelect(conversation.id)}
                       className={`w-full text-left p-4 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${
-                        currentConversationId === conversation.id && !selectedFeature
-                          ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-lg transform scale-[1.02]' 
-                          : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 hover:shadow-lg hover:transform hover:scale-[1.01]'
+                        currentConversationId === conversation.id &&
+                        !selectedFeature
+                          ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-lg transform scale-[1.02]"
+                          : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 hover:shadow-lg hover:transform hover:scale-[1.01]"
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -213,14 +248,19 @@ export const Sidebar: React.FC = () => {
                                 {conversation.messages.length} messages
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-500">
-                                {format(new Date(conversation.updatedAt), 'MMM d')}
+                                {format(
+                                  new Date(conversation.updatedAt),
+                                  "MMM d"
+                                )}
                               </p>
                             </div>
                           </div>
                         </div>
-                        
+
                         <button
-                          onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                          onClick={(e) =>
+                            handleDeleteConversation(conversation.id, e)
+                          }
                           className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg ml-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -234,7 +274,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           {/* PM Features */}
-          <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50/30 to-indigo-50/30 dark:from-blue-900/10 dark:to-indigo-900/10">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-md">
                 <Sparkles className="w-3 h-3 text-white" />
@@ -249,14 +289,18 @@ export const Sidebar: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               {Object.entries(categoryConfig).map(([category, config]) => {
-                const categoryActions = quickActions.filter(action => action.category === category);
-                const isExpanded = expandedCategories.includes(category as PMCategory);
-                
+                const categoryActions = quickActions.filter(
+                  (action) => action.category === category
+                );
+                const isExpanded = expandedCategories.includes(
+                  category as PMCategory
+                );
+
                 if (categoryActions.length === 0) return null;
-                
+
                 return (
                   <div key={category}>
                     <button
@@ -264,7 +308,9 @@ export const Sidebar: React.FC = () => {
                       className="w-full flex items-center justify-between px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 shadow-sm hover:shadow-md"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-xl ${config.bgColor} flex items-center justify-center shadow-md`}>
+                        <div
+                          className={`w-8 h-8 rounded-xl ${config.bgColor} flex items-center justify-center shadow-md`}
+                        >
                           <config.icon className={`w-4 h-4 ${config.color}`} />
                         </div>
                         <span className="font-semibold">{config.label}</span>
@@ -277,7 +323,7 @@ export const Sidebar: React.FC = () => {
                         )}
                       </div>
                     </button>
-                    
+
                     {isExpanded && (
                       <div className="ml-11 mt-2 space-y-1">
                         {categoryActions.map((action) => (
@@ -286,8 +332,8 @@ export const Sidebar: React.FC = () => {
                             onClick={() => handleFeatureClick(action.id)}
                             className={`w-full text-left px-3 py-3 text-sm rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${
                               selectedFeature === action.id
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-indigo-300 border border-blue-200 dark:border-indigo-700 shadow-lg font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:shadow-md'
+                                ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-indigo-300 border border-blue-200 dark:border-indigo-700 shadow-lg font-medium"
+                                : "text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:shadow-md"
                             }`}
                           >
                             <div className="flex items-center">

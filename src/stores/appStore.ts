@@ -88,7 +88,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      sidebarOpen: true,
+      sidebarOpen: false,
       theme: 'light',
       selectedFeature: null,
       selectedModel: 'claude' as AIModel,

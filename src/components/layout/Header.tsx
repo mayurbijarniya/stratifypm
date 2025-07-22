@@ -16,7 +16,12 @@ export const Header: React.FC = () => {
           size="sm"
           icon={Menu}
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-2 w-10 h-10 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+          className={`hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-2 w-10 h-10 transition-all duration-200 border ${
+            sidebarOpen 
+              ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' 
+              : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+          }`}
+          title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         />
         
         <div className="flex items-center space-x-3">
