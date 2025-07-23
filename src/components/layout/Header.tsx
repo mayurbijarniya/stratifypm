@@ -47,11 +47,11 @@ export const Header: React.FC = () => {
           </div>
           <div className="hidden xs:block sm:block">
             <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-              Product Manager AI
+              StratifyPM
             </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
+            {/*<p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">
               Your PM Brainstorming Buddy
-            </p>
+            </p>*/}
           </div>
           <div className="xs:hidden">
             <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
