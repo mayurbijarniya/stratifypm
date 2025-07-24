@@ -8,6 +8,9 @@ export default {
         'xs': '475px',
       },
       fontFamily: {
+        heading: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
+        body: ['Lora', 'Georgia', 'serif'],
+        // Keep inter as fallback for compatibility
         inter: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
