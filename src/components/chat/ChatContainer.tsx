@@ -4,14 +4,7 @@ import { MessageInput } from "./MessageInput";
 import { FeatureInterface } from "./FeatureInterface";
 import { Navbar } from "../layout/Navbar";
 import { useAppStore } from "../../stores/appStore";
-import {
-  Target,
-  Users,
-  BarChart3,
-  TrendingUp,
-  Lightbulb,
-  Sparkles,
-} from "lucide-react";
+import { Target, Users, BarChart3, TrendingUp, Sparkles } from "lucide-react";
 
 export const ChatContainer: React.FC = () => {
   const { getCurrentConversation, selectedFeature } = useAppStore();
