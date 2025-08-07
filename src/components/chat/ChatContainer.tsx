@@ -1,9 +1,17 @@
-import React from 'react';
-import { MessageList } from './MessageList';
-import { MessageInput } from './MessageInput';
-import { FeatureInterface } from './FeatureInterface';
-import { useAppStore } from '../../stores/appStore';
-import { Bot, Sparkles, Target, Users, BarChart3, TrendingUp, Zap, Lightbulb, Rocket } from 'lucide-react';
+import React from "react";
+import { MessageList } from "./MessageList";
+import { MessageInput } from "./MessageInput";
+import { FeatureInterface } from "./FeatureInterface";
+import { Navbar } from "../layout/Navbar";
+import { useAppStore } from "../../stores/appStore";
+import {
+  Target,
+  Users,
+  BarChart3,
+  TrendingUp,
+  Lightbulb,
+  Sparkles,
+} from "lucide-react";
 
 export const ChatContainer: React.FC = () => {
   const { getCurrentConversation, selectedFeature } = useAppStore();
@@ -11,130 +19,141 @@ export const ChatContainer: React.FC = () => {
 
   // Show feature interface if a feature is selected
   if (selectedFeature) {
-    return <FeatureInterface featureId={selectedFeature} />;
+    return (
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
+        <Navbar />
+        <div className="flex-1 mt-16">
+          <FeatureInterface featureId={selectedFeature} />
+        </div>
+      </div>
+    );
   }
 
   if (!currentConversation) {
     return (
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-indigo-900/10 overflow-hidden">
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
-            <div className="text-center max-w-6xl w-full">
-              {/* Smaller Hero Section */}
-              <div className="relative mb-6 sm:mb-8">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-2xl transform scale-125"></div>
-                <div className="relative w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl transform hover:scale-105 transition-transform duration-300">
-                  <Bot className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 text-white" />
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <Zap className="w-2.5 h-2.5 text-white" />
-                  </div>
-                </div>
-              </div>
-              
-              <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3 sm:mb-4 px-4">
-                Welcome to Product Manager AI
-              </h2>
-              
-              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-4">
-                Your brainstorming buddy for product decisions, data-driven recommendations, 
-                and actionable frameworks for product success.
+      <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+        <Navbar />
+
+        {/* Welcome Screen - Fixed height, no scroll */}
+        <div className="flex-1 flex items-center justify-center p-4 mt-16 overflow-hidden">
+          <div className="text-center max-w-4xl w-full">
+            <div className="mb-8">
+              <h1 className="text-4xl sm:text-6xl mb-4 text-foreground font-be-vietnam-pro font-light tracking-tighter">
+                stratifypm
+              </h1>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                Your AI-powered product management assistant for strategic
+                decisions, user research, and data-driven insights.
               </p>
-              
-              {/* Compact Feature Grid - Optimized for single view */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 px-4 max-w-4xl mx-auto">
-                <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-400/10 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 dark:hover:border-blue-700 cursor-pointer">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                      <Target className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Strategic Planning</h3>
+            </div>
+
+            {/* Feature Cards - Single line */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              <div className="group bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-200/20 dark:border-blue-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 gradient-blue rounded-md flex items-center justify-center shadow-sm">
+                    <Target className="w-3 h-3 text-white" />
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                    Competitive analysis, market positioning, roadmapping, and business model innovation
-                  </p>
-                  {/*<div className="flex items-center text-blue-600 dark:text-blue-400 text-xs font-medium">
-                    <Rocket className="w-3 h-3 mr-1.5" />
-                    Get Started
-                  </div>*/}
-                </div>
-                
-                <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-400/10 transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 dark:hover:border-purple-700 cursor-pointer">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">User Research</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                    Persona development, journey mapping, interview guides, and behavioral analysis
-                  </p>
-                  {/*<div className="flex items-center text-purple-600 dark:text-purple-400 text-xs font-medium">
-                    <Rocket className="w-3 h-3 mr-1.5" />
-                    Get Started
-                  </div>*/}
-                </div>
-                
-                <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-400/10 transition-all duration-300 hover:-translate-y-1 hover:border-green-200 dark:hover:border-green-700 cursor-pointer">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                      <BarChart3 className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Data Analytics</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                    KPI frameworks, cohort analysis, A/B testing, and performance metrics
-                  </p>
-                  {/*<div className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
-                    <Rocket className="w-3 h-3 mr-1.5" />
-                    Get Started
-                  </div>*/}
-                </div>
-                
-                <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 sm:p-5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:shadow-orange-500/10 dark:hover:shadow-orange-400/10 transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 dark:hover:border-orange-700 cursor-pointer">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Execution</h3>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                    Feature prioritization, sprint planning, resource allocation, and go-to-market
-                  </p>
-                  {/*<div className="flex items-center text-orange-600 dark:text-orange-400 text-xs font-medium">
-                    <Rocket className="w-3 h-3 mr-1.5" />
-                    Get Started
-                  </div>*/}
-                </div>
-              </div>
-              
-              {/* Compact Pro Tip Section */}
-              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 sm:p-6 rounded-xl border border-blue-200/50 dark:border-blue-800/50 mb-4 shadow-lg backdrop-blur-sm max-w-3xl mx-auto">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md mr-3">
-                    <Lightbulb className="w-4 h-4 text-white" />
-                  </div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                    <Sparkles className="w-4 h-4 text-yellow-500 mr-2" />
-                    Pro Tip
+                  <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                    Strategic Planning
                   </h3>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-center">
-                  Try the PM Features in the sidebar for guided assistance, 
-                  or start a conversation with specific questions about your product challenges.
-                </p>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-200/20 dark:border-green-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 gradient-green rounded-md flex items-center justify-center shadow-sm">
+                    <Users className="w-3 h-3 text-white" />
+                  </div>
+                  <h3 className="text-xs font-medium text-green-700 dark:text-green-300">
+                    User Research
+                  </h3>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-200/20 dark:border-orange-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 gradient-orange rounded-md flex items-center justify-center shadow-sm">
+                    <BarChart3 className="w-3 h-3 text-white" />
+                  </div>
+                  <h3 className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                    Data Analytics
+                  </h3>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-200/20 dark:border-blue-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 gradient-blue rounded-md flex items-center justify-center shadow-sm">
+                    <TrendingUp className="w-3 h-3 text-white" />
+                  </div>
+                  <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                    Execution
+                  </h3>
+                </div>
               </div>
             </div>
+
+            {/* Suggested Questions - Single line */}
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
+                <span className="text-sm text-muted-foreground font-medium mr-2">
+                  Try:
+                </span>
+                {[
+                  "Create a competitive analysis framework",
+                  "Help me prioritize features for Q1",
+                  "Design a user research study",
+                  "Build a KPI dashboard strategy",
+                  "Analyze market trends and opportunities",
+                ].map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      const event = new CustomEvent("setSuggestion", {
+                        detail: suggestion,
+                      });
+                      window.dispatchEvent(event);
+                    }}
+                    className="px-3 py-1.5 text-xs bg-muted hover:bg-primary/10 hover:text-primary rounded-full border border-border hover:border-primary/30 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-3 rounded-lg border border-primary/10 max-w-md mx-auto">
+              <div className="flex items-center justify-center mb-1">
+                <Sparkles className="w-4 h-4 text-primary mr-2" />
+                <span className="text-sm font-medium text-primary">
+                  Ready to get started?
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Ask me anything about product management, or drag & drop files
+                to analyze data
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Input at bottom - Fixed position */}
+        <div className="flex-shrink-0">
+          <MessageInput conversationId="" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
-      <MessageList conversation={currentConversation} />
-      <MessageInput conversationId={currentConversation.id} />
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <Navbar />
+      <div className="flex-1 flex flex-col mt-16">
+        <MessageList conversation={currentConversation} />
+        <MessageInput conversationId={currentConversation.id} />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Bot } from 'lucide-react';
+import { Bot, User } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { StreamingMessage } from './StreamingMessage';
 import { useAppStore } from '../../stores/appStore';
@@ -23,14 +23,14 @@ export const MessageList: React.FC<MessageListProps> = ({ conversation }) => {
   }, [conversation.messages, streamingMessage, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white dark:bg-dark-primary">
-      <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="flex-1 overflow-y-auto bg-background scrollbar-thin" style={{ height: 'calc(100vh - 200px)' }}>
+      <div className="w-full max-w-4xl mx-auto px-6 py-6 space-y-6">
         {conversation.messages.length === 0 && !isLoading && !streamingMessage ? (
-          <div className="text-center py-8 sm:py-12">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-light-surface dark:bg-dark-surface rounded-full flex items-center justify-center mx-auto mb-4 shadow-light dark:shadow-dark">
-              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 dark:text-primary-400" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bot className="w-8 h-8 text-muted-foreground" />
             </div>
-            <p className="text-sm sm:text-base text-light-text-secondary dark:text-dark-text-secondary">
+            <p className="text-muted-foreground">
               Start the conversation! Ask me anything about product management.
             </p>
           </div>
@@ -45,17 +45,17 @@ export const MessageList: React.FC<MessageListProps> = ({ conversation }) => {
             )}
             
             {isLoading && !streamingMessage && (
-              <div className="flex items-start space-x-3 sm:space-x-4">
-                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-primary-600 dark:bg-primary-400 flex items-center justify-center shadow-light dark:shadow-dark">
-                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-dark-primary" />
+              <div className="flex items-start space-x-4 mb-8 px-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <div className="flex items-center space-x-2 text-light-text-muted dark:text-dark-text-muted">
+                <div className="flex items-center space-x-2 text-muted-foreground">
                   <div className="flex space-x-1">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary-600 dark:bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary-600 dark:bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary-600 dark:bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-xs sm:text-sm">AI is thinking...</span>
+                  <span className="text-sm">AI is thinking...</span>
                 </div>
               </div>
             )}

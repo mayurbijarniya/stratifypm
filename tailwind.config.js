@@ -8,52 +8,35 @@ export default {
         'xs': '475px',
       },
       fontFamily: {
-        heading: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
-        body: ['Lora', 'Georgia', 'serif'],
-        // Keep inter as fallback for compatibility
+        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+        'be-vietnam-pro': ['Be Vietnam Pro', 'system-ui', 'sans-serif'],
+        // Keep existing fonts as fallback
+        heading: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+        body: ['Geist', 'system-ui', 'sans-serif'],
         inter: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Professional Blue-based Design System
-        primary: {
-          50: '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93BBFC',
-          400: '#60A5FA',
-          500: '#3B82F6',
-          600: '#2563EB',
-          700: '#1D4ED8',
-          800: '#1E40AF',
-          900: '#1E3A8A',
-        },
-        // Light mode colors
-        light: {
-          primary: '#FFFFFF',
-          surface: '#F8FAFC',
-          background: '#FFFFFF',
-          text: {
-            primary: '#0F172A',
-            secondary: '#64748B',
-            muted: '#94A3B8',
-          },
-          border: '#E2E8F0',
-          shadow: 'rgba(0, 0, 0, 0.1)',
-        },
-        // Dark mode colors
-        dark: {
-          primary: '#0F172A',
-          surface: '#1E293B',
-          background: '#0F172A',
-          text: {
-            primary: '#F8FAFC',
-            secondary: '#CBD5E1',
-            muted: '#94A3B8',
-          },
-          border: '#334155',
-          shadow: 'rgba(0, 0, 0, 0.3)',
-        },
-        // Semantic colors
+        // Scira-inspired color system using OKLCH-like values
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: 'hsl(var(--card))',
+        'card-foreground': 'hsl(var(--card-foreground))',
+        popover: 'hsl(var(--popover))',
+        'popover-foreground': 'hsl(var(--popover-foreground))',
+        primary: 'hsl(var(--primary))',
+        'primary-foreground': 'hsl(var(--primary-foreground))',
+        secondary: 'hsl(var(--secondary))',
+        'secondary-foreground': 'hsl(var(--secondary-foreground))',
+        muted: 'hsl(var(--muted))',
+        'muted-foreground': 'hsl(var(--muted-foreground))',
+        accent: 'hsl(var(--accent))',
+        'accent-foreground': 'hsl(var(--accent-foreground))',
+        destructive: 'hsl(var(--destructive))',
+        'destructive-foreground': 'hsl(var(--destructive-foreground))',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        // Keep existing colors for compatibility
         success: {
           light: '#059669',
           dark: '#10B981',
@@ -79,6 +62,8 @@ export default {
         'pulse-slow': 'pulse 3s infinite',
         'bounce-subtle': 'bounceSubtle 0.6s ease-out',
         'typing': 'typing 1s steps(20) infinite',
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -102,14 +87,19 @@ export default {
           '0%, 50%': { opacity: '1' },
           '51%, 100%': { opacity: '0' },
         },
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
       },
-      boxShadow: {
-        'light': '0 1px 3px rgba(0, 0, 0, 0.1)',
-        'light-md': '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
-        'light-lg': '0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
-        'dark': '0 1px 3px rgba(0, 0, 0, 0.3)',
-        'dark-md': '0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)',
-        'dark-lg': '0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2)',
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
     },
   },

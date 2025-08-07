@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Square, ChevronDown, Zap } from "lucide-react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Paperclip, Square, ChevronDown, Upload, X } from "lucide-react";
 import { FileSpreadsheet, FileText, File as FileIcon } from "lucide-react";
-import { FileUpload } from "../features/FileUpload";
 import { useAppStore } from "../../stores/appStore";
 import { aiService } from "../../utils/aiService";
 
@@ -13,10 +12,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   conversationId,
 }) => {
   const [message, setMessage] = useState("");
-  const [showFileUpload, setShowFileUpload] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const {
     addMessage,
@@ -26,20 +28,24 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     stopConversationAI,
     getConversationState,
     getCurrentConversation,
+    createConversation,
+    setCurrentConversation,
     selectedModel,
     setSelectedModel,
     uploadedFiles,
     removeFile,
+    addFile,
   } = useAppStore();
 
   // Get conversation-specific state
   const { isLoading } = getConversationState(conversationId);
 
   const quickSuggestions = [
-    "Create a competitive analysis",
-    "Help me prioritize features",
-    "Design user research study",
-    "Build KPI dashboard",
+    "Create a competitive analysis framework",
+    "Help me prioritize features for Q1",
+    "Design a user research study",
+    "Build a KPI dashboard strategy",
+    "Analyze market trends and opportunities",
   ];
 
   // Check if this is a new conversation (no messages yet)
@@ -68,6 +74,108 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showModelSelector]);
+
+  // Listen for suggestion clicks from welcome screen
+  useEffect(() => {
+    const handleSuggestion = (event: CustomEvent) => {
+      setMessage(event.detail);
+      // Focus the textarea
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    };
+
+    window.addEventListener('setSuggestion', handleSuggestion as EventListener);
+    return () => {
+      window.removeEventListener('setSuggestion', handleSuggestion as EventListener);
+    };
+  }, []);
+
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    handleFileSelection(files);
+  }, []);
+
+  // File selection handler
+  const handleFileSelection = useCallback((files: File[]) => {
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        
+        // Parse content based on file type
+        let parsedContent: any[] = [];
+        try {
+          if (file.name.endsWith('.json')) {
+            const jsonData = JSON.parse(content);
+            parsedContent = Array.isArray(jsonData) ? jsonData : [jsonData];
+          } else if (file.name.endsWith('.csv')) {
+            // Simple CSV parsing - split by lines and commas
+            const lines = content.split('\n').filter(line => line.trim());
+            const headers = lines[0]?.split(',') || [];
+            parsedContent = lines.slice(1).map(line => {
+              const values = line.split(',');
+              const obj: any = {};
+              headers.forEach((header, index) => {
+                obj[header.trim()] = values[index]?.trim() || '';
+              });
+              return obj;
+            });
+          } else {
+            // For text files, split by lines
+            parsedContent = content.split('\n').filter(line => line.trim());
+          }
+        } catch (error) {
+          console.error('Error parsing file:', error);
+          parsedContent = [content]; // Fallback to raw content
+        }
+        
+        // Add file to store
+        addFile({
+          name: file.name,
+          type: file.type,
+          content: parsedContent,
+          size: file.size,
+          processed: true
+        });
+      };
+      
+      if (file.type.includes('text') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsDataURL(file);
+      }
+    });
+  }, [addFile]);
+
+  // Handle file input click
+  const handleFileInputClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    handleFileSelection(files);
+    // Reset input
+    e.target.value = '';
+  };
 
   // Animation for suggestions
   useEffect(() => {
@@ -128,17 +236,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       // Only respond to user messages, and avoid duplicate responses
       if (lastMessage.role !== "user") return;
 
-      // Check if the last user message already has an assistant response
-      // Look for the next message after the last user message
-      const lastUserMessageIndex = conversation.messages.length - 1;
-      const nextMessage = conversation.messages[lastUserMessageIndex + 1];
-      const hasAssistantResponse =
-        nextMessage && nextMessage.role === "assistant";
-
-      if (hasAssistantResponse) {
-        // Clear loading state if there's already a response
+      // Check if there's already an assistant message after the last user message
+      const userMessages = conversation.messages.filter(msg => msg.role === "user");
+      const assistantMessages = conversation.messages.filter(msg => msg.role === "assistant");
+      
+      // If we have equal or more assistant messages than user messages, don't make another call
+      if (assistantMessages.length >= userMessages.length) {
         setConversationLoading(conversationId, false);
         return;
+      }
+
+      // Check if there's already an active request for this conversation
+      const conversationState = getConversationState(conversationId);
+      if (conversationState.streamingMessage !== null) {
+        return; // Already processing
       }
 
       // Create abort controller for this request
@@ -203,13 +314,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       }
     };
 
-    handleAIResponse();
+    // Add a small delay to prevent rapid successive calls
+    const timeoutId = setTimeout(handleAIResponse, 100);
+    return () => clearTimeout(timeoutId);
   }, [isLoading, conversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const hasContent = message.trim() || uploadedFiles.length > 0;
-    if (!hasContent || isLoading) return;
+    if (!hasContent || isLoading || isSubmitting) return;
+
+    // Prevent double submissions
+    setIsSubmitting(true);
 
     console.log("Submit triggered", {
       message: message.trim(),
@@ -227,14 +343,25 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       textareaRef.current.style.height = "48px";
     }
 
+    // If no conversation exists, create one first
+    let targetConversationId = conversationId;
+    if (!conversationId) {
+      const newConversationId = createConversation();
+      targetConversationId = newConversationId;
+      setCurrentConversation(newConversationId);
+    }
+
     // Add user message
-    addMessage(conversationId, {
+    addMessage(targetConversationId, {
       content: userMessage,
       role: "user",
     });
 
     // Set loading state (this will trigger the AI response via useEffect)
-    setConversationLoading(conversationId, true);
+    setConversationLoading(targetConversationId, true);
+    
+    // Reset submitting state after a short delay
+    setTimeout(() => setIsSubmitting(false), 1000);
   };
 
   const handleStop = () => {
@@ -274,10 +401,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     adjustTextareaHeight();
   };
 
-  const handleFileProcessed = (analysisPrompt: string) => {
-    setShowFileUpload(false);
-    // Just close the upload UI, files are now attached
-  };
+
 
   const getFileIcon = (type: string) => {
     if (
@@ -319,17 +443,50 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     return "bg-gray-500";
   };
 
+  const isEmptyConversation = !conversationId;
+
   return (
-    <div className="border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-      <div className="max-w-4xl mx-auto px-4 sm:px-4 lg:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
+    <div 
+      ref={dropZoneRef}
+      className={`transition-all duration-500 bg-background ${
+        isEmptyConversation 
+          ? 'relative max-w-2xl mx-auto w-full p-4' 
+          : 'relative w-full p-4'
+      } ${isDragOver ? 'drag-over' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className="max-w-4xl mx-auto px-4">
+        
+        {/* Drag overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-2xl flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="text-center">
+              <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
+              <p className="text-primary font-medium">Drop files here to upload</p>
+              <p className="text-primary/70 text-sm">Supports CSV, JSON, TXT files</p>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".csv,.json,.txt,.xlsx,.xls"
+          onChange={handleFileInputChange}
+          className="hidden"
+        />
         {/* Try Suggestions - Only show for new conversations */}
-        {isNewConversation && (
+        {isNewConversation && !isEmptyConversation && (
           <div className="mb-4 text-center">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               <span className="font-medium">Try: </span>
               <button
                 onClick={() => setMessage(suggestionText)}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline-offset-2 hover:underline cursor-pointer transition-colors duration-200"
+                className="text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer transition-colors duration-200"
               >
                 {suggestionText}
                 {isSuggestionTyping ? (
@@ -344,7 +501,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
         {/* File Attachments - Horizontal Scrollable */}
         {uploadedFiles.length > 0 && (
-          <div className="mb-3">
+          <div className="mb-3 file-upload-enter">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
               {uploadedFiles.map((file) => {
                 const IconComponent = getFileIcon(file.type);
@@ -354,7 +511,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 return (
                   <div
                     key={file.name}
-                    className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-all duration-200 group flex-shrink-0"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl px-3 py-2 shadow-sm hover:shadow-md hover:shadow-primary/10 transition-all duration-200 group flex-shrink-0"
                     style={{ minWidth: "200px", maxWidth: "280px" }}
                   >
                     <div
@@ -364,31 +521,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                         {file.name}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {typeLabel} • {file.content.length} records
+                      <p className="text-xs text-primary/70 truncate">
+                        {typeLabel} • {Array.isArray(file.content) ? file.content.length : 1} records
                       </p>
                     </div>
 
                     <button
                       onClick={() => removeFile(file.name)}
-                      className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                      className="w-5 h-5 flex items-center justify-center text-primary/60 hover:text-destructive hover:bg-destructive/10 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 flex-shrink-0"
                     >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
                 );
@@ -397,21 +542,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           </div>
         )}
 
-        {showFileUpload && (
-          <div className="mb-4">
-            <FileUpload
-              onClose={() => setShowFileUpload(false)}
-              onFileProcessed={handleFileProcessed}
-            />
-          </div>
-        )}
+
 
         <form onSubmit={handleSubmit} className="relative">
           {/* Unified Container */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent relative">
+          <div className="bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 relative overflow-hidden">
             {/* Text Input Area - Top Section */}
             <div className="relative overflow-hidden rounded-t-2xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10 opacity-0 focus-within:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.02] to-primary/[0.04] opacity-0 focus-within:opacity-100 transition-opacity duration-300"></div>
               <textarea
                 ref={textareaRef}
                 value={message}
@@ -419,20 +557,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about product strategy, roadmapping, user research, or any PM topic..."
                 disabled={isLoading}
-                className="relative w-full px-6 py-3 resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-50 transition-all duration-200 text-base leading-relaxed min-h-[48px]"
+                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground placeholder-muted-foreground disabled:opacity-50 transition-all duration-200 text-base leading-relaxed min-h-[56px] auto-resize z-10"
                 rows={1}
-                style={{ maxHeight: "100px" }}
               />
             </div>
 
             {/* Button Row - Bottom Section */}
-            <div className="flex items-center px-4 py-3 border-t border-gray-200/50 dark:border-gray-700/50">
+            <div className="flex items-center px-4 py-3 border-t border-border">
               {/* File Upload Button */}
               <button
                 type="button"
-                onClick={() => setShowFileUpload(!showFileUpload)}
+                onClick={handleFileInputClick}
                 disabled={isLoading}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group focus:outline-none focus:ring-2 focus:ring-ring"
+                title="Upload files (CSV, JSON, TXT)"
               >
                 <Paperclip className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
               </button>
@@ -446,7 +584,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   type="button"
                   onClick={() => setShowModelSelector(!showModelSelector)}
                   disabled={isLoading}
-                  className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+                  className="flex items-center justify-between px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   <div className="flex items-center">
                     <img
@@ -462,7 +600,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                         target.style.display = "none";
                       }}
                     />
-                    <span>
+                    <span className="text-xs">
                       {selectedModel === "claude"
                         ? "Claude 4.0 Sonnet"
                         : "Gemini 2.5 Pro"}
@@ -472,14 +610,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 </button>
 
                 {showModelSelector && (
-                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-[100]">
+                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedModel("claude");
                         setShowModelSelector(false);
                       }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg"
+                      className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-t-lg"
                     >
                       <img
                         src="/claude-color.svg"
@@ -492,7 +630,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                       />
                       <span>Claude 4.0 Sonnet</span>
                       {selectedModel === "claude" && (
-                        <div className="w-2 h-2 bg-blue-600 rounded-full ml-auto"></div>
+                        <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
                       )}
                     </button>
                     <button
@@ -501,7 +639,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                         setSelectedModel("gemini");
                         setShowModelSelector(false);
                       }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-b-lg"
+                      className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
                     >
                       <img
                         src="/gemini-color.svg"
@@ -514,7 +652,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                       />
                       <span>Gemini 2.5 Pro</span>
                       {selectedModel === "gemini" && (
-                        <div className="w-2 h-2 bg-blue-600 rounded-full ml-auto"></div>
+                        <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
                       )}
                     </button>
                   </div>
@@ -533,14 +671,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 type={isLoading ? "button" : "submit"}
                 onClick={isLoading ? handleStop : undefined}
                 disabled={
-                  !isLoading && !message.trim() && uploadedFiles.length === 0
+                  (!isLoading && !message.trim() && uploadedFiles.length === 0) || isSubmitting
                 }
-                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 transform active:scale-95 ${
+                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 transform active:scale-95 shadow-sm ${
                   isLoading
-                    ? "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                    ? "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:scale-105 shadow-red-500/25"
                     : message.trim() || uploadedFiles.length > 0
-                    ? "text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 focus:ring-blue-500 focus:ring-offset-white dark:focus:ring-offset-gray-800"
-                    : "text-gray-400 bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                    ? "text-white bg-primary hover:bg-primary/90 hover:scale-105 shadow-primary/25"
+                    : "text-muted-foreground bg-muted cursor-not-allowed"
                 }`}
               >
                 {isLoading ? (
@@ -554,12 +692,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         </form>
 
         {/* Compact Footer info */}
-        <div className="flex items-center justify-center mt-3 text-xs text-gray-500 dark:text-gray-400">
-          <Zap className="w-3 h-3 mr-1" />
+        <div className="flex items-center justify-center mt-3 text-xs text-muted-foreground">
           Powered by{" "}
           {selectedModel === "claude" ? "Claude 4.0 Sonnet" : "Gemini 2.5 Pro"}.
-          AI can make mistakes. Always verify important information and
-          strategic decisions.
+          AI can make mistakes. Always verify important information.
         </div>
       </div>
     </div>
