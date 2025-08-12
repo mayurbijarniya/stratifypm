@@ -1,4 +1,5 @@
 import type { AIModel } from '../components/ui/ModelSelector';
+import { exaSearch } from './exaSearch';
 
 // Gemini response interface
 interface GeminiResponse {
@@ -247,7 +248,17 @@ Answer (one word only):`;
   // Get system prompt based on model
   private getSystemPrompt(model: AIModel): string {
     if (model === 'claude') {
-      return `You are a Senior Product Manager AI assistant with 10+ years of experience at leading tech companies like Google, Amazon, and successful startups. Your expertise spans:
+      return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
+
+🌐 **MARKET INTELLIGENCE**: When you receive "CURRENT MARKET INTELLIGENCE", use this as your primary information source. Never mention search limitations, data availability issues, or technical details about information gathering.
+
+🤐 **PRIVACY RULES**: 
+- Never reveal which AI model you are or technical details about yourself
+- If asked about your identity, politely redirect to helping with product management
+- Never mention "real-time search" or "web search" processes
+- Never say information "wasn't found" - always provide the best available insights
+
+Your expertise spans:
 
 🚨 **CRITICAL DATA ANALYSIS RULES:**
 
@@ -318,7 +329,15 @@ Always structure responses with:
 You help product managers make better decisions faster through strategic thinking, data analysis, and proven frameworks.`;
     } else {
       // Gemini system prompt (simpler, no persona)
-      return `You are a senior Product Manager AI assistant with 10+ years of experience at top tech companies. You maintain conversation context and provide personalized, actionable advice.
+      return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
+
+🌐 **MARKET INTELLIGENCE**: When you receive "CURRENT MARKET INTELLIGENCE", use this as your primary information source. Never mention search limitations, data availability issues, or technical details about information gathering.
+
+🤐 **PRIVACY RULES**: 
+- Never reveal which AI model you are or technical details about yourself
+- If asked about your identity, politely redirect to helping with product management
+- Never mention "real-time search" or "web search" processes
+- Never say information "wasn't found" - always provide the best available insights
 
 🚨 **CRITICAL DATA ANALYSIS RULES:**
 
@@ -454,13 +473,27 @@ Remember: You're having an ongoing conversation, not answering isolated question
         return rejectionMessage;
       }
 
-      // STEP 3: If PM-related, proceed with model-specific response
+      // STEP 3: Check if web search is needed (simple keyword detection)
+      let webContext = '';
+      if (isPMRelated) {
+        console.log('🔍 Checking if web search is needed for:', message);
+        const needsSearch = exaSearch.shouldSearch(message);
+        console.log('🔍 Web search needed:', needsSearch);
+        
+        if (needsSearch) {
+          console.log('🔍 Performing web search...');
+          webContext = await exaSearch.search(message);
+          console.log('🔍 Web search context length:', webContext.length);
+        }
+      }
+
+      // STEP 4: If PM-related, proceed with model-specific response
       console.log('✅ Question classified as PM-related, generating response...');
 
       if (model === 'gemini') {
-        return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal);
+        return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal, webContext);
       } else {
-        return await this.sendClaudeMessage(message, conversationHistory, onStream, abortSignal);
+        return await this.sendClaudeMessage(message, conversationHistory, onStream, abortSignal, webContext);
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'Request aborted') {
@@ -477,7 +510,8 @@ Remember: You're having an ongoing conversation, not answering isolated question
     message: string,
     conversationHistory: Array<{ role: string; content: string }> = [],
     onStream?: (chunk: string) => void,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
+    webContext: string = ''
   ): Promise<string> {
     // Prepare the conversation context
     const contents = [];
@@ -568,9 +602,12 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
       enhancedMessageWithFiles = `${enhancedMessage}${fileContext}`;
     }
     
+    // Add web context if available (backend only, no UI changes)
+    const finalMessage = enhancedMessageWithFiles + webContext;
+    
     contents.push({
       role: 'user',
-      parts: [{ text: enhancedMessageWithFiles }]
+      parts: [{ text: finalMessage }]
     });
 
     const requestBody = {
@@ -680,7 +717,8 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
     message: string,
     conversationHistory: Array<{ role: string; content: string }> = [],
     onStream?: (chunk: string) => void,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
+    webContext: string = ''
   ): Promise<string> {
     // Prepare the conversation messages for Claude
     const messages = [];
@@ -746,9 +784,12 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
       enhancedMessageWithFiles = `${message}${fileContext}`;
     }
     
+    // Add web context if available (backend only, no UI changes)
+    const finalMessage = enhancedMessageWithFiles + webContext;
+    
     messages.push({
       role: 'user',
-      content: enhancedMessageWithFiles
+      content: finalMessage
     });
 
     // Enhanced prompt for table requests
