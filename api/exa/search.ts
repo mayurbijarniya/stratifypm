@@ -18,17 +18,22 @@ function setCORS(req: VercelRequest, res: VercelResponse) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCORS(req, res); // ✅ Always set headers first
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end(); // ✅ Preflight handled here
-  }
-
   try {
-    const apiKey = process.env.VITE_EXA_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Missing API key' });
+    setCORS(req, res); // ✅ Always set headers first
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end(); // ✅ Preflight handled here
     }
+
+    const apiKey = process.env.VITE_EXA_API_KEY;
+    console.log('API Key check:', { hasKey: !!apiKey, keyLength: apiKey?.length });
+    
+    if (!apiKey) {
+      console.error('Missing VITE_EXA_API_KEY environment variable');
+      return res.status(500).json({ error: 'Missing API key configuration' });
+    }
+
+    console.log('Making request to Exa API with body:', req.body);
 
     const upstream = await fetch('https://api.exa.ai/search', {
       method: 'POST',
@@ -39,9 +44,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify(req.body),
     });
 
+    console.log('Exa API response status:', upstream.status);
+
+    if (!upstream.ok) {
+      const errorText = await upstream.text();
+      console.error('Exa API error:', upstream.status, errorText);
+      return res.status(upstream.status).json({ 
+        error: `Exa API error: ${upstream.status}`,
+        details: errorText 
+      });
+    }
+
     const text = await upstream.text();
-    return res.status(upstream.status).send(text);
+    console.log('Exa API response length:', text.length);
+    
+    return res.status(200).send(text);
   } catch (err: any) {
-    return res.status(500).json({ error: err?.message || 'Unknown error' });
+    console.error('Function error:', err);
+    return res.status(500).json({ 
+      error: err?.message || 'Unknown error',
+      type: err?.constructor?.name || 'Unknown'
+    });
   }
 }
