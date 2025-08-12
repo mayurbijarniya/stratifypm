@@ -250,8 +250,10 @@ Optimized search query:`;
 
             // Use all available results for comprehensive coverage
             data.results.forEach((result, i) => {
-                context += `**${i + 1}. ${result.title}**\n`;
-                context += `${result.text.substring(0, 400)}\n`;
+                context += `**${i + 1}. ${result.title || 'Untitled'}**\n`;
+                if (result.text) {
+                    context += `${result.text.substring(0, 400)}\n`;
+                }
                 context += `Source: ${result.url}\n`;
                 if (result.publishedDate) {
                     context += `Date: ${result.publishedDate}\n`;
