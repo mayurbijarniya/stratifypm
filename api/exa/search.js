@@ -1,28 +1,26 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://stratifypm.mayur.app',
 ];
 
-function setCORS(req: VercelRequest, res: VercelResponse) {
+function setCORS(req, res) {
   const origin = req.headers.origin || '';
   const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[1];
   const reqHeaders = req.headers['access-control-request-headers'] || 'Content-Type';
   
   res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', reqHeaders as string);
+  res.setHeader('Access-Control-Allow-Headers', reqHeaders);
   res.setHeader('Access-Control-Max-Age', '86400');
   res.setHeader('Vary', 'Origin');
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   try {
-    setCORS(req, res); // ✅ Always set headers first
+    setCORS(req, res);
     
     if (req.method === 'OPTIONS') {
-      return res.status(204).end(); // ✅ Preflight handled here
+      return res.status(204).end();
     }
 
     const apiKey = process.env.VITE_EXA_API_KEY;
@@ -59,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Exa API response length:', text.length);
     
     return res.status(200).send(text);
-  } catch (err: any) {
+  } catch (err) {
     console.error('Function error:', err);
     return res.status(500).json({ 
       error: err?.message || 'Unknown error',
