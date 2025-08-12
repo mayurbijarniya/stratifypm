@@ -285,8 +285,8 @@
   line-height: 1.6;
 }
 
-/* Custom numbered list styling */
-.prose ol li::before {
+/* Custom numbered list styling - only direct children of ol */
+.prose ol > li::before {
   counter-increment: list-counter;
   content: counter(list-counter) ".";
   color: hsl(var(--primary));
