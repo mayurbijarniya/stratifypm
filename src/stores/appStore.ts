@@ -21,6 +21,9 @@ interface AppState {
     abortController: AbortController | null;
   }>;
 
+  // Web search cache status
+  webSearchCacheActive: boolean;
+
   // Files
   uploadedFiles: FileData[];
 
@@ -96,6 +99,7 @@ export const useAppStore = create<AppState>()(
       currentConversationId: null,
       conversationStates: {},
       uploadedFiles: [],
+      webSearchCacheActive: false,
 
       // Expose store globally for AI service access
       ...(typeof window !== 'undefined' && (() => {

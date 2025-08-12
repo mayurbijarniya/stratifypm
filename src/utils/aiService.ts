@@ -60,6 +60,16 @@ export class UnifiedAIService {
   private claudeApiKey: string;
   private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
   private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
+  
+  // Context persistence for web search
+  private webSearchCache: {
+    query: string;
+    context: string;
+    timestamp: number;
+    sessionId: string;
+  } | null = null;
+  
+  private currentSessionId: string = this.generateSessionId();
 
   private constructor() {
     // Get API keys from environment variables
@@ -77,6 +87,45 @@ export class UnifiedAIService {
     console.log('✅ Unified AI service initialized with both Gemini and Claude');
   }
 
+  private generateSessionId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  private isCacheValid(query: string): boolean {
+    if (!this.webSearchCache) return false;
+    
+    // Cache is valid for 10 minutes and same session
+    const cacheAge = Date.now() - this.webSearchCache.timestamp;
+    const isRecent = cacheAge < 10 * 60 * 1000; // 10 minutes
+    const isSameSession = this.webSearchCache.sessionId === this.currentSessionId;
+    
+    // Check if queries are related (simple keyword overlap)
+    const currentKeywords = query.toLowerCase().split(' ').filter(w => w.length > 3);
+    const cachedKeywords = this.webSearchCache.query.toLowerCase().split(' ').filter(w => w.length > 3);
+    const overlap = currentKeywords.filter(k => cachedKeywords.includes(k)).length;
+    const isRelated = overlap >= Math.min(2, currentKeywords.length * 0.3);
+    
+    console.log('🔍 Cache check:', { isRecent, isSameSession, isRelated, overlap });
+    
+    return isRecent && isSameSession && isRelated;
+  }
+
+  private updateCache(query: string, context: string): void {
+    this.webSearchCache = {
+      query,
+      context,
+      timestamp: Date.now(),
+      sessionId: this.currentSessionId
+    };
+    console.log('💾 Updated web search cache for session:', this.currentSessionId);
+  }
+
+  public clearCache(): void {
+    this.webSearchCache = null;
+    this.currentSessionId = this.generateSessionId();
+    console.log('🗑️ Cleared web search cache, new session:', this.currentSessionId);
+  }
+
   // Method to get uploaded files from the app store
   private getUploadedFiles() {
     // Access the store directly to get uploaded files
@@ -91,6 +140,11 @@ export class UnifiedAIService {
       UnifiedAIService.instance = new UnifiedAIService();
     }
     return UnifiedAIService.instance;
+  }
+
+  // Public method to check if cache exists
+  public hasCachedContext(): boolean {
+    return this.webSearchCache !== null && this.isCacheValid(this.webSearchCache.query);
   }
 
   // Unified classification method
@@ -483,7 +537,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
         return rejectionMessage;
       }
 
-      // STEP 3: Check if web search is needed (simple keyword detection)
+      // STEP 3: Check if web search is needed (with caching)
       let webContext = '';
       if (isPMRelated) {
         console.log('🔍 Checking if web search is needed for:', message);
@@ -491,9 +545,20 @@ Remember: You're having an ongoing conversation, not answering isolated question
         console.log('🔍 Web search needed:', needsSearch);
         
         if (needsSearch) {
-          console.log('🔍 Performing web search...');
-          webContext = await exaSearch.search(message);
-          console.log('🔍 Web search context length:', webContext.length);
+          // Check if we can use cached context
+          if (this.isCacheValid(message)) {
+            webContext = this.webSearchCache!.context;
+            console.log('♻️ Using cached web search context (length:', webContext.length, ')');
+          } else {
+            console.log('🔍 Performing new web search...');
+            webContext = await exaSearch.search(message);
+            console.log('🔍 Web search context length:', webContext.length);
+            
+            // Cache the results for follow-up questions
+            if (webContext.length > 0) {
+              this.updateCache(message, webContext);
+            }
+          }
         }
       }
 
