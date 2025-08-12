@@ -479,14 +479,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onChange={handleFileInputChange}
           className="hidden"
         />
-        {/* Try Suggestions - Only show for new conversations */}
+        {/* Try Suggestions - Only show for new conversations (hidden on small screens) */}
         {isNewConversation && !isEmptyConversation && (
           <div className="mb-4 text-center">
             <div className="text-sm text-muted-foreground">
               <span className="font-medium">Try: </span>
               <button
                 onClick={() => setMessage(suggestionText)}
-                className="text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer transition-colors duration-200"
+                className="hidden sm:inline text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer transition-colors duration-200"
               >
                 {suggestionText}
                 {isSuggestionTyping ? (
@@ -557,7 +557,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about product strategy, roadmapping, user research, or any PM topic..."
                 disabled={isLoading}
-                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground placeholder-muted-foreground disabled:opacity-50 transition-all duration-200 text-base leading-relaxed min-h-[56px] auto-resize z-10"
+                className="relative w-full px-4 sm:px-6 py-3 sm:py-4 resize-none focus:outline-none bg-transparent text-foreground placeholder-muted-foreground disabled:opacity-50 transition-all duration-200 text-sm sm:text-base leading-relaxed min-h-[44px] sm:min-h-[56px] auto-resize z-10"
                 rows={1}
               />
             </div>

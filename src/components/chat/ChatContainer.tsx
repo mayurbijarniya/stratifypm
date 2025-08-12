@@ -87,10 +87,10 @@ export const ChatContainer: React.FC = () => {
               </div>
             </div>
 
-            {/* Suggested Questions - Single line */}
+            {/* Suggested Questions - compact on mobile, full on desktop */}
             <div className="mb-6">
               <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
-                <span className="text-sm text-muted-foreground font-medium mr-2">
+                <span className="text-xs sm:text-sm text-muted-foreground font-medium mr-2">
                   Try:
                 </span>
                 {[
@@ -108,7 +108,7 @@ export const ChatContainer: React.FC = () => {
                       });
                       window.dispatchEvent(event);
                     }}
-                    className="px-3 py-1.5 text-xs bg-muted hover:bg-primary/10 hover:text-primary rounded-full border border-border hover:border-primary/30 transition-all duration-200 hover:scale-105 whitespace-nowrap"
+                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs bg-muted hover:bg-primary/10 hover:text-primary rounded-full border border-border hover:border-primary/30 transition-all duration-200 hover:scale-105 whitespace-nowrap ${index > 1 ? 'hidden sm:inline-flex' : ''}`}
                   >
                     {suggestion}
                   </button>
