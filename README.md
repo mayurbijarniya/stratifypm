@@ -5,8 +5,9 @@
 ## ✨ Features
 
 - 🤖 **Dual AI Models** - Claude 4.0 Sonnet and Gemini 2.5 Pro
+- �  **Real-time Web Search** - Current market data and trends via Exa AI
 - 🎯 **PM Frameworks** - RICE scoring, competitive analysis, user research
-- 📊 **File Analysis** - Upload CSV/Excel/JSON for insights
+- �  **File Analysis** - Upload CSV/Excel/JSON for insights
 - 💬 **Conversation Memory** - Persistent chat history
 - 🌙 **Dark/Light Mode** - Professional UI
 - 📱 **Mobile Optimized** - Responsive design
@@ -35,10 +36,12 @@
 |----------|-------------|----------|
 | `VITE_DEEPINFRA_API_KEY` | DeepInfra API key for Claude | ✅ |
 | `VITE_GEMINI_API_KEY` | Google AI Studio API key for Gemini | ✅ |
+| `VITE_EXA_API_KEY` | Exa AI API key for web search | ✅ |
 
 Get API keys:
 - **DeepInfra**: [Dashboard](https://deepinfra.com/dash/api_keys)
 - **Google AI Studio**: [API Keys](https://makersuite.google.com/app/apikey)
+- **Exa AI**: [Dashboard](https://exa.ai/)
 
 ## 🔒 Security
 

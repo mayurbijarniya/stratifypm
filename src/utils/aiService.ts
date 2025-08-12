@@ -1,6 +1,17 @@
 import type { AIModel } from '../components/ui/ModelSelector';
 import { exaSearch } from './exaSearch';
 
+function safeGeminiText(data: any): string {
+  try {
+    const parts = data?.candidates?.[0]?.content?.parts;
+    if (Array.isArray(parts)) {
+      const texts = parts.map((p: any) => p?.text).filter(Boolean);
+      if (texts.length) return texts.join('\n').trim();
+    }
+  } catch {}
+  return '';
+}
+
 // Gemini response interface
 interface GeminiResponse {
   candidates: Array<{
@@ -197,13 +208,12 @@ Answer (one word only):`;
     }
 
     const data: GeminiResponse = await response.json();
+    const classificationResult = safeGeminiText(data).toLowerCase().trim();
     
-    if (!data.candidates || data.candidates.length === 0) {
-      console.error('No Gemini classification response');
-      return true;
+    if (!classificationResult) {
+      console.warn('Gemini classification returned empty text; allowing by default');
+      return true; // keep behavior: allow if classifier fails
     }
-
-    const classificationResult = data.candidates[0].content.parts[0].text.toLowerCase().trim();
     
     console.log(`🔍 Gemini classification result: "${classificationResult}"`);
     
@@ -640,47 +650,64 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
       ]
     };
 
-    const response = await fetch(`${this.geminiBaseUrl}?key=${this.geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      signal: abortSignal,
-    });
+    // Retry logic for empty responses
+    let responseText = '';
+    let finishReason = '';
+    let retryCount = 0;
+    const maxRetries = 1;
 
-    // Check if request was aborted after fetch
-    if (abortSignal?.aborted) {
-      throw new Error('Request aborted');
-    }
+    while (retryCount <= maxRetries) {
+      const response = await fetch(`${this.geminiBaseUrl}?key=${this.geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: abortSignal,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error response:', errorText);
-      
-      if (response.status === 400) {
-        throw new Error('Invalid request. Please check your message and try again.');
-      } else if (response.status === 401) {
-        throw new Error('API key is invalid. Please check your configuration.');
-      } else if (response.status === 403) {
-        throw new Error('API access forbidden. Please check your API key permissions.');
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-      } else if (response.status >= 500) {
-        throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
+      // Check if request was aborted after fetch
+      if (abortSignal?.aborted) {
+        throw new Error('Request aborted');
       }
-      
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
 
-    const data: GeminiResponse = await response.json();
-    
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response from AI service. Please try again.');
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Gemini API error response:', errorText);
+        
+        if (response.status === 400) {
+          throw new Error('Invalid request. Please check your message and try again.');
+        } else if (response.status === 401) {
+          throw new Error('API key is invalid. Please check your configuration.');
+        } else if (response.status === 403) {
+          throw new Error('API access forbidden. Please check your API key permissions.');
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+        } else if (response.status >= 500) {
+          throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
+        }
+        
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
 
-    let responseText = data.candidates[0].content.parts[0].text;
-    const finishReason = data.candidates[0].finishReason;
+      const data: GeminiResponse = await response.json();
+      responseText = safeGeminiText(data);
+      finishReason = data?.candidates?.[0]?.finishReason || '';
+
+      // If we got a response, break out of retry loop
+      if (responseText) {
+        break;
+      }
+
+      // If no response and we haven't hit max retries, try again
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Gemini returned empty response, retrying... (attempt ${retryCount + 2})`);
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+      } else {
+        throw new Error('No response from AI service after retry. Please try again.');
+      }
+    }
 
     // Handle different finish reasons
     if (finishReason === 'MAX_TOKENS') {

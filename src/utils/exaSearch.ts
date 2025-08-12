@@ -16,10 +16,33 @@ interface ExaResponse {
 class ExaSearchService {
     private static instance: ExaSearchService;
     private apiKey: string;
-    private baseUrl = 'https://api.exa.ai/search';
+    private baseUrl: string;
+
+    private useDirectApi: boolean;
+
+    private getApiConfig(): { baseUrl: string; useDirectApi: boolean } {
+        const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+        
+        if (isLocalhost) {
+            // Use direct Exa API for localhost (no CORS issue)
+            return {
+                baseUrl: 'https://api.exa.ai/search',
+                useDirectApi: true
+            };
+        } else {
+            // Use proxy for production
+            return {
+                baseUrl: '/api/exa/search',
+                useDirectApi: false
+            };
+        }
+    }
 
     private constructor() {
         this.apiKey = import.meta.env.VITE_EXA_API_KEY || '';
+        const config = this.getApiConfig();
+        this.baseUrl = config.baseUrl;
+        this.useDirectApi = config.useDirectApi;
     }
 
     static getInstance(): ExaSearchService {
@@ -73,7 +96,7 @@ Answer:`;
         } catch (error) {
             console.error('Search detection failed:', error);
         }
-        
+
         // Fallback to keyword detection
         return this.keywordBasedDetection(message);
     }
@@ -87,28 +110,28 @@ Answer:`;
             // Time-based
             'latest', 'recent', 'current', 'new', 'updated', 'fresh', 'today', 'now', 'this year',
             '2024', '2025', 'recently', 'just released', 'just announced', 'breaking',
-            
+
             // Market & Business
             'market trends', 'market analysis', 'competitive analysis', 'competitor analysis',
             'market research', 'industry trends', 'market size', 'market share', 'benchmarking',
             'pricing trends', 'pricing analysis', 'revenue trends', 'business model trends',
-            
+
             // News & Events
             'news', 'announcement', 'launch', 'release', 'update', 'acquisition', 'merger',
             'funding', 'investment', 'ipo', 'partnership', 'deal', 'agreement',
-            
+
             // Technology & Products
             'product launch', 'feature release', 'version', 'beta', 'alpha', 'rollout',
             'ai trends', 'tech trends', 'software trends', 'platform updates',
-            
+
             // Research & Data
             'study', 'report', 'survey', 'research', 'statistics', 'data', 'insights',
             'analysis', 'findings', 'results', 'metrics', 'performance data',
-            
+
             // Comparative & Lists
             'compare', 'comparison', 'vs', 'versus', 'alternatives', 'options',
             'list of', 'top', 'best', 'leading', 'popular', 'trending',
-            
+
             // Company-specific
             'google', 'apple', 'microsoft', 'amazon', 'meta', 'netflix', 'spotify',
             'uber', 'airbnb', 'slack', 'zoom', 'figma', 'notion', 'stripe', 'shopify',
@@ -121,7 +144,7 @@ Answer:`;
     // Main search detection method (simple and reliable)
     shouldSearch(message: string): boolean {
         if (!this.isAvailable()) return false;
-        
+
         // Use reliable keyword-based detection that was working before
         return this.keywordBasedDetection(message);
     }
@@ -146,23 +169,23 @@ Optimized search query:`;
 
             if (response.ok) {
                 const data = await response.json();
-                const optimizedQuery = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-                console.log('🔍 Query optimization result:', optimizedQuery);
-                return optimizedQuery || userQuery.substring(0, 100);
+                const optimizedQuery = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+                console.log('🔍 Query optimization result:', optimizedQuery || '(fallback)');
+                return optimizedQuery || userQuery.slice(0, 200);
             } else {
                 console.error('🔍 Query optimization API error:', response.status);
             }
         } catch (error) {
             console.error('🔍 Query optimization failed:', error);
         }
-        
-        return userQuery.substring(0, 100);
+
+        return userQuery.slice(0, 200);
     }
 
     // Enhanced search with 25 results for comprehensive coverage
     async search(query: string): Promise<string> {
         console.log('🔍 Search method called with query:', query);
-        
+
         if (!this.isAvailable()) {
             console.log('🔍 Search not available - no API key');
             return '';
@@ -173,20 +196,38 @@ Optimized search query:`;
             // Use Gemini to optimize the search query
             const optimizedQuery = await this.optimizeSearchQuery(query);
             console.log('🔍 Optimized query:', optimizedQuery);
-            
+
+            // Prepare headers based on environment
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+
+            // Add API key for direct Exa API calls (localhost)
+            if (this.useDirectApi) {
+                headers['x-api-key'] = this.apiKey;
+            }
+
+            // Prepare body based on environment
+            const body = this.useDirectApi 
+                ? JSON.stringify({
+                    query: optimizedQuery,
+                    type: 'neural',
+                    numResults: 25,
+                    contents: { text: true },
+                    livecrawl: 'always'
+                  })
+                : JSON.stringify({
+                    query: optimizedQuery,
+                    numResults: 25
+                  });
+
+            console.log('🔍 Using', this.useDirectApi ? 'direct Exa API' : 'proxy API');
+
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': this.apiKey,
-                },
-                body: JSON.stringify({
-                    query: optimizedQuery,
-                    type: 'neural', // Better for comprehensive results
-                    numResults: 25, // Maximum results for same cost ($5/1k searches)
-                    contents: { text: true },
-                    livecrawl: 'always' // Get the freshest data
-                }),
+                mode: 'cors',
+                headers,
+                body,
             });
 
             console.log('🔍 Exa API response status:', response.status);
@@ -206,7 +247,7 @@ Optimized search query:`;
 
             // Format comprehensive results for AI
             let context = '\n\n🌐 **CURRENT MARKET INTELLIGENCE** (Live Data):\n';
-            
+
             // Use all available results for comprehensive coverage
             data.results.forEach((result, i) => {
                 context += `**${i + 1}. ${result.title}**\n`;
