@@ -5,9 +5,9 @@
 ## ✨ Features
 
 - 🤖 **Dual AI Models** - Claude 4.0 Sonnet and Gemini 2.5 Pro
-- �  **Real-time Web Search** - Current market data and trends via Exa AI
+-   **Real-time Web Search** - Current market data and trends via Exa AI
 - 🎯 **PM Frameworks** - RICE scoring, competitive analysis, user research
-- �  **File Analysis** - Upload CSV/Excel/JSON for insights
+-   **File Analysis** - Upload CSV/Excel/JSON for insights
 - 💬 **Conversation Memory** - Persistent chat history
 - 🌙 **Dark/Light Mode** - Professional UI
 - 📱 **Mobile Optimized** - Responsive design
