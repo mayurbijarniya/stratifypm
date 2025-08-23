@@ -1,6 +1,6 @@
 # StratifyPM
 
-> AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Choose between Claude 4.0 Sonnet and Gemini 2.5 Pro models.
+> AI--powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Choose between Claude 4.0 Sonnet and Gemini 2.5 Pro models.
 
 ## ✨ Features
 
