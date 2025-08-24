@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Paperclip, Square, ChevronDown, Upload, X } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  Square,
+  ChevronDown,
+  Upload,
+  X,
+  Mic,
+  MicOff,
+  ArrowUp,
+} from "lucide-react";
 import { FileSpreadsheet, FileText, File as FileIcon } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { aiService } from "../../utils/aiService";
@@ -85,9 +95,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       }
     };
 
-    window.addEventListener('setSuggestion', handleSuggestion as EventListener);
+    window.addEventListener("setSuggestion", handleSuggestion as EventListener);
     return () => {
-      window.removeEventListener('setSuggestion', handleSuggestion as EventListener);
+      window.removeEventListener(
+        "setSuggestion",
+        handleSuggestion as EventListener
+      );
     };
   }, []);
 
@@ -114,56 +127,63 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   }, []);
 
   // File selection handler
-  const handleFileSelection = useCallback((files: File[]) => {
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        
-        // Parse content based on file type
-        let parsedContent: any[] = [];
-        try {
-          if (file.name.endsWith('.json')) {
-            const jsonData = JSON.parse(content);
-            parsedContent = Array.isArray(jsonData) ? jsonData : [jsonData];
-          } else if (file.name.endsWith('.csv')) {
-            // Simple CSV parsing - split by lines and commas
-            const lines = content.split('\n').filter(line => line.trim());
-            const headers = lines[0]?.split(',') || [];
-            parsedContent = lines.slice(1).map(line => {
-              const values = line.split(',');
-              const obj: any = {};
-              headers.forEach((header, index) => {
-                obj[header.trim()] = values[index]?.trim() || '';
+  const handleFileSelection = useCallback(
+    (files: File[]) => {
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target?.result as string;
+
+          // Parse content based on file type
+          let parsedContent: any[] = [];
+          try {
+            if (file.name.endsWith(".json")) {
+              const jsonData = JSON.parse(content);
+              parsedContent = Array.isArray(jsonData) ? jsonData : [jsonData];
+            } else if (file.name.endsWith(".csv")) {
+              // Simple CSV parsing - split by lines and commas
+              const lines = content.split("\n").filter((line) => line.trim());
+              const headers = lines[0]?.split(",") || [];
+              parsedContent = lines.slice(1).map((line) => {
+                const values = line.split(",");
+                const obj: any = {};
+                headers.forEach((header, index) => {
+                  obj[header.trim()] = values[index]?.trim() || "";
+                });
+                return obj;
               });
-              return obj;
-            });
-          } else {
-            // For text files, split by lines
-            parsedContent = content.split('\n').filter(line => line.trim());
+            } else {
+              // For text files, split by lines
+              parsedContent = content.split("\n").filter((line) => line.trim());
+            }
+          } catch (error) {
+            console.error("Error parsing file:", error);
+            parsedContent = [content]; // Fallback to raw content
           }
-        } catch (error) {
-          console.error('Error parsing file:', error);
-          parsedContent = [content]; // Fallback to raw content
+
+          // Add file to store
+          addFile({
+            name: file.name,
+            type: file.type,
+            content: parsedContent,
+            size: file.size,
+            processed: true,
+          });
+        };
+
+        if (
+          file.type.includes("text") ||
+          file.name.endsWith(".csv") ||
+          file.name.endsWith(".json")
+        ) {
+          reader.readAsText(file);
+        } else {
+          reader.readAsDataURL(file);
         }
-        
-        // Add file to store
-        addFile({
-          name: file.name,
-          type: file.type,
-          content: parsedContent,
-          size: file.size,
-          processed: true
-        });
-      };
-      
-      if (file.type.includes('text') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
-        reader.readAsText(file);
-      } else {
-        reader.readAsDataURL(file);
-      }
-    });
-  }, [addFile]);
+      });
+    },
+    [addFile]
+  );
 
   // Handle file input click
   const handleFileInputClick = () => {
@@ -174,7 +194,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     const files = Array.from(e.target.files || []);
     handleFileSelection(files);
     // Reset input
-    e.target.value = '';
+    e.target.value = "";
   };
 
   // Animation for suggestions
@@ -237,9 +257,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       if (lastMessage.role !== "user") return;
 
       // Check if there's already an assistant message after the last user message
-      const userMessages = conversation.messages.filter(msg => msg.role === "user");
-      const assistantMessages = conversation.messages.filter(msg => msg.role === "assistant");
-      
+      const userMessages = conversation.messages.filter(
+        (msg) => msg.role === "user"
+      );
+      const assistantMessages = conversation.messages.filter(
+        (msg) => msg.role === "assistant"
+      );
+
       // If we have equal or more assistant messages than user messages, don't make another call
       if (assistantMessages.length >= userMessages.length) {
         setConversationLoading(conversationId, false);
@@ -359,7 +383,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
     // Set loading state (this will trigger the AI response via useEffect)
     setConversationLoading(targetConversationId, true);
-    
+
     // Reset submitting state after a short delay
     setTimeout(() => setIsSubmitting(false), 1000);
   };
@@ -400,8 +424,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     setMessage(e.target.value);
     adjustTextareaHeight();
   };
-
-
 
   const getFileIcon = (type: string) => {
     if (
@@ -446,26 +468,29 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const isEmptyConversation = !conversationId;
 
   return (
-    <div 
+    <div
       ref={dropZoneRef}
       className={`transition-all duration-500 bg-background ${
-        isEmptyConversation 
-          ? 'relative max-w-2xl mx-auto w-full p-4' 
-          : 'relative w-full p-4'
-      } ${isDragOver ? 'drag-over' : ''}`}
+        isEmptyConversation
+          ? "relative max-w-2xl mx-auto w-full p-4"
+          : "relative w-full p-4"
+      } ${isDragOver ? "drag-over" : ""}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div className="max-w-4xl mx-auto px-4">
-        
         {/* Drag overlay */}
         {isDragOver && (
           <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-2xl flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="text-center">
               <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-primary font-medium">Drop files here to upload</p>
-              <p className="text-primary/70 text-sm">Supports CSV, JSON, TXT files</p>
+              <p className="text-primary font-medium">
+                Drop files here to upload
+              </p>
+              <p className="text-primary/70 text-sm">
+                Supports CSV, JSON, TXT files
+              </p>
             </div>
           </div>
         )}
@@ -525,7 +550,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                         {file.name}
                       </p>
                       <p className="text-xs text-primary/70 truncate">
-                        {typeLabel} • {Array.isArray(file.content) ? file.content.length : 1} records
+                        {typeLabel} •{" "}
+                        {Array.isArray(file.content) ? file.content.length : 1}{" "}
+                        records
                       </p>
                     </div>
 
@@ -542,157 +569,194 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           </div>
         )}
 
-
-
         <form onSubmit={handleSubmit} className="relative">
-          {/* Unified Container */}
-          <div className="bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 relative overflow-hidden">
-            {/* Text Input Area - Top Section */}
-            <div className="relative overflow-hidden rounded-t-2xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.02] to-primary/[0.04] opacity-0 focus-within:opacity-100 transition-opacity duration-300"></div>
+          {/* Modern Chat Input Container */}
+          <div className="relative bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/30 overflow-hidden">
+            {/* Gradient Background Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-primary/[0.03] opacity-0 focus-within:opacity-100 transition-opacity duration-500"></div>
+
+            {/* Text Input Area */}
+            <div className="relative">
               <textarea
                 ref={textareaRef}
                 value={message}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about product strategy, roadmapping, user research, or any PM topic..."
+                placeholder="Ask about product management..."
                 disabled={isLoading}
-                className="relative w-full px-4 sm:px-6 py-3 sm:py-4 resize-none focus:outline-none bg-transparent text-foreground placeholder-muted-foreground disabled:opacity-50 transition-all duration-200 text-sm sm:text-base leading-relaxed min-h-[44px] sm:min-h-[56px] auto-resize z-10"
+                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent"
                 rows={1}
               />
-            </div>
-
-            {/* Button Row - Bottom Section */}
-            <div className="flex items-center px-4 py-3 border-t border-border">
-              {/* File Upload Button */}
-              <button
-                type="button"
-                onClick={handleFileInputClick}
-                disabled={isLoading}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group focus:outline-none focus:ring-2 focus:ring-ring"
-                title="Upload files (CSV, JSON, TXT)"
-              >
-                <Paperclip className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-              </button>
-
-              {/* Spacer */}
-              <div className="flex-1"></div>
-
-              {/* Model Selector */}
-              <div ref={modelSelectorRef} className="relative mr-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModelSelector(!showModelSelector)}
-                  disabled={isLoading}
-                  className="flex items-center justify-between px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <div className="flex items-center">
-                    <img
-                      src={
-                        selectedModel === "claude"
-                          ? "/claude-color.svg"
-                          : "/gemini-color.svg"
-                      }
-                      alt={selectedModel === "claude" ? "Claude" : "Gemini"}
-                      className="w-4 h-4 mr-2"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                      }}
-                    />
-                    <span className="text-xs">
-                      {selectedModel === "claude"
-                        ? "Claude 4.0 Sonnet"
-                        : "Gemini 2.5 Pro"}
-                    </span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 ml-2" />
-                </button>
-
-                {showModelSelector && (
-                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedModel("claude");
-                        setShowModelSelector(false);
-                      }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-t-lg"
-                    >
-                      <img
-                        src="/claude-color.svg"
-                        alt="Claude"
-                        className="w-4 h-4 mr-2"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                        }}
-                      />
-                      <span>Claude 4.0 Sonnet</span>
-                      {selectedModel === "claude" && (
-                        <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedModel("gemini");
-                        setShowModelSelector(false);
-                      }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
-                    >
-                      <img
-                        src="/gemini-color.svg"
-                        alt="Gemini"
-                        className="w-4 h-4 mr-2"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                        }}
-                      />
-                      <span>Gemini 2.5 Pro</span>
-                      {selectedModel === "gemini" && (
-                        <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* File Upload Icon - Show when files attached */}
-              {uploadedFiles.length > 0 && (
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center mr-2">
-                  <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+              {/* Desktop-only placeholder overlay */}
+              {!message && (
+                <div className="hidden sm:block absolute left-6 top-4 pointer-events-none text-muted-foreground/70 text-base z-5">
+                  Ask about product strategy, roadmapping, user research, or any PM topic...
                 </div>
               )}
+            </div>
 
-              {/* Send/Stop Button */}
-              <button
-                type={isLoading ? "button" : "submit"}
-                onClick={isLoading ? handleStop : undefined}
-                disabled={
-                  (!isLoading && !message.trim() && uploadedFiles.length === 0) || isSubmitting
-                }
-                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 transform active:scale-95 shadow-sm ${
-                  isLoading
-                    ? "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:scale-105 shadow-red-500/25"
-                    : message.trim() || uploadedFiles.length > 0
-                    ? "text-white bg-primary hover:bg-primary/90 hover:scale-105 shadow-primary/25"
-                    : "text-muted-foreground bg-muted cursor-not-allowed"
-                }`}
-              >
-                {isLoading ? (
-                  <Square className="w-4 h-4 fill-current" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </button>
+            {/* Controls Bar - No divider line */}
+            <div className="relative flex items-center justify-between px-4 py-3 bg-transparent">
+              {/* Left Side Controls */}
+              <div className="flex items-center gap-2">
+                {/* Paperclip - File Upload */}
+                <button
+                  type="button"
+                  onClick={handleFileInputClick}
+                  disabled={isLoading}
+                  className="group relative flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/60 hover:bg-secondary/80 text-muted-foreground hover:text-primary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm"
+                  title="Upload files (CSV, JSON, TXT)"
+                >
+                  <Paperclip className="w-4 h-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                  {uploadedFiles.length > 0 && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-[8px] text-white font-bold">
+                        {uploadedFiles.length}
+                      </span>
+                    </div>
+                  )}
+                </button>
+
+                {/* Model Selector */}
+                <div ref={modelSelectorRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowModelSelector(!showModelSelector)}
+                    disabled={isLoading}
+                    className="group flex items-center gap-2 px-3 py-2 bg-secondary/60 hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      {/* Model Icon */}
+                      <div className="relative w-5 h-5 rounded-lg overflow-hidden bg-white/90 flex items-center justify-center shadow-sm">
+                        <img
+                          src={
+                            selectedModel === "claude"
+                              ? "/claude-color.svg"
+                              : "/gemini-color.svg"
+                          }
+                          alt={selectedModel === "claude" ? "Claude" : "Gemini"}
+                          className="w-4 h-4"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                          }}
+                        />
+                      </div>
+                      {/* Model Name */}
+                      <span className="text-sm font-medium text-foreground hidden sm:block">
+                        {selectedModel === "claude"
+                          ? "Claude 4.0"
+                          : "Gemini 2.5"}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`w-3 h-3 text-muted-foreground transition-transform duration-300 ${
+                        showModelSelector ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Model Selector Dropdown - Simple original design */}
+                  {showModelSelector && (
+                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedModel("claude");
+                          setShowModelSelector(false);
+                        }}
+                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-t-lg"
+                      >
+                        <img
+                          src="/claude-color.svg"
+                          alt="Claude"
+                          className="w-4 h-4 mr-2"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                          }}
+                        />
+                        <span>Claude 4.0 Sonnet</span>
+                        {selectedModel === "claude" && (
+                          <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedModel("gemini");
+                          setShowModelSelector(false);
+                        }}
+                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
+                      >
+                        <img
+                          src="/gemini-color.svg"
+                          alt="Gemini"
+                          className="w-4 h-4 mr-2"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                          }}
+                        />
+                        <span>Gemini 2.5 Pro</span>
+                        {selectedModel === "gemini" && (
+                          <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Side Controls */}
+              <div className="flex items-center gap-2">
+                {/* Microphone Button - Placeholder for future implementation */}
+                <button
+                  type="button"
+                  disabled={true} // Disabled for now as mentioned
+                  className="group relative flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/60 text-muted-foreground/50 cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
+                  title="Voice input (Coming soon)"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+
+                {/* Send/Stop Button */}
+                <button
+                  type={isLoading ? "button" : "submit"}
+                  onClick={isLoading ? handleStop : undefined}
+                  disabled={
+                    (!isLoading &&
+                      !message.trim() &&
+                      uploadedFiles.length === 0) ||
+                    isSubmitting
+                  }
+                  className={`group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 transform active:scale-95 ${
+                    isLoading
+                      ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                      : message.trim() || uploadedFiles.length > 0
+                      ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105"
+                      : "bg-secondary/60 text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  {isLoading ? (
+                    <Square className="w-4 h-4 fill-current" />
+                  ) : (
+                    <ArrowUp className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                  )}
+
+                  {/* Subtle glow effect for active state */}
+                  {(message.trim() || uploadedFiles.length > 0) &&
+                    !isLoading && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary to-primary/90 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    )}
+                </button>
+              </div>
             </div>
           </div>
         </form>
 
-        {/* Compact Footer info */}
-        <div className="flex items-center justify-center mt-3 text-xs text-muted-foreground">
+        {/* Compact Footer info - Hidden on mobile */}
+        <div className="hidden sm:flex items-center justify-center mt-3 text-xs text-muted-foreground">
           Powered by{" "}
           {selectedModel === "claude" ? "Claude 4.0 Sonnet" : "Gemini 2.5 Pro"}.
           AI can make mistakes. Always verify important information.
