@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-  Send,
   Paperclip,
   Square,
   ChevronDown,
@@ -13,6 +12,7 @@ import {
 import { FileSpreadsheet, FileText, File as FileIcon } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { aiService } from "../../utils/aiService";
+import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 
 interface MessageInputProps {
   conversationId: string;
@@ -29,6 +29,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const modelSelectorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // Speech recognition
+  const {
+    transcript,
+    isListening,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+    error: speechError,
+  } = useSpeechRecognition();
 
   const {
     addMessage,
@@ -361,6 +372,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       message.trim() ||
       "I've uploaded files for analysis. Please analyze the data and provide insights.";
     setMessage("");
+    resetTranscript();
 
     // Reset textarea height
     if (textareaRef.current) {
@@ -424,6 +436,30 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     setMessage(e.target.value);
     adjustTextareaHeight();
   };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening(message);
+    }
+  };
+
+  // Update textarea value with speech transcript
+  useEffect(() => {
+    if (transcript) {
+      setMessage(transcript);
+      adjustTextareaHeight();
+    }
+  }, [transcript]);
+
+  // Show speech error
+  useEffect(() => {
+    if (speechError) {
+      console.error("Speech recognition error:", speechError);
+      // You can add a toast notification here if you have one
+    }
+  }, [speechError]);
 
   const getFileIcon = (type: string) => {
     if (
@@ -582,15 +618,25 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 value={message}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about product management..."
+                placeholder={
+                  isListening
+                    ? "Listening..."
+                    : "Ask about product management..."
+                }
                 disabled={isLoading}
                 className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent"
                 rows={1}
               />
               {/* Desktop-only placeholder overlay */}
               {!message && (
-                <div className="hidden sm:block absolute left-6 top-4 pointer-events-none text-muted-foreground/70 text-base z-5">
-                  Ask about product strategy, roadmapping, user research, or any PM topic...
+                <div
+                  className={`hidden sm:block absolute left-6 top-4 pointer-events-none text-base z-5 ${
+                    isListening ? "text-red-500" : "text-muted-foreground/70"
+                  }`}
+                >
+                  {isListening
+                    ? "Listening..."
+                    : "Ask about product strategy, roadmapping, user research, or any PM topic..."}
                 </div>
               )}
             </div>
@@ -710,15 +756,29 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
               {/* Right Side Controls */}
               <div className="flex items-center gap-2">
-                {/* Microphone Button - Placeholder for future implementation */}
-                <button
-                  type="button"
-                  disabled={true} // Disabled for now as mentioned
-                  className="group relative flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/60 text-muted-foreground/50 cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
-                  title="Voice input (Coming soon)"
-                >
-                  <Mic className="w-4 h-4" />
-                </button>
+                {/* Microphone Button - Speech to Text */}
+                {isSpeechSupported && (
+                  <button
+                    type="button"
+                    onClick={handleMicClick}
+                    disabled={isLoading}
+                    className={`group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm ${
+                      isListening
+                        ? "bg-red-500/15 border border-red-500 text-red-500 animate-pulse"
+                        : "bg-secondary/60 hover:bg-secondary/80 text-muted-foreground hover:text-primary"
+                    }`}
+                    title={isListening ? "Stop recording" : "Start voice input"}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-4 h-4" />
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                    {isListening && (
+                      <div className="absolute inset-1 rounded-lg border border-red-500 animate-ping opacity-50" />
+                    )}
+                  </button>
+                )}
 
                 {/* Send/Stop Button */}
                 <button
