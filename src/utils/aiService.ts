@@ -58,7 +58,7 @@ export class UnifiedAIService {
   private static instance: UnifiedAIService;
   private geminiApiKey: string;
   private claudeApiKey: string;
-  private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
+  private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
   
   // Context persistence for web search
