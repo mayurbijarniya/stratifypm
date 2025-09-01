@@ -24,14 +24,14 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.VITE_EXA_API_KEY;
-    console.log('API Key check:', { hasKey: !!apiKey, keyLength: apiKey?.length });
+    // console.log('API Key check:', { hasKey: !!apiKey, keyLength: apiKey?.length });
     
     if (!apiKey) {
       console.error('Missing VITE_EXA_API_KEY environment variable');
       return res.status(500).json({ error: 'Missing API key configuration' });
     }
 
-    console.log('Making request to Exa API with body:', req.body);
+    // console.log('Making request to Exa API with body:', req.body);
 
     const upstream = await fetch('https://api.exa.ai/search', {
       method: 'POST',
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       body: JSON.stringify(req.body),
     });
 
-    console.log('Exa API response status:', upstream.status);
+    // console.log('Exa API response status:', upstream.status);
 
     if (!upstream.ok) {
       const errorText = await upstream.text();
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     }
 
     const text = await upstream.text();
-    console.log('Exa API response length:', text.length);
+    // console.log('Exa API response length:', text.length);
     
     return res.status(200).send(text);
   } catch (err) {

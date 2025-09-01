@@ -286,10 +286,10 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const conversationState = state.conversationStates[conversationId];
 
-          console.log(`Stopping AI for conversation ${conversationId}`, conversationState);
+          // console.log(`Stopping AI for conversation ${conversationId}`, conversationState);
 
           if (conversationState?.abortController) {
-            console.log('Aborting request...');
+            // console.log('Aborting request...');
             conversationState.abortController.abort();
           }
 

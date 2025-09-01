@@ -330,7 +330,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       } catch (error) {
         // Don't show error if request was aborted
         if (error instanceof Error && error.message === "Request aborted") {
-          console.log("Request was aborted by user");
+          // console.log("Request was aborted by user");
           setConversationStreaming(conversationId, null);
           return;
         }
@@ -362,11 +362,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     // Prevent double submissions
     setIsSubmitting(true);
 
-    console.log("Submit triggered", {
-      message: message.trim(),
-      uploadedFiles: uploadedFiles.length,
-      isLoading,
-    });
+    // console.log("Submit triggered", {
+    //   message: message.trim(),
+    //   uploadedFiles: uploadedFiles.length,
+    //   isLoading,
+    // });
 
     const userMessage =
       message.trim() ||
@@ -401,7 +401,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleStop = () => {
-    console.log(`Stop button clicked for conversation ${conversationId}`);
+    // console.log(`Stop button clicked for conversation ${conversationId}`);
 
     // Immediately clear streaming to stop visual output
     setConversationStreaming(conversationId, null);
@@ -409,7 +409,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     // Stop the AI processing
     stopConversationAI(conversationId);
 
-    console.log(`AI response stopped for conversation ${conversationId}`);
+    // console.log(`AI response stopped for conversation ${conversationId}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
