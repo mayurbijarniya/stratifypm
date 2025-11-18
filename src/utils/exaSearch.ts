@@ -88,10 +88,10 @@ Answer:`;
             if (response.ok) {
                 const data = await response.json();
                 const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
-                // console.log('🔍 Search detection result:', result, 'for query:', message);
+                // console.log('Search detection result:', result, 'for query:', message);
                 return result === 'YES';
             } else {
-                console.error('🔍 Search detection API error:', response.status);
+                console.error('Search detection API error:', response.status);
             }
         } catch (error) {
             console.error('Search detection failed:', error);
@@ -170,13 +170,13 @@ Optimized search query:`;
             if (response.ok) {
                 const data = await response.json();
                 const optimizedQuery = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
-                // console.log('🔍 Query optimization result:', optimizedQuery || '(fallback)');
+                // console.log('Query optimization result:', optimizedQuery || '(fallback)');
                 return optimizedQuery || userQuery.slice(0, 200);
             } else {
-                console.error('🔍 Query optimization API error:', response.status);
+                console.error('Query optimization API error:', response.status);
             }
         } catch (error) {
-            console.error('🔍 Query optimization failed:', error);
+            console.error('Query optimization failed:', error);
         }
 
         return userQuery.slice(0, 200);
@@ -184,18 +184,18 @@ Optimized search query:`;
 
     // Enhanced search with 25 results for comprehensive coverage
     async search(query: string): Promise<string> {
-        // console.log('🔍 Search method called with query:', query);
+        // console.log('Search method called with query:', query);
 
         if (!this.isAvailable()) {
-            // console.log('🔍 Search not available - no API key');
+            // console.log('Search not available - no API key');
             return '';
         }
 
         try {
-            // console.log('🔍 Starting web search process...');
+            // console.log('Starting web search process...');
             // Use Gemini to optimize the search query
             const optimizedQuery = await this.optimizeSearchQuery(query);
-            // console.log('🔍 Optimized query:', optimizedQuery);
+            // console.log('Optimized query:', optimizedQuery);
 
             // Prepare headers based on environment
             const headers: Record<string, string> = {
@@ -221,7 +221,7 @@ Optimized search query:`;
                     numResults: 25
                   });
 
-            // console.log('🔍 Using', this.useDirectApi ? 'direct Exa API' : 'proxy API');
+            // console.log('Using', this.useDirectApi ? 'direct Exa API' : 'proxy API');
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -230,18 +230,18 @@ Optimized search query:`;
                 body,
             });
 
-            // console.log('🔍 Exa API response status:', response.status);
+            // console.log('Exa API response status:', response.status);
 
             if (!response.ok) {
-                console.error('🔍 Exa API error:', response.status, await response.text());
+                console.error('Exa API error:', response.status, await response.text());
                 return '';
             }
 
             const data: ExaResponse = await response.json();
-            // console.log('🔍 Exa API results count:', data.results?.length || 0);
+            // console.log('Exa API results count:', data.results?.length || 0);
 
             if (!data.results || data.results.length === 0) {
-                // console.log('🔍 No results found from Exa API');
+                // console.log('No results found from Exa API');
                 return '';
             }
 

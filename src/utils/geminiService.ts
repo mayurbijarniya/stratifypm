@@ -98,7 +98,7 @@ Answer (one word only):`;
         stream: false
       };
 
-      // console.log('🔍 Sending classification request to Claude...');
+      // console.log('Sending classification request to Claude...');
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -117,7 +117,7 @@ Answer (one word only):`;
       const data: ClaudeResponse = await response.json();
       const result = data.choices[0]?.message?.content?.toLowerCase().trim();
       
-      // console.log('📋 Classification result:', result);
+      // console.log('Classification result:', result);
       return result === 'yes';
     } catch (error) {
       console.error('Classification error:', error);
@@ -130,11 +130,11 @@ Answer (one word only):`;
     this.apiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
     
     if (!this.apiKey) {
-      console.error('🚫 VITE_DEEPINFRA_API_KEY environment variable is required');
+      console.error('VITE_DEEPINFRA_API_KEY environment variable is required');
       throw new Error('DeepInfra API key is required');
     }
     
-    // console.log('✅ Claude service initialized with DeepInfra API');
+    // console.log('Claude service initialized with DeepInfra API');
   }
 
   static getInstance(): ClaudeService {
@@ -222,7 +222,7 @@ You help product managers make better decisions faster through strategic thinkin
         throw new Error('Request aborted');
       }
 
-      // console.log('🚀 Starting Claude classification process...');
+      // console.log('Starting Claude classification process...');
 
       const hasHistory = conversationHistory.length > 0;
 
@@ -230,13 +230,13 @@ You help product managers make better decisions faster through strategic thinkin
       let isPMRelated = true;
 
       if (!hasHistory) {
-        // console.log('🔍 Classifying new question...');
+        // console.log('Classifying new question...');
         isPMRelated = await this.classifyPMQuestion(message);
       }
 
       // STEP 2: If not PM-related, return rejection message
       if (!isPMRelated) {
-        // console.log('❌ Question classified as non-PM');
+        // console.log('Question classified as non-PM');
         const rejectionMessage = "I'm a Product Manager AI assistant. Please ask me questions about product strategy, roadmapping, user research, analytics, or other product management topics.";
         
         // Simulate streaming for rejection message
@@ -259,7 +259,7 @@ You help product managers make better decisions faster through strategic thinkin
       }
 
       // STEP 3: If PM-related, proceed with full response
-      // console.log('✅ Question classified as PM-related, generating response...');
+      // console.log('Question classified as PM-related, generating response...');
 
       // Prepare the conversation messages for Claude
       const messages = [];
@@ -301,7 +301,7 @@ You help product managers make better decisions faster through strategic thinkin
         top_p: 0.9
       };
 
-      // console.log('📤 Sending request to Claude API...');
+      // console.log('Sending request to Claude API...');
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -378,11 +378,11 @@ You help product managers make better decisions faster through strategic thinkin
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'Request aborted') {
-        // console.log('🛑 Request was aborted by user');
+        // console.log('Request was aborted by user');
         throw error;
       }
       
-      console.error('❌ Claude API error:', error);
+      console.error('Claude API error:', error);
       throw new Error(`Failed to get response from Claude: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

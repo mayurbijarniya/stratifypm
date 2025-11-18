@@ -77,14 +77,14 @@ export class UnifiedAIService {
     this.claudeApiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
     
     if (!this.geminiApiKey) {
-      console.error('🚫 VITE_GEMINI_API_KEY environment variable is required for Gemini');
+      console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
     }
     
     if (!this.claudeApiKey) {
-      console.error('🚫 VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
+      console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
     }
     
-    // console.log('✅ Unified AI service initialized with both Gemini and Claude');
+    // console.log('Unified AI service initialized with both Gemini and Claude');
   }
 
   private generateSessionId(): string {
@@ -105,7 +105,7 @@ export class UnifiedAIService {
     const overlap = currentKeywords.filter(k => cachedKeywords.includes(k)).length;
     const isRelated = overlap >= Math.min(2, currentKeywords.length * 0.3);
     
-    // console.log('🔍 Cache check:', { isRecent, isSameSession, isRelated, overlap });
+    // console.log('Cache check:', { isRecent, isSameSession, isRelated, overlap });
     
     return isRecent && isSameSession && isRelated;
   }
@@ -117,13 +117,13 @@ export class UnifiedAIService {
       timestamp: Date.now(),
       sessionId: this.currentSessionId
     };
-    // console.log('💾 Updated web search cache for session:', this.currentSessionId);
+    // console.log('Updated web search cache for session:', this.currentSessionId);
   }
 
   public clearCache(): void {
     this.webSearchCache = null;
     this.currentSessionId = this.generateSessionId();
-    // console.log('🗑️ Cleared web search cache, new session:', this.currentSessionId);
+    // console.log('Cleared web search cache, new session:', this.currentSessionId);
   }
 
   // Method to get uploaded files from the app store
@@ -269,7 +269,7 @@ Answer (one word only):`;
       return true; // keep behavior: allow if classifier fails
     }
     
-    // console.log(`🔍 Gemini classification result: "${classificationResult}"`);
+      // console.log(`Gemini classification result: "${classificationResult}"`);
     
     return classificationResult.includes('yes') || classificationResult === 'y';
   }
@@ -305,7 +305,7 @@ Answer (one word only):`;
     const data: ClaudeResponse = await response.json();
     const result = data.choices[0]?.message?.content?.toLowerCase().trim();
     
-    // console.log(`🔍 Claude classification result: "${result}"`);
+      // console.log(`Claude classification result: "${result}"`);
     return result === 'yes';
   }
 
@@ -497,7 +497,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
         throw new Error('Request aborted');
       }
 
-      // console.log(`🚀 Starting ${model} processing...`);
+      // console.log(`Starting ${model} processing...`);
 
       const hasHistory = conversationHistory.length > 0;
 
@@ -506,16 +506,16 @@ Remember: You're having an ongoing conversation, not answering isolated question
 
       // Skip classification for file upload analysis - always allow
       if (message.includes('uploaded and analyzed a file') || message.includes('File Details:')) {
-        // console.log('🔄 File upload detected - skipping classification');
+        // console.log('File upload detected - skipping classification');
         isPMRelated = true;
       } else if (!hasHistory) {
-        // console.log('🔍 Classifying new question...');
+        // console.log('Classifying new question...');
         isPMRelated = await this.classifyPMQuestion(message, model);
       }
 
       // STEP 2: If not PM-related, return simple rejection message (no persona)
       if (!isPMRelated) {
-        // console.log('❌ Question classified as non-PM');
+        // console.log('Question classified as non-PM');
         const rejectionMessage = "I'm a Product Manager AI assistant. Please ask me questions about product strategy, roadmapping, user research, analytics, or other product management topics.";
         
         // Simulate streaming for rejection message
@@ -540,19 +540,19 @@ Remember: You're having an ongoing conversation, not answering isolated question
       // STEP 3: Check if web search is needed (with caching)
       let webContext = '';
       if (isPMRelated) {
-        // console.log('🔍 Checking if web search is needed for:', message);
+        // console.log('Checking if web search is needed for:', message);
         const needsSearch = exaSearch.shouldSearch(message);
-        // console.log('🔍 Web search needed:', needsSearch);
+        // console.log('Web search needed:', needsSearch);
         
         if (needsSearch) {
           // Check if we can use cached context
           if (this.isCacheValid(message)) {
             webContext = this.webSearchCache!.context;
-            // console.log('♻️ Using cached web search context (length:', webContext.length, ')');
+            // console.log('Using cached web search context (length:', webContext.length, ')');
           } else {
-            // console.log('🔍 Performing new web search...');
+            // console.log('Performing new web search...');
             webContext = await exaSearch.search(message);
-            // console.log('🔍 Web search context length:', webContext.length);
+            // console.log('Web search context length:', webContext.length);
             
             // Cache the results for follow-up questions
             if (webContext.length > 0) {
@@ -563,7 +563,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
       }
 
       // STEP 4: If PM-related, proceed with model-specific response
-      // console.log('✅ Question classified as PM-related, generating response...');
+      // console.log('Question classified as PM-related, generating response...');
 
       if (model === 'gemini') {
         return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal, webContext);
@@ -572,11 +572,11 @@ Remember: You're having an ongoing conversation, not answering isolated question
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'Request aborted') {
-        // console.log('🛑 Request was aborted by user');
+        // console.log('Request was aborted by user');
         throw error;
       }
       
-      console.error(`❌ ${model} API error:`, error);
+      console.error(`${model} API error:`, error);
       throw new Error(`Failed to get response from ${model}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
