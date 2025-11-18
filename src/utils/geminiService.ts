@@ -110,7 +110,7 @@ Answer (one word only):`;
       });
 
       if (!response.ok) {
-        console.error('Classification API error:', response.status, response.statusText);
+        // console.error('Classification API error:', response.status, response.statusText);
         return true; // Default to allowing if classification fails
       }
 
@@ -120,7 +120,7 @@ Answer (one word only):`;
       // console.log('Classification result:', result);
       return result === 'yes';
     } catch (error) {
-      console.error('Classification error:', error);
+      // console.error('Classification error:', error);
       return true; // Default to allowing if classification fails
     }
   }
@@ -130,7 +130,7 @@ Answer (one word only):`;
     this.apiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
     
     if (!this.apiKey) {
-      console.error('VITE_DEEPINFRA_API_KEY environment variable is required');
+      // console.error('VITE_DEEPINFRA_API_KEY environment variable is required');
       throw new Error('DeepInfra API key is required');
     }
     
@@ -382,7 +382,7 @@ You help product managers make better decisions faster through strategic thinkin
         throw error;
       }
       
-      console.error('Claude API error:', error);
+      // console.error('Claude API error:', error);
       throw new Error(`Failed to get response from Claude: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

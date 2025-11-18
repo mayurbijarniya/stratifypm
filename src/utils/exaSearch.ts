@@ -91,10 +91,10 @@ Answer:`;
                 // console.log('Search detection result:', result, 'for query:', message);
                 return result === 'YES';
             } else {
-                console.error('Search detection API error:', response.status);
+                // console.error('Search detection API error:', response.status);
             }
         } catch (error) {
-            console.error('Search detection failed:', error);
+            // console.error('Search detection failed:', error);
         }
 
         // Fallback to keyword detection
@@ -173,10 +173,10 @@ Optimized search query:`;
                 // console.log('Query optimization result:', optimizedQuery || '(fallback)');
                 return optimizedQuery || userQuery.slice(0, 200);
             } else {
-                console.error('Query optimization API error:', response.status);
+                // console.error('Query optimization API error:', response.status);
             }
         } catch (error) {
-            console.error('Query optimization failed:', error);
+            // console.error('Query optimization failed:', error);
         }
 
         return userQuery.slice(0, 200);
@@ -233,7 +233,7 @@ Optimized search query:`;
             // console.log('Exa API response status:', response.status);
 
             if (!response.ok) {
-                console.error('Exa API error:', response.status, await response.text());
+                // console.error('Exa API error:', response.status, await response.text());
                 return '';
             }
 
@@ -265,7 +265,7 @@ Optimized search query:`;
 
             return context;
         } catch (error) {
-            console.error('Exa search error:', error);
+            // console.error('Exa search error:', error);
             return '';
         }
     }

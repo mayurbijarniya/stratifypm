@@ -77,11 +77,11 @@ export class UnifiedAIService {
     this.claudeApiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
     
     if (!this.geminiApiKey) {
-      console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
+      // console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
     }
     
     if (!this.claudeApiKey) {
-      console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
+      // console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
     }
     
     // console.log('Unified AI service initialized with both Gemini and Claude');
@@ -208,7 +208,7 @@ Answer (one word only):`;
         return await this.classifyWithClaude(classificationPrompt);
       }
     } catch (error) {
-      console.error('Classification error:', error);
+      // console.error('Classification error:', error);
       return true; // Default to allowing if classification fails
     }
   }
@@ -257,7 +257,7 @@ Answer (one word only):`;
     });
 
     if (!response.ok) {
-      console.error('Gemini classification API error:', response.status);
+      // console.error('Gemini classification API error:', response.status);
       return true;
     }
 
@@ -265,7 +265,7 @@ Answer (one word only):`;
     const classificationResult = safeGeminiText(data).toLowerCase().trim();
     
     if (!classificationResult) {
-      console.warn('Gemini classification returned empty text; allowing by default');
+      // console.warn('Gemini classification returned empty text; allowing by default');
       return true; // keep behavior: allow if classifier fails
     }
     
@@ -298,7 +298,7 @@ Answer (one word only):`;
     });
 
     if (!response.ok) {
-      console.error('Claude classification API error:', response.status, response.statusText);
+      // console.error('Claude classification API error:', response.status, response.statusText);
       return true;
     }
 
@@ -576,7 +576,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
         throw error;
       }
       
-      console.error(`${model} API error:`, error);
+      // console.error(`${model} API error:`, error);
       throw new Error(`Failed to get response from ${model}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -738,7 +738,7 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Gemini API error response:', errorText);
+        // console.error('Gemini API error response:', errorText);
         
         if (response.status === 400) {
           throw new Error('Invalid request. Please check your message and try again.');
