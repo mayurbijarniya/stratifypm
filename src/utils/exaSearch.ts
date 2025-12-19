@@ -133,7 +133,7 @@ Answer:`;
             // Company-specific
             'google', 'apple', 'microsoft', 'amazon', 'meta', 'netflix', 'spotify',
             'uber', 'airbnb', 'slack', 'zoom', 'figma', 'notion', 'stripe', 'shopify',
-            'openai', 'anthropic', 'claude', 'chatgpt', 'gemini'
+            'openai', 'anthropic', 'claude', 'chatgpt', 'gemini', 'open ai', 'gen ai', 'llm'
         ];
 
         return realTimeIndicators.some(indicator => lowerMessage.includes(indicator));
