@@ -390,17 +390,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  const adjustTextareaHeight = () => {
+  const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "48px"; // Start with smaller height
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`; // Max 100px instead of 120px
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message, adjustTextareaHeight]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
-    adjustTextareaHeight();
   };
 
   const handleMicClick = () => {
