@@ -83,6 +83,7 @@ export class UnifiedAIService {
     context: string;
     timestamp: number;
     sessionId: string;
+    conversationId: string; // Bind cache to specific conversation
   } | null = null;
 
   private currentSessionId: string = this.generateSessionId();
@@ -107,17 +108,22 @@ export class UnifiedAIService {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  private isCacheValid(query: string): boolean {
+  private isCacheValid(query: string, conversationId: string): boolean {
     if (!this.webSearchCache) return false;
 
     // Cache is valid for 10 minutes and same session
     const cacheAge = Date.now() - this.webSearchCache.timestamp;
     const isRecent = cacheAge < 10 * 60 * 1000; // 10 minutes
-    const isSameSession = this.webSearchCache.sessionId === this.currentSessionId;
+    const isSameConversation = this.webSearchCache.conversationId === conversationId;
+
+    if (!isSameConversation) return false;
 
     // Check if queries are related (strict keyword overlap)
-    const currentKeywords = query.toLowerCase().split(' ').filter(w => w.length > 3);
-    const cachedKeywords = this.webSearchCache.query.toLowerCase().split(' ').filter(w => w.length > 3);
+    // Improve tokenization to handle punctuation (e.g. "Apple," vs "Apple")
+    const tokenize = (text: string) => text.toLowerCase().split(/[\s,?.!]+/).filter(w => w.length > 3);
+
+    const currentKeywords = tokenize(query);
+    const cachedKeywords = tokenize(this.webSearchCache.query);
 
     // If either query has no significant keywords, assume not related enough for STRICT reuse
     if (currentKeywords.length === 0 || cachedKeywords.length === 0) return false;
@@ -126,15 +132,16 @@ export class UnifiedAIService {
 
     const isRelated = overlap >= (currentKeywords.length * 0.6);
 
-    return isRecent && isSameSession && isRelated;
+    return isRecent && isSameConversation && isRelated;
   }
 
-  private updateCache(query: string, context: string): void {
+  private updateCache(query: string, context: string, conversationId: string): void {
     this.webSearchCache = {
       query,
       context,
       timestamp: Date.now(),
-      sessionId: this.currentSessionId
+      sessionId: this.currentSessionId,
+      conversationId
     };
     // Updated web search cache
   }
@@ -163,8 +170,8 @@ export class UnifiedAIService {
   }
 
   // Public method to check if cache exists
-  public hasCachedContext(): boolean {
-    return this.webSearchCache !== null && this.isCacheValid(this.webSearchCache.query);
+  public hasCachedContext(conversationId: string): boolean {
+    return this.webSearchCache !== null && this.isCacheValid(this.webSearchCache.query, conversationId);
   }
 
   // Unified classification method
@@ -501,9 +508,11 @@ Remember: You're having an ongoing conversation, not answering isolated question
     return tableKeywords.some(keyword => lowerMessage.includes(keyword));
   }
 
+
   async sendMessage(
     message: string,
     model: AIModel,
+    conversationId: string,
     conversationHistory: Array<{ role: string; content: string }> = [],
     onStream?: (chunk: string) => void,
     abortSignal?: AbortSignal
@@ -571,8 +580,8 @@ Remember: You're having an ongoing conversation, not answering isolated question
         const needsSearch = await exaSearch.shouldSearch(message);
 
         if (needsSearch) {
-          // Check if we can use cached context (STRICT check for same topic)
-          if (this.isCacheValid(message)) {
+          // Check if we can use cached context (STRICT check for same topic + same conversation)
+          if (this.isCacheValid(message, conversationId)) {
             webContext = this.webSearchCache!.context;
             // Using cached web search context (Topic match verified)
           } else {
@@ -582,7 +591,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
 
             // Cache the results for follow-up questions
             if (webContext.length > 0) {
-              this.updateCache(message, webContext);
+              this.updateCache(message, webContext, conversationId);
             }
           }
         } else {

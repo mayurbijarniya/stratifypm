@@ -264,6 +264,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         const response = await aiService.sendMessage(
           lastMessage.content,
           selectedModel,
+          conversationId,
           conversationHistory,
           (streamContent: string) => {
             // Check if request was aborted
