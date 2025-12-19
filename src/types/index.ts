@@ -21,9 +21,10 @@ export interface Conversation {
   updatedAt: Date;
   tags?: string[];
   category?: PMCategory;
+  files?: FileData[];
 }
 
-export type PMCategory = 
+export type PMCategory =
   | 'strategy'
   | 'execution'
   | 'research'
@@ -62,7 +63,7 @@ export interface FrameworkField {
 export interface ChartData {
   type: 'line' | 'bar' | 'area' | 'pie' | 'scatter' | 'radar' | 'funnel';
   title: string;
-  data: any[];
+  data: unknown[];
   config: ChartConfig;
 }
 
@@ -87,7 +88,7 @@ export interface FileData {
   name: string;
   size: number;
   type: string;
-  content: any[];
+  content: unknown[];
   processed: boolean;
   insights?: string[];
 }

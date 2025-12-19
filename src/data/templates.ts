@@ -29,7 +29,7 @@ Provide a strategic overview of the market entry opportunity.
 3. **Phase 3** (Year 2): {PHASE_3_STRATEGY}
 
 ### Resource Requirements
-- **Investment**: ${INVESTMENT_REQUIRED}
+- **Investment**: \${INVESTMENT_REQUIRED}
 - **Team Size**: {TEAM_SIZE} people
 - **Timeline**: {TIMELINE} months to break-even
 

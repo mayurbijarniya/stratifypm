@@ -1,14 +1,30 @@
 import type { AIModel } from '../components/ui/ModelSelector';
 import { exaSearch } from './exaSearch';
+import type { FileData } from '../types';
 
-function safeGeminiText(data: any): string {
+// Partial interface for Gemini response structure to avoid any types
+interface GeminiCandidatePart {
+  text?: string;
+}
+interface GeminiCandidate {
+  content?: {
+    parts?: GeminiCandidatePart[];
+  };
+}
+interface GeminiData {
+  candidates?: GeminiCandidate[];
+}
+
+function safeGeminiText(data: unknown): string {
   try {
-    const parts = data?.candidates?.[0]?.content?.parts;
+    const parts = (data as GeminiData)?.candidates?.[0]?.content?.parts;
     if (Array.isArray(parts)) {
-      const texts = parts.map((p: any) => p?.text).filter(Boolean);
+      const texts = parts.map((p) => p?.text).filter((t): t is string => Boolean(t));
       if (texts.length) return texts.join('\n').trim();
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
   return '';
 }
 
@@ -60,7 +76,7 @@ export class UnifiedAIService {
   private claudeApiKey: string;
   private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
-  
+
   // Context persistence for web search
   private webSearchCache: {
     query: string;
@@ -68,23 +84,23 @@ export class UnifiedAIService {
     timestamp: number;
     sessionId: string;
   } | null = null;
-  
+
   private currentSessionId: string = this.generateSessionId();
 
   private constructor() {
     // Get API keys from environment variables
     this.geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     this.claudeApiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
-    
+
     if (!this.geminiApiKey) {
       // console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
     }
-    
+
     if (!this.claudeApiKey) {
       // console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
     }
-    
-    // console.log('Unified AI service initialized with both Gemini and Claude');
+
+    // Unified AI service initialized with both Gemini and Claude
   }
 
   private generateSessionId(): string {
@@ -93,20 +109,20 @@ export class UnifiedAIService {
 
   private isCacheValid(query: string): boolean {
     if (!this.webSearchCache) return false;
-    
+
     // Cache is valid for 10 minutes and same session
     const cacheAge = Date.now() - this.webSearchCache.timestamp;
     const isRecent = cacheAge < 10 * 60 * 1000; // 10 minutes
     const isSameSession = this.webSearchCache.sessionId === this.currentSessionId;
-    
+
     // Check if queries are related (simple keyword overlap)
     const currentKeywords = query.toLowerCase().split(' ').filter(w => w.length > 3);
     const cachedKeywords = this.webSearchCache.query.toLowerCase().split(' ').filter(w => w.length > 3);
     const overlap = currentKeywords.filter(k => cachedKeywords.includes(k)).length;
     const isRelated = overlap >= Math.min(2, currentKeywords.length * 0.3);
-    
-    // console.log('Cache check:', { isRecent, isSameSession, isRelated, overlap });
-    
+
+    // Cache check verified
+
     return isRecent && isSameSession && isRelated;
   }
 
@@ -117,20 +133,21 @@ export class UnifiedAIService {
       timestamp: Date.now(),
       sessionId: this.currentSessionId
     };
-    // console.log('Updated web search cache for session:', this.currentSessionId);
+    // Updated web search cache
   }
 
   public clearCache(): void {
     this.webSearchCache = null;
     this.currentSessionId = this.generateSessionId();
-    // console.log('Cleared web search cache, new session:', this.currentSessionId);
+    // Cleared web search cache
   }
 
   // Method to get uploaded files from the app store
   private getUploadedFiles() {
     // Access the store directly to get uploaded files
-    if (typeof window !== 'undefined' && (window as any).__APP_STORE__) {
-      return (window as any).__APP_STORE__.getState().uploadedFiles || [];
+    const win = window as unknown as { __APP_STORE__: { getState: () => { uploadedFiles: FileData[] } } };
+    if (typeof window !== 'undefined' && win.__APP_STORE__) {
+      return win.__APP_STORE__.getState().uploadedFiles || [];
     }
     return [];
   }
@@ -208,7 +225,7 @@ Answer (one word only):`;
         return await this.classifyWithClaude(classificationPrompt);
       }
     } catch (error) {
-      // console.error('Classification error:', error);
+      console.error('Classification error:', error);
       return true; // Default to allowing if classification fails
     }
   }
@@ -263,20 +280,20 @@ Answer (one word only):`;
 
     const data: GeminiResponse = await response.json();
     const classificationResult = safeGeminiText(data).toLowerCase().trim();
-    
+
     if (!classificationResult) {
-      // console.warn('Gemini classification returned empty text; allowing by default');
       return true; // keep behavior: allow if classifier fails
     }
-    
-      // console.log(`Gemini classification result: "${classificationResult}"`);
-    
-    return classificationResult.includes('yes') || classificationResult === 'y';
+
+    if (classificationResult.includes('yes') || classificationResult.includes('pm_related')) {
+      return true;
+    }
+    return false; // Default to false if not explicitly 'yes' or 'pm_related'
   }
 
   private async classifyWithClaude(prompt: string): Promise<boolean> {
     const requestBody = {
-      model: "anthropic/claude-4-sonnet",
+      model: "Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
       messages: [
         {
           role: 'user',
@@ -304,8 +321,8 @@ Answer (one word only):`;
 
     const data: ClaudeResponse = await response.json();
     const result = data.choices[0]?.message?.content?.toLowerCase().trim();
-    
-      // console.log(`Claude classification result: "${result}"`);
+
+    // console.log(`Claude classification result: "${result}"`);
     return result === 'yes';
   }
 
@@ -477,7 +494,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
       'market research', 'feature comparison', 'competitor', 'analysis',
       'in table format', 'table format', 'create table', 'show table'
     ];
-    
+
     return tableKeywords.some(keyword => lowerMessage.includes(keyword));
   }
 
@@ -488,72 +505,76 @@ Remember: You're having an ongoing conversation, not answering isolated question
     onStream?: (chunk: string) => void,
     abortSignal?: AbortSignal
   ): Promise<string> {
-    // Get uploaded files from store for context
-    const uploadedFiles = this.getUploadedFiles();
-    
+    // Get uploaded files from store for context is handled inside specific model methods
+
     try {
       // Check if request was aborted before starting
       if (abortSignal?.aborted) {
         throw new Error('Request aborted');
       }
 
-      // console.log(`Starting ${model} processing...`);
-
       const hasHistory = conversationHistory.length > 0;
 
       // STEP 1: Classify if question is PM-related
       let isPMRelated = true;
 
-      // Skip classification for file upload analysis - always allow
-      if (message.includes('uploaded and analyzed a file') || message.includes('File Details:')) {
-        // console.log('File upload detected - skipping classification');
+      // Get uploaded files to check if we should skip classification
+      const uploadedFiles = this.getUploadedFiles();
+      const hasFiles = uploadedFiles.length > 0;
+
+      const lowerMessage = message.toLowerCase();
+      const isAnalysisRequest = lowerMessage.includes('analyze') ||
+        lowerMessage.includes('analysis') ||
+        lowerMessage.includes('insight') ||
+        lowerMessage.includes('data');
+
+      // Always allow if files are present or user explicitly asks for analysis
+      if (hasFiles || isAnalysisRequest || message.includes('uploaded and analyzed a file') || message.includes('File Details:')) {
+        // File upload or explicit analysis request - always allow
         isPMRelated = true;
       } else if (!hasHistory) {
-        // console.log('Classifying new question...');
+        // Classifying new question...
         isPMRelated = await this.classifyPMQuestion(message, model);
       }
 
       // STEP 2: If not PM-related, return simple rejection message (no persona)
       if (!isPMRelated) {
-        // console.log('Question classified as non-PM');
+        // Question classified as non-PM
         const rejectionMessage = "I'm a Product Manager AI assistant. Please ask me questions about product strategy, roadmapping, user research, analytics, or other product management topics.";
-        
+
         // Simulate streaming for rejection message
         if (onStream) {
           const words = rejectionMessage.split(' ');
           let currentResponse = '';
-          
+
           for (let i = 0; i < words.length; i++) {
             if (abortSignal?.aborted) {
               throw new Error('Request aborted');
             }
-            
+
             currentResponse += (i > 0 ? ' ' : '') + words[i];
             onStream(currentResponse);
             await new Promise(resolve => setTimeout(resolve, 25));
           }
         }
-        
+
         return rejectionMessage;
       }
 
       // STEP 3: Check if web search is needed (with caching)
       let webContext = '';
       if (isPMRelated) {
-        // console.log('Checking if web search is needed for:', message);
-        const needsSearch = exaSearch.shouldSearch(message);
-        // console.log('Web search needed:', needsSearch);
-        
+        const needsSearch = await exaSearch.shouldSearch(message);
+
         if (needsSearch) {
           // Check if we can use cached context
           if (this.isCacheValid(message)) {
             webContext = this.webSearchCache!.context;
-            // console.log('Using cached web search context (length:', webContext.length, ')');
+            // Using cached web search context
           } else {
-            // console.log('Performing new web search...');
+            // Performing new web search...
             webContext = await exaSearch.search(message);
-            // console.log('Web search context length:', webContext.length);
-            
+
             // Cache the results for follow-up questions
             if (webContext.length > 0) {
               this.updateCache(message, webContext);
@@ -575,7 +596,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
         // console.log('Request was aborted by user');
         throw error;
       }
-      
+
       // console.error(`${model} API error:`, error);
       throw new Error(`Failed to get response from ${model}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -588,22 +609,25 @@ Remember: You're having an ongoing conversation, not answering isolated question
     abortSignal?: AbortSignal,
     webContext: string = ''
   ): Promise<string> {
-    // Prepare the conversation context
-    const contents = [];
-
-    // Add system prompt as the first message for new conversations
-    if (conversationHistory.length === 0) {
-      contents.push({
-        role: 'user',
-        parts: [{ text: this.getSystemPrompt('gemini') }]
-      });
-      contents.push({
-        role: 'model',
-        parts: [{ text: "Hello! I'm your senior Product Manager AI assistant. I'm here to help you with product strategy, roadmapping, user research, analytics, and all aspects of product management. What product challenge can I help you tackle today?" }]
-      });
+    // Check for API key
+    if (!this.geminiApiKey) {
+      throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
     }
 
-    // Add conversation history (last 8 messages to manage token usage)
+    // Construct the conversation history for Gemini
+    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+
+    // Add system prompt
+    contents.push({
+      role: 'user',
+      parts: [{ text: this.getSystemPrompt('gemini') }]
+    });
+    contents.push({
+      role: 'model',
+      parts: [{ text: "Hello! I'm your senior Product Manager AI assistant. I'm here to help you with product strategy, roadmapping, user research, analytics, and all aspects of product management. What product challenge can I help you tackle today?" }]
+    });
+
+    // Add conversation history (last 8 messages)
     const recentHistory = conversationHistory.slice(-8);
     recentHistory.forEach(msg => {
       if (msg.role === 'user') {
@@ -621,68 +645,37 @@ Remember: You're having an ongoing conversation, not answering isolated question
 
     // Determine if this is a table request and adjust configuration accordingly
     const isTableGeneration = this.isTableRequest(message);
-    
+
     // Enhanced message for table requests to force completion
     let enhancedMessage = message;
     if (isTableGeneration) {
-      enhancedMessage = `${message}
-
-IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop at headers or partial content. Include at least 3-5 competitors/items with detailed information in every column. Complete the entire table before adding any additional commentary.`;
+      enhancedMessage = `${message}\n\nIMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop at headers or partial content. Include at least 3-5 competitors/items with detailed information in every column. Complete the entire table before adding any additional commentary.`;
     }
 
-    // Add current message with file context
-    let enhancedMessageWithFiles = enhancedMessage;
-    
     // Get uploaded files from store for context
     const uploadedFiles = this.getUploadedFiles();
-    
-    // If there are uploaded files, include their data in the context
+
+    // Generate detailed context based on available files
+    let fullPrompt = enhancedMessage;
     if (uploadedFiles.length > 0) {
-      let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES - ANALYZE ONLY THIS DATA:**\n';
-      
-      uploadedFiles.forEach(file => {
-        fileContext += `\n📊 **File: ${file.name}**\n`;
-        fileContext += `📈 **Total Records: ${file.content.length}**\n`;
-        fileContext += `📋 **File Type: ${file.type}**\n`;
+      const fileContext = this.generateFileContext(uploadedFiles);
+
+      fullPrompt = `
+        ${enhancedMessage}
         
-        // Include sample data for better analysis - show more for smaller files
-        const sampleSize = file.content.length <= 100 ? Math.min(file.content.length, 50) : 20;
-        if (file.content.length > 0) {
-          fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
-          fileContext += '```json\n';
-          fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
-          fileContext += '\n```\n';
-          
-          // Show column structure for better understanding
-          if (file.content.length > 0) {
-            const firstRow = file.content[0];
-            const columns = Object.keys(firstRow);
-            fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
-          }
-          
-          // For large datasets, emphasize full analysis
-          if (file.content.length > sampleSize) {
-            fileContext += `\n⚠️ **IMPORTANT:** This shows only the first ${sampleSize} rows for context. Your analysis must consider ALL ${file.content.length} records in the dataset. Calculate real totals, averages, and insights from the complete dataset.\n`;
-          }
-        }
-      });
-      
-      fileContext += `\n🚨 **CRITICAL REMINDER:** 
-- Use ONLY the product names, categories, and values shown in this real data
-- Calculate ALL metrics from this actual dataset
-- Do NOT create fictional examples or template responses
-- If data doesn't exist in the file, explicitly state it's not available
-- Every number and insight must be derived from this real data\n`;
-      
-      enhancedMessageWithFiles = `${enhancedMessage}${fileContext}`;
+        ${fileContext}
+        
+        User Question: "${message}"
+        
+        Answer the user's question based on the provided data context (if any) and your general knowledge.
+        Always prioritize the data from the uploaded files.
+      `.trim();
     }
-    
-    // Add web context if available (backend only, no UI changes)
-    const finalMessage = enhancedMessageWithFiles + webContext;
-    
+
+    // Add current message with file context and web context
     contents.push({
       role: 'user',
-      parts: [{ text: finalMessage }]
+      parts: [{ text: fullPrompt + webContext }]
     });
 
     const requestBody = {
@@ -738,8 +731,8 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
 
       if (!response.ok) {
         const errorText = await response.text();
-        // console.error('Gemini API error response:', errorText);
-        
+        console.error('Gemini API error response:', errorText);
+
         if (response.status === 400) {
           throw new Error('Invalid request. Please check your message and try again.');
         } else if (response.status === 401) {
@@ -751,7 +744,7 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
         } else if (response.status >= 500) {
           throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
         }
-        
+
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
 
@@ -766,7 +759,6 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
 
       // If no response and we haven't hit max retries, try again
       if (retryCount < maxRetries) {
-        // console.log(`🔄 Gemini returned empty response, retrying... (attempt ${retryCount + 2})`);
         retryCount++;
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
       } else {
@@ -787,15 +779,13 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
     if (onStream) {
       const words = responseText.split(' ');
       let currentResponse = '';
-      
       const streamDelay = 12;
-      
+
       for (let i = 0; i < words.length; i++) {
         if (abortSignal?.aborted) {
-          // console.log('Streaming aborted during word processing');
           throw new Error('Request aborted');
         }
-        
+
         currentResponse += (i > 0 ? ' ' : '') + words[i];
         onStream(currentResponse);
         await new Promise(resolve => setTimeout(resolve, streamDelay));
@@ -803,6 +793,49 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
     }
 
     return responseText;
+  }
+
+  private generateFileContext(uploadedFiles: FileData[]): string {
+    let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES (PARSED JSON) - ANALYZE THIS:**\n';
+    fileContext += 'Note: The data below is the actual parsed content of the user\'s files converted to JSON. It is NOT base64 or raw bytes. Treat it as structured data.\n';
+
+    uploadedFiles.forEach((file: FileData) => {
+      fileContext += `\n📊 **File: ${file.name}**\n`;
+      fileContext += `📈 **Total Records: ${file.content.length}**\n`;
+      fileContext += `📋 **File Type: ${file.type}**\n`;
+
+      // Include much more data for analysis (up to 2000 rows which is roughly 20-50k tokens)
+      // Modern models (Gemini 1.5, Claude 3.5) have massive context windows (128k - 1M+)
+      const sampleSize = Math.min(file.content.length, 2000);
+
+      if (file.content.length > 0) {
+        fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
+        fileContext += '```json\n';
+        fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
+        fileContext += '\n```\n';
+
+        // Show column structure for better understanding
+        if (file.content.length > 0 && typeof file.content[0] === 'object') {
+          const firstRow = file.content[0] as object;
+          const columns = Object.keys(firstRow);
+          fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
+        }
+
+        // For large datasets, emphasize full analysis
+        if (file.content.length > sampleSize) {
+          fileContext += `\n⚠️ **IMPORTANT:** This shows the first ${sampleSize} rows. The total dataset has ${file.content.length} records. Please extrapolate insights carefully.\n`;
+        }
+      }
+    });
+
+    fileContext += `\n🚨 **CRITICAL REMINDER:** 
+- Use ONLY the product names, categories, and values shown in this real data
+- Calculate ALL metrics from this actual dataset
+- Do NOT create fictional examples or template responses
+- If data doesn't exist in the file, explicitly state it's not available
+- Every number and insight must be derived from this real data\n`;
+
+    return fileContext;
   }
 
   private async sendClaudeMessage(
@@ -814,7 +847,7 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
   ): Promise<string> {
     // Prepare the conversation messages for Claude
     const messages = [];
-    
+
     // Add system message
     messages.push({
       role: 'system',
@@ -831,54 +864,16 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
 
     // Add current message with file context
     let enhancedMessageWithFiles = message;
-    
-    // Get uploaded files from store for context
     const uploadedFiles = this.getUploadedFiles();
-    
-    // If there are uploaded files, include their data in the context
+
     if (uploadedFiles.length > 0) {
-      let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES - ANALYZE ONLY THIS DATA:**\n';
-      
-      uploadedFiles.forEach(file => {
-        fileContext += `\n📊 **File: ${file.name}**\n`;
-        fileContext += `📈 **Total Records: ${file.content.length}**\n`;
-        fileContext += `📋 **File Type: ${file.type}**\n`;
-        
-        // Include sample data for better analysis - show more for smaller files
-        const sampleSize = file.content.length <= 100 ? Math.min(file.content.length, 50) : 20;
-        if (file.content.length > 0) {
-          fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
-          fileContext += '```json\n';
-          fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
-          fileContext += '\n```\n';
-          
-          // Show column structure for better understanding
-          if (file.content.length > 0) {
-            const firstRow = file.content[0];
-            const columns = Object.keys(firstRow);
-            fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
-          }
-          
-          // For large datasets, emphasize full analysis
-          if (file.content.length > sampleSize) {
-            fileContext += `\n⚠️ **IMPORTANT:** This shows only the first ${sampleSize} rows for context. Your analysis must consider ALL ${file.content.length} records in the dataset. Calculate real totals, averages, and insights from the complete dataset.\n`;
-          }
-        }
-      });
-      
-      fileContext += `\n🚨 **CRITICAL REMINDER:** 
-- Use ONLY the product names, categories, and values shown in this real data
-- Calculate ALL metrics from this actual dataset
-- Do NOT create fictional examples or template responses
-- If data doesn't exist in the file, explicitly state it's not available
-- Every number and insight must be derived from this real data\n`;
-      
-      enhancedMessageWithFiles = `${message}${fileContext}`;
+      const fileContext = this.generateFileContext(uploadedFiles);
+      enhancedMessageWithFiles = `${message}\n\n${fileContext}`;
     }
-    
-    // Add web context if available (backend only, no UI changes)
+
+    // Add web context
     const finalMessage = enhancedMessageWithFiles + webContext;
-    
+
     messages.push({
       role: 'user',
       content: finalMessage
@@ -888,20 +883,17 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
     if (this.isTableRequest(message)) {
       messages.push({
         role: 'system',
-        content: 'The user is requesting structured data or comparisons. Please format your response with clear tables using markdown syntax, organized sections, and actionable insights.'
+        content: "The user is requesting a table. Ensure the response contains a MARKDOWN TABLE with detailed information."
       });
     }
 
     const requestBody = {
-      model: "anthropic/claude-4-sonnet",
+      model: "Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 4000,
-      stream: Boolean(onStream),
-      top_p: 0.9
+      max_tokens: 8192,
+      stream: !!onStream
     };
-
-    // console.log('📤 Sending request to Claude API...');
 
     const response = await fetch(`${this.claudeBaseUrl}/chat/completions`, {
       method: 'POST',
@@ -948,13 +940,12 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
               try {
                 const parsed: StreamChunk = JSON.parse(data);
                 const content = parsed.choices[0]?.delta?.content;
-                
+
                 if (content) {
                   fullResponse += content;
                   onStream(fullResponse);
                 }
-              } catch (e) {
-                // Skip invalid JSON chunks
+              } catch {
                 continue;
               }
             }
@@ -969,7 +960,7 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
       // Handle non-streaming response
       const data: ClaudeResponse = await response.json();
       const content = data.choices[0]?.message?.content;
-      
+
       if (!content) {
         throw new Error('No content in API response');
       }
@@ -979,5 +970,4 @@ IMPORTANT: Please provide a COMPLETE table with ALL rows filled out. Do not stop
   }
 }
 
-// Export singleton instance
 export const aiService = UnifiedAIService.getInstance();

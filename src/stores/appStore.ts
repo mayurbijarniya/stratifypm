@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Conversation, Message, FileData, Theme } from '../types';
+import type { Conversation, Message, FileData } from '../types';
 import type { AIModel } from '../components/ui/ModelSelector';
 
 interface AppState {
@@ -79,7 +79,7 @@ const customStorage = {
       return null;
     }
   },
-  setItem: (name: string, value: any) => {
+  setItem: (name: string, value: unknown) => {
     localStorage.setItem(name, JSON.stringify(value));
   },
   removeItem: (name: string) => {
@@ -103,7 +103,7 @@ export const useAppStore = create<AppState>()(
 
       // Expose store globally for AI service access
       ...(typeof window !== 'undefined' && (() => {
-        (window as any).__APP_STORE__ = { getState: get };
+        (window as unknown as { __APP_STORE__: { getState: typeof get } }).__APP_STORE__ = { getState: get };
         return {};
       })()),
 
@@ -121,6 +121,8 @@ export const useAppStore = create<AppState>()(
           messages: [],
           createdAt: new Date(),
           updatedAt: new Date(),
+          // Inherit currently uploaded files (pending files) if any
+          files: get().uploadedFiles || [],
         };
 
         set((state) => ({
@@ -135,7 +137,10 @@ export const useAppStore = create<AppState>()(
               streamingMessage: null,
               abortController: null,
             }
-          }
+          },
+          // IMPORTANT: Do NOT clear uploadedFiles here. 
+          // They are now part of the new conversation and we want them to remain visible.
+          // The next time 'createConversation' is called (from a fresh state), uploadedFiles should be empty via UI logic or explicit reset if dealing with "New Chat" button click.
         }));
 
         return id;
@@ -187,9 +192,18 @@ export const useAppStore = create<AppState>()(
 
       setCurrentConversation: (id) => {
         set((state) => {
+          // If setting to null (New Chat), we want a clean slate
+          // Use !id to catch both null and undefined
+          if (!id) {
+            return {
+              currentConversationId: null,
+              uploadedFiles: [], // EXPLICITLY clear files for new chat
+            };
+          }
+
           // Initialize conversation state if it doesn't exist
           const newConversationStates = { ...state.conversationStates };
-          if (id && !newConversationStates[id]) {
+          if (!newConversationStates[id]) {
             newConversationStates[id] = {
               isLoading: false,
               streamingMessage: null,
@@ -197,9 +211,13 @@ export const useAppStore = create<AppState>()(
             };
           }
 
+          const targetConv = state.conversations.find(c => c.id === id);
+
           return {
             currentConversationId: id,
             conversationStates: newConversationStates,
+            // Sync global files state with selected conversation's files
+            uploadedFiles: targetConv?.files || [],
           };
         });
       },
@@ -286,10 +304,7 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const conversationState = state.conversationStates[conversationId];
 
-          // console.log(`Stopping AI for conversation ${conversationId}`, conversationState);
-
           if (conversationState?.abortController) {
-            // console.log('Aborting request...');
             conversationState.abortController.abort();
           }
 
@@ -316,24 +331,75 @@ export const useAppStore = create<AppState>()(
         };
       },
 
+      // File actions - scoped to conversation if active, otherwise global (pending)
       addFile: (file) => {
-        set((state) => ({
-          uploadedFiles: [...state.uploadedFiles, file],
-        }));
+        set((state) => {
+          const currentId = state.currentConversationId;
+
+          // If no active conversation, just update global state (pending files)
+          if (!currentId) {
+            return {
+              uploadedFiles: [...state.uploadedFiles, file]
+            };
+          }
+
+          // If active conversation, update conversation AND sync global
+          return {
+            conversations: state.conversations.map(conv =>
+              conv.id === currentId
+                ? { ...conv, files: [...(conv.files || []), file] }
+                : conv
+            ),
+            uploadedFiles: [...state.uploadedFiles, file]
+          };
+        });
       },
 
       removeFile: (fileName) => {
-        set((state) => ({
-          uploadedFiles: state.uploadedFiles.filter((file) => file.name !== fileName),
-        }));
+        set((state) => {
+          const currentId = state.currentConversationId;
+
+          // If no active conversation, just update global state
+          if (!currentId) {
+            return {
+              uploadedFiles: state.uploadedFiles.filter(f => f.name !== fileName)
+            };
+          }
+
+          return {
+            conversations: state.conversations.map(conv =>
+              conv.id === currentId
+                ? { ...conv, files: (conv.files || []).filter(f => f.name !== fileName) }
+                : conv
+            ),
+            uploadedFiles: state.uploadedFiles.filter(f => f.name !== fileName)
+          };
+        });
       },
 
       updateFile: (fileName, updates) => {
-        set((state) => ({
-          uploadedFiles: state.uploadedFiles.map((file) =>
-            file.name === fileName ? { ...file, ...updates } : file
-          ),
-        }));
+        set((state) => {
+          const currentId = state.currentConversationId;
+
+          // If no active conversation, just update global state
+          if (!currentId) {
+            return {
+              uploadedFiles: state.uploadedFiles.map(f => f.name === fileName ? { ...f, ...updates } : f)
+            };
+          }
+
+          return {
+            conversations: state.conversations.map(conv =>
+              conv.id === currentId
+                ? {
+                  ...conv,
+                  files: (conv.files || []).map(f => f.name === fileName ? { ...f, ...updates } : f)
+                }
+                : conv
+            ),
+            uploadedFiles: state.uploadedFiles.map(f => f.name === fileName ? { ...f, ...updates } : f)
+          };
+        });
       },
 
       getCurrentConversation: () => {

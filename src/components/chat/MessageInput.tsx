@@ -14,6 +14,14 @@ import { useAppStore } from "../../stores/appStore";
 import { aiService } from "../../utils/aiService";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 
+const quickSuggestions = [
+  "Create a competitive analysis framework",
+  "Help me prioritize features for Q1",
+  "Design a user research study",
+  "Build a KPI dashboard strategy",
+  "Analyze market trends and opportunities",
+];
+
 interface MessageInputProps {
   conversationId: string;
 }
@@ -61,14 +69,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   // Get conversation-specific state
   const { isLoading } = getConversationState(conversationId);
 
-  const quickSuggestions = [
-    "Create a competitive analysis framework",
-    "Help me prioritize features for Q1",
-    "Design a user research study",
-    "Build a KPI dashboard strategy",
-    "Analyze market trends and opportunities",
-  ];
-
   // Check if this is a new conversation (no messages yet)
   const conversation = getCurrentConversation();
   const isNewConversation = !conversation || conversation.messages.length === 0;
@@ -115,6 +115,25 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     };
   }, []);
 
+  // File selection handler
+  const handleFileSelection = useCallback(
+    async (files: File[]) => {
+      // Import dynamically to avoid circular dependencies if any, or just standard import usage
+      const { processFile } = await import('../../utils/fileProcessor');
+
+      for (const file of files) {
+        try {
+          const fileData = await processFile(file);
+          addFile(fileData);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          // Fallback or error notification could go here
+        }
+      }
+    },
+    [addFile]
+  );
+
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -135,66 +154,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
     const files = Array.from(e.dataTransfer.files);
     handleFileSelection(files);
-  }, []);
-
-  // File selection handler
-  const handleFileSelection = useCallback(
-    (files: File[]) => {
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target?.result as string;
-
-          // Parse content based on file type
-          let parsedContent: any[] = [];
-          try {
-            if (file.name.endsWith(".json")) {
-              const jsonData = JSON.parse(content);
-              parsedContent = Array.isArray(jsonData) ? jsonData : [jsonData];
-            } else if (file.name.endsWith(".csv")) {
-              // Simple CSV parsing - split by lines and commas
-              const lines = content.split("\n").filter((line) => line.trim());
-              const headers = lines[0]?.split(",") || [];
-              parsedContent = lines.slice(1).map((line) => {
-                const values = line.split(",");
-                const obj: any = {};
-                headers.forEach((header, index) => {
-                  obj[header.trim()] = values[index]?.trim() || "";
-                });
-                return obj;
-              });
-            } else {
-              // For text files, split by lines
-              parsedContent = content.split("\n").filter((line) => line.trim());
-            }
-          } catch (error) {
-            console.error("Error parsing file:", error);
-            parsedContent = [content]; // Fallback to raw content
-          }
-
-          // Add file to store
-          addFile({
-            name: file.name,
-            type: file.type,
-            content: parsedContent,
-            size: file.size,
-            processed: true,
-          });
-        };
-
-        if (
-          file.type.includes("text") ||
-          file.name.endsWith(".csv") ||
-          file.name.endsWith(".json")
-        ) {
-          reader.readAsText(file);
-        } else {
-          reader.readAsDataURL(file);
-        }
-      });
-    },
-    [addFile]
-  );
+  }, [handleFileSelection]);
 
   // Handle file input click
   const handleFileInputClick = () => {
@@ -352,7 +312,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     // Add a small delay to prevent rapid successive calls
     const timeoutId = setTimeout(handleAIResponse, 100);
     return () => clearTimeout(timeoutId);
-  }, [isLoading, conversationId]);
+  }, [
+    isLoading,
+    conversationId,
+    addMessage,
+    getConversationState,
+    getCurrentConversation,
+    selectedModel,
+    setConversationAbortController,
+    setConversationLoading,
+    setConversationStreaming,
+    stopConversationAI // Added dependency
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -400,27 +371,22 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     setTimeout(() => setIsSubmitting(false), 1000);
   };
 
-  const handleStop = () => {
-    // console.log(`Stop button clicked for conversation ${conversationId}`);
-
-    // Immediately clear streaming to stop visual output
-    setConversationStreaming(conversationId, null);
-
-    // Stop the AI processing
-    stopConversationAI(conversationId);
-
-    // console.log(`AI response stopped for conversation ${conversationId}`);
+  const handleStop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (conversationId) {
+      stopConversationAI(conversationId);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e as unknown as React.FormEvent);
     }
     // Add Cmd/Ctrl+Enter as alternative send shortcut
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
 
@@ -505,19 +471,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <div
-      ref={dropZoneRef}
-      className={`transition-all duration-500 bg-background ${
-        isEmptyConversation
-          ? "relative max-w-2xl mx-auto w-full p-4"
-          : "relative w-full p-4"
-      } ${isDragOver ? "drag-over" : ""}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      ref={ dropZoneRef }
+      className={ `transition-all duration-500 bg-background ${isEmptyConversation
+        ? "relative max-w-2xl mx-auto w-full p-4"
+        : "relative w-full p-4"
+        } ${isDragOver ? "drag-over" : ""}` }
+      onDragOver={ handleDragOver }
+      onDragLeave={ handleDragLeave }
+      onDrop={ handleDrop }
     >
       <div className="max-w-4xl mx-auto px-4">
-        {/* Drag overlay */}
-        {isDragOver && (
+        {/* Drag overlay */ }
+        { isDragOver && (
           <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-2xl flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="text-center">
               <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -529,150 +494,150 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               </p>
             </div>
           </div>
-        )}
+        ) }
 
-        {/* Hidden file input */}
+        {/* Hidden file input */ }
         <input
-          ref={fileInputRef}
+          ref={ fileInputRef }
           type="file"
           multiple
           accept=".csv,.json,.txt,.xlsx,.xls"
-          onChange={handleFileInputChange}
+          onChange={ handleFileInputChange }
           className="hidden"
         />
-        {/* Try Suggestions - Only show for new conversations (hidden on small screens) */}
-        {isNewConversation && !isEmptyConversation && (
+        {/* Try Suggestions - Only show for new conversations (hidden on small screens) */ }
+        { isNewConversation && !isEmptyConversation && (
           <div className="mb-4 text-center">
             <div className="text-sm text-muted-foreground">
               <span className="font-medium">Try: </span>
               <button
-                onClick={() => setMessage(suggestionText)}
+                onClick={ () => setMessage(suggestionText) }
                 className="hidden sm:inline text-primary hover:text-primary/80 underline-offset-2 hover:underline cursor-pointer transition-colors duration-200"
               >
-                {suggestionText}
-                {isSuggestionTyping ? (
+                { suggestionText }
+                { isSuggestionTyping ? (
                   <span className="animate-pulse ml-0.5">|</span>
                 ) : (
                   ""
-                )}
+                ) }
               </button>
             </div>
           </div>
-        )}
+        ) }
 
-        {/* File Attachments - Horizontal Scrollable */}
-        {uploadedFiles.length > 0 && (
+        {/* File Attachments - Horizontal Scrollable */ }
+        { uploadedFiles.length > 0 && (
           <div className="mb-3 file-upload-enter">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
-              {uploadedFiles.map((file) => {
+              { uploadedFiles.map((file) => {
                 const IconComponent = getFileIcon(file.type);
                 const typeLabel = getFileTypeLabel(file.type, file.name);
                 const iconColor = getFileIconColor(file.type, file.name);
 
                 return (
                   <div
-                    key={file.name}
+                    key={ file.name }
                     className="flex items-center space-x-2 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl px-3 py-2 shadow-sm hover:shadow-md hover:shadow-primary/10 transition-all duration-200 group flex-shrink-0"
-                    style={{ minWidth: "200px", maxWidth: "280px" }}
+                    style={ { minWidth: "200px", maxWidth: "280px" } }
                   >
                     <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 ${iconColor} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}
+                      className={ `w-6 h-6 sm:w-8 sm:h-8 ${iconColor} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm` }
                     >
                       <IconComponent className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm font-medium text-foreground truncate">
-                        {file.name}
+                        { file.name }
                       </p>
                       <p className="text-xs text-primary/70 truncate">
-                        {typeLabel} •{" "}
-                        {Array.isArray(file.content) ? file.content.length : 1}{" "}
+                        { typeLabel } •{ " " }
+                        { Array.isArray(file.content) ? file.content.length : 1 }{ " " }
                         records
                       </p>
                     </div>
 
                     <button
-                      onClick={() => removeFile(file.name)}
+                      onClick={ () => removeFile(file.name) }
                       className="w-5 h-5 flex items-center justify-center text-primary/60 hover:text-destructive hover:bg-destructive/10 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 flex-shrink-0"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 );
-              })}
+              }) }
             </div>
           </div>
-        )}
+        ) }
 
-        <form onSubmit={handleSubmit} className="relative">
-          {/* Modern Chat Input Container */}
+        <form onSubmit={ handleSubmit } className="relative">
+          {/* Modern Chat Input Container */ }
           <div className="relative bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 shadow-2xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/30 overflow-hidden">
-            {/* Gradient Background Overlay */}
+            {/* Gradient Background Overlay */ }
             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-primary/[0.03] opacity-0 focus-within:opacity-100 transition-opacity duration-500"></div>
 
-            {/* Text Input Area */}
+            {/* Text Input Area */ }
             <div className="relative">
               <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
+                ref={ textareaRef }
+                value={ message }
+                onChange={ handleInputChange }
+                onKeyDown={ handleKeyDown }
                 placeholder={
                   isListening
                     ? "Listening..."
-                    : "Ask about product management..."
+                    : "Ask about product strategy, roadmapping, user research, or any PM topic..."
                 }
-                disabled={isLoading}
-                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent"
-                rows={1}
+                disabled={ isLoading }
+                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent scrollbar-hide"
+                rows={ 1 }
+                style={ { minHeight: "44px" } }
               />
-              {/* Desktop-only placeholder overlay */}
-              {!message && (
+              {/* Desktop-only placeholder overlay */ }
+              { !message && (
                 <div
-                  className={`hidden sm:block absolute left-6 top-4 pointer-events-none text-base z-5 ${
-                    isListening ? "text-red-500" : "text-muted-foreground/70"
-                  }`}
+                  className={ `hidden sm:block absolute left-6 top-4 pointer-events-none text-base z-5 ${isListening ? "text-red-500" : "text-muted-foreground/70"
+                    }` }
                 >
-                  {isListening
+                  { isListening
                     ? "Listening..."
-                    : "Ask about product strategy, roadmapping, user research, or any PM topic..."}
+                    : "Ask about product strategy, roadmapping, user research, or any PM topic..." }
                 </div>
-              )}
+              ) }
             </div>
 
-            {/* Controls Bar - No divider line */}
+            {/* Controls Bar - No divider line */ }
             <div className="relative flex items-center justify-between px-4 py-3 bg-transparent">
-              {/* Left Side Controls */}
+              {/* Left Side Controls */ }
               <div className="flex items-center gap-2">
-                {/* Paperclip - File Upload */}
+                {/* Paperclip - File Upload */ }
                 <button
                   type="button"
-                  onClick={handleFileInputClick}
-                  disabled={isLoading}
+                  onClick={ handleFileInputClick }
+                  disabled={ isLoading }
                   className="group relative flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/60 hover:bg-secondary/80 text-muted-foreground hover:text-primary transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm"
                   title="Upload files (CSV, JSON, TXT)"
                 >
                   <Paperclip className="w-4 h-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
-                  {uploadedFiles.length > 0 && (
+                  { uploadedFiles.length > 0 && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
                       <span className="text-[8px] text-white font-bold">
-                        {uploadedFiles.length}
+                        { uploadedFiles.length }
                       </span>
                     </div>
-                  )}
+                  ) }
                 </button>
 
-                {/* Model Selector */}
-                <div ref={modelSelectorRef} className="relative">
+                {/* Model Selector */ }
+                <div ref={ modelSelectorRef } className="relative">
                   <button
                     type="button"
-                    onClick={() => setShowModelSelector(!showModelSelector)}
-                    disabled={isLoading}
+                    onClick={ () => setShowModelSelector(!showModelSelector) }
+                    disabled={ isLoading }
                     className="group flex items-center gap-2 px-3 py-2 bg-secondary/60 hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm"
                   >
                     <div className="flex items-center gap-2">
-                      {/* Model Icon */}
+                      {/* Model Icon */ }
                       <div className="relative w-5 h-5 rounded-lg overflow-hidden bg-white/90 flex items-center justify-center shadow-sm">
                         <img
                           src={
@@ -680,145 +645,142 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                               ? "/claude-color.svg"
                               : "/gemini-color.svg"
                           }
-                          alt={selectedModel === "claude" ? "Claude" : "Gemini"}
+                          alt={ selectedModel === "claude" ? "Claude" : "Gemini" }
                           className="w-4 h-4"
-                          onError={(e) => {
+                          onError={ (e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
-                          }}
+                          } }
                         />
                       </div>
-                      {/* Model Name */}
+                      {/* Model Name */ }
                       <span className="text-sm font-medium text-foreground hidden sm:block">
-                        {selectedModel === "claude"
+                        { selectedModel === "claude"
                           ? "Claude 4.0"
-                          : "Gemini 2.5"}
+                          : "Gemini 2.5" }
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3 h-3 text-muted-foreground transition-transform duration-300 ${
-                        showModelSelector ? "rotate-180" : ""
-                      }`}
+                      className={ `w-3 h-3 text-muted-foreground transition-transform duration-300 ${showModelSelector ? "rotate-180" : ""
+                        }` }
                     />
                   </button>
 
-                  {/* Model Selector Dropdown - Simple original design */}
-                  {showModelSelector && (
+                  {/* Model Selector Dropdown - Simple original design */ }
+                  { showModelSelector && (
                     <div className="absolute bottom-full left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={ () => {
                           setSelectedModel("claude");
                           setShowModelSelector(false);
-                        }}
+                        } }
                         className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-t-lg"
                       >
                         <img
                           src="/claude-color.svg"
                           alt="Claude"
                           className="w-4 h-4 mr-2"
-                          onError={(e) => {
+                          onError={ (e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
-                          }}
+                          } }
                         />
                         <span>Claude 4.0 Sonnet</span>
-                        {selectedModel === "claude" && (
+                        { selectedModel === "claude" && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                        )}
+                        ) }
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={ () => {
                           setSelectedModel("gemini");
                           setShowModelSelector(false);
-                        }}
+                        } }
                         className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
                       >
                         <img
                           src="/gemini-color.svg"
                           alt="Gemini"
                           className="w-4 h-4 mr-2"
-                          onError={(e) => {
+                          onError={ (e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
-                          }}
+                          } }
                         />
                         <span>Gemini 2.5 Pro</span>
-                        {selectedModel === "gemini" && (
+                        { selectedModel === "gemini" && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                        )}
+                        ) }
                       </button>
                     </div>
-                  )}
+                  ) }
                 </div>
               </div>
 
-              {/* Right Side Controls */}
+              {/* Right Side Controls */ }
               <div className="flex items-center gap-2">
-                {/* Microphone Button - Speech to Text */}
-                {isSpeechSupported && (
+                {/* Microphone Button - Speech to Text */ }
+                { isSpeechSupported && (
                   <button
                     type="button"
-                    onClick={handleMicClick}
-                    disabled={isLoading}
-                    className={`group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm ${
-                      isListening
-                        ? "bg-red-500/15 border border-red-500 text-red-500 animate-pulse"
-                        : "bg-secondary/60 hover:bg-secondary/80 text-muted-foreground hover:text-primary"
-                    }`}
-                    title={isListening ? "Stop recording" : "Start voice input"}
+                    onClick={ handleMicClick }
+                    disabled={ isLoading }
+                    className={ `group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm ${isListening
+                      ? "bg-red-500/15 border border-red-500 text-red-500 animate-pulse"
+                      : "bg-secondary/60 hover:bg-secondary/80 text-muted-foreground hover:text-primary"
+                      }` }
+                    title={ isListening ? "Stop recording" : "Start voice input" }
                   >
-                    {isListening ? (
+                    { isListening ? (
                       <MicOff className="w-4 h-4" />
                     ) : (
                       <Mic className="w-4 h-4" />
-                    )}
-                    {isListening && (
+                    ) }
+                    { isListening && (
                       <div className="absolute inset-1 rounded-lg border border-red-500 animate-ping opacity-50" />
-                    )}
+                    ) }
                   </button>
-                )}
+                ) }
 
-                {/* Send/Stop Button */}
+                {/* Send/Stop Button */ }
                 <button
-                  type={isLoading ? "button" : "submit"}
-                  onClick={isLoading ? handleStop : undefined}
+                  type={ isLoading ? "button" : "submit" }
+                  onClick={ isLoading ? handleStop : undefined }
                   disabled={
                     (!isLoading &&
                       !message.trim() &&
                       uploadedFiles.length === 0) ||
                     isSubmitting
                   }
-                  className={`group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 transform active:scale-95 ${
-                    isLoading
-                      ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
-                      : message.trim() || uploadedFiles.length > 0
+                  className={ `group relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 transform active:scale-95 ${isLoading
+                    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                    : message.trim() || uploadedFiles.length > 0
                       ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105"
                       : "bg-secondary/60 text-muted-foreground cursor-not-allowed"
-                  }`}
+                    }` }
                 >
-                  {isLoading ? (
+                  { isLoading ? (
                     <Square className="w-4 h-4 fill-current" />
                   ) : (
                     <ArrowUp className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                  )}
+                  ) }
 
-                  {/* Subtle glow effect for active state */}
-                  {(message.trim() || uploadedFiles.length > 0) &&
+                  {/* Subtle glow effect for active state */ }
+                  { (message.trim() || uploadedFiles.length > 0) &&
                     !isLoading && (
                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary to-primary/90 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                    )}
+                    ) }
                 </button>
               </div>
             </div>
           </div>
         </form>
 
-        {/* Compact Footer info - Hidden on mobile */}
+        {/* Compact Footer info - Hidden on mobile */ }
         <div className="hidden sm:flex items-center justify-center mt-3 text-xs text-muted-foreground">
-          Powered by{" "}
-          {selectedModel === "claude" ? "Claude 4.0 Sonnet" : "Gemini 2.5 Pro"}.
+          Powered by{ " " }
+          { selectedModel === "claude" ? "Claude 4.0 Sonnet" : "Gemini 2.5 Pro" }.
           AI can make mistakes. Always verify important information.
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ChatContainer } from './components/chat/ChatContainer';
 import { useTheme } from './hooks/useTheme';
 

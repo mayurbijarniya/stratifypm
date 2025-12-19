@@ -108,7 +108,7 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
 
             recognitionRef.current = recognition;
             recognition.start();
-        } catch (err) {
+        } catch {
             setError('Failed to start speech recognition');
             setIsListening(false);
         }

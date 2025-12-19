@@ -22,7 +22,7 @@ class ExaSearchService {
 
     private getApiConfig(): { baseUrl: string; useDirectApi: boolean } {
         const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-        
+
         if (isLocalhost) {
             // Use direct Exa API for localhost (no CORS issue)
             return {
@@ -56,6 +56,7 @@ class ExaSearchService {
         return !!this.apiKey;
     }
 
+
     // Use Gemini to intelligently detect if web search is needed (cost-effective)
     private async intelligentSearchDetection(message: string): Promise<boolean> {
         try {
@@ -88,17 +89,14 @@ Answer:`;
             if (response.ok) {
                 const data = await response.json();
                 const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
-                // console.log('Search detection result:', result, 'for query:', message);
                 return result === 'YES';
-            } else {
-                // console.error('Search detection API error:', response.status);
             }
+            return false;
         } catch (error) {
-            // console.error('Search detection failed:', error);
+            console.warn('Intelligent detection failed, falling back to keywords:', error);
+            // Fallback to basic keyword matching
+            return this.keywordBasedDetection(message);
         }
-
-        // Fallback to keyword detection
-        return this.keywordBasedDetection(message);
     }
 
     // Fallback keyword-based detection
@@ -142,11 +140,33 @@ Answer:`;
     }
 
     // Main search detection method (simple and reliable)
-    shouldSearch(message: string): boolean {
-        if (!this.isAvailable()) return false;
+    async shouldSearch(message: string): Promise<boolean> {
+        if (!this.isAvailable()) {
+            console.warn('Exa search skipped: No API key found');
+            return false;
+        }
 
-        // Use reliable keyword-based detection that was working before
-        return this.keywordBasedDetection(message);
+        // Try intelligent detection first
+        try {
+            const intelligentResult = await this.intelligentSearchDetection(message);
+            if (intelligentResult) {
+                // Intelligent search detection: YES
+                return true;
+            }
+
+            // If intelligent detection says NO, double-check with keywords as a safety net
+            // for obvious time-sensitive queries that the model might have missed
+            const keywordResult = this.keywordBasedDetection(message);
+            if (keywordResult) {
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Search detection error:', error);
+            // Fallback
+            return this.keywordBasedDetection(message);
+        }
     }
 
     // Use Gemini to optimize search query (cost-effective)
@@ -170,13 +190,10 @@ Optimized search query:`;
             if (response.ok) {
                 const data = await response.json();
                 const optimizedQuery = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
-                // console.log('Query optimization result:', optimizedQuery || '(fallback)');
                 return optimizedQuery || userQuery.slice(0, 200);
-            } else {
-                // console.error('Query optimization API error:', response.status);
             }
-        } catch (error) {
-            // console.error('Query optimization failed:', error);
+        } catch {
+            // Fallback to original query on error
         }
 
         return userQuery.slice(0, 200);
@@ -184,18 +201,14 @@ Optimized search query:`;
 
     // Enhanced search with 25 results for comprehensive coverage
     async search(query: string): Promise<string> {
-        // console.log('Search method called with query:', query);
 
         if (!this.isAvailable()) {
-            // console.log('Search not available - no API key');
             return '';
         }
 
         try {
-            // console.log('Starting web search process...');
             // Use Gemini to optimize the search query
             const optimizedQuery = await this.optimizeSearchQuery(query);
-            // console.log('Optimized query:', optimizedQuery);
 
             // Prepare headers based on environment
             const headers: Record<string, string> = {
@@ -208,20 +221,18 @@ Optimized search query:`;
             }
 
             // Prepare body based on environment
-            const body = this.useDirectApi 
+            const body = this.useDirectApi
                 ? JSON.stringify({
                     query: optimizedQuery,
                     type: 'neural',
                     numResults: 25,
                     contents: { text: true },
                     livecrawl: 'always'
-                  })
+                })
                 : JSON.stringify({
                     query: optimizedQuery,
                     numResults: 25
-                  });
-
-            // console.log('Using', this.useDirectApi ? 'direct Exa API' : 'proxy API');
+                });
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -230,18 +241,14 @@ Optimized search query:`;
                 body,
             });
 
-            // console.log('Exa API response status:', response.status);
-
             if (!response.ok) {
                 // console.error('Exa API error:', response.status, await response.text());
                 return '';
             }
 
             const data: ExaResponse = await response.json();
-            // console.log('Exa API results count:', data.results?.length || 0);
 
             if (!data.results || data.results.length === 0) {
-                // console.log('No results found from Exa API');
                 return '';
             }
 
@@ -265,8 +272,8 @@ Optimized search query:`;
 
             return context;
         } catch (error) {
-            // console.error('Exa search error:', error);
-            return '';
+            console.warn('Exa search failed:', error);
+            return ''; // Return empty string on search failure
         }
     }
 }
