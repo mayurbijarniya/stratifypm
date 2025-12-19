@@ -115,13 +115,16 @@ export class UnifiedAIService {
     const isRecent = cacheAge < 10 * 60 * 1000; // 10 minutes
     const isSameSession = this.webSearchCache.sessionId === this.currentSessionId;
 
-    // Check if queries are related (simple keyword overlap)
+    // Check if queries are related (strict keyword overlap)
     const currentKeywords = query.toLowerCase().split(' ').filter(w => w.length > 3);
     const cachedKeywords = this.webSearchCache.query.toLowerCase().split(' ').filter(w => w.length > 3);
-    const overlap = currentKeywords.filter(k => cachedKeywords.includes(k)).length;
-    const isRelated = overlap >= Math.min(2, currentKeywords.length * 0.3);
 
-    // Cache check verified
+    // If either query has no significant keywords, assume not related enough for STRICT reuse
+    if (currentKeywords.length === 0 || cachedKeywords.length === 0) return false;
+
+    const overlap = currentKeywords.filter(k => cachedKeywords.includes(k)).length;
+
+    const isRelated = overlap >= (currentKeywords.length * 0.6);
 
     return isRecent && isSameSession && isRelated;
   }
@@ -564,15 +567,16 @@ Remember: You're having an ongoing conversation, not answering isolated question
       // STEP 3: Check if web search is needed (with caching)
       let webContext = '';
       if (isPMRelated) {
+        // First check if user needs NEW info
         const needsSearch = await exaSearch.shouldSearch(message);
 
         if (needsSearch) {
-          // Check if we can use cached context
+          // Check if we can use cached context (STRICT check for same topic)
           if (this.isCacheValid(message)) {
             webContext = this.webSearchCache!.context;
-            // Using cached web search context
+            // Using cached web search context (Topic match verified)
           } else {
-            // Performing new web search...
+            // Performing new web search (New topic or expired cache)
             webContext = await exaSearch.search(message);
 
             // Cache the results for follow-up questions
@@ -580,11 +584,17 @@ Remember: You're having an ongoing conversation, not answering isolated question
               this.updateCache(message, webContext);
             }
           }
+        } else {
+          if (this.webSearchCache &&
+            this.webSearchCache.sessionId === this.currentSessionId &&
+            (Date.now() - this.webSearchCache.timestamp < 30 * 60 * 1000)) {
+            webContext = this.webSearchCache.context;
+          }
         }
       }
 
       // STEP 4: If PM-related, proceed with model-specific response
-      // console.log('Question classified as PM-related, generating response...');
+
 
       if (model === 'gemini') {
         return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal, webContext);
