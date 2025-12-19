@@ -421,7 +421,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       setMessage(transcript);
       adjustTextareaHeight();
     }
-  }, [transcript]);
+  }, [transcript, adjustTextareaHeight]);
 
   // Show speech error
   useEffect(() => {
