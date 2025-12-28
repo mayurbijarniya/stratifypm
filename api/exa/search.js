@@ -1,13 +1,14 @@
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://stratifypm.mayur.app',
+  'https://stratifypm.mayur.run',
 ];
 
 function setCORS(req, res) {
   const origin = req.headers.origin || '';
   const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[1];
   const reqHeaders = req.headers['access-control-request-headers'] || 'Content-Type';
-  
+
   res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', reqHeaders);
@@ -18,14 +19,14 @@ function setCORS(req, res) {
 export default async function handler(req, res) {
   try {
     setCORS(req, res);
-    
+
     if (req.method === 'OPTIONS') {
       return res.status(204).end();
     }
 
     const apiKey = process.env.VITE_EXA_API_KEY;
     // console.log('API Key check:', { hasKey: !!apiKey, keyLength: apiKey?.length });
-    
+
     if (!apiKey) {
       console.error('Missing VITE_EXA_API_KEY environment variable');
       return res.status(500).json({ error: 'Missing API key configuration' });
@@ -47,19 +48,19 @@ export default async function handler(req, res) {
     if (!upstream.ok) {
       const errorText = await upstream.text();
       console.error('Exa API error:', upstream.status, errorText);
-      return res.status(upstream.status).json({ 
+      return res.status(upstream.status).json({
         error: `Exa API error: ${upstream.status}`,
-        details: errorText 
+        details: errorText
       });
     }
 
     const text = await upstream.text();
     // console.log('Exa API response length:', text.length);
-    
+
     return res.status(200).send(text);
   } catch (err) {
     console.error('Function error:', err);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: err?.message || 'Unknown error',
       type: err?.constructor?.name || 'Unknown'
     });
