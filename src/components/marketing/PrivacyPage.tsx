@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PublicLayout } from './PublicLayout';
 import { FileText, Settings, Trash2, Lock } from '../ui/icons';
 
 export const PrivacyPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const sections = [
     {
       icon: FileText,

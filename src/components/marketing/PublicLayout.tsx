@@ -44,7 +44,10 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           <div className="mx-auto w-full max-w-6xl px-6">
             <div className="grid gap-12 md:grid-cols-4 mb-12">
               <div className="space-y-3">
-                <img src="/logo.svg" alt="StratifyPM" className="h-7 w-auto" />
+                <Link to="/" className="flex items-center gap-2">
+                  <img src="/logo.svg" alt="StratifyPM" className="h-7 w-auto" />
+                  <span className="text-lg font-semibold text-slate-900 dark:text-white">StratifyPM</span>
+                </Link>
               </div>
               <div className="space-y-3">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">Product</p>

@@ -34,6 +34,10 @@ const FadeInSection: React.FC<{ children: React.ReactNode; delay?: number }> = (
 };
 
 export const LandingPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const features = [
     {
       icon: MessageSquare,

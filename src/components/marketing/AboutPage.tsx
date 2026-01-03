@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PublicLayout } from './PublicLayout';
 import { Target, Users, Zap, Shield } from '../ui/icons';
 
 export const AboutPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const features = [
     {
       icon: Target,
