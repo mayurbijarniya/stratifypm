@@ -4,7 +4,7 @@ import { MessageInput } from "./MessageInput";
 import { FeatureInterface } from "./FeatureInterface";
 import { Navbar } from "../layout/Navbar";
 import { useAppStore } from "../../stores/appStore";
-import { Target, Users, BarChart3, TrendingUp, Sparkles } from "lucide-react";
+import { Target, Users, BarChart3, TrendingUp, Sparkles } from "../ui/icons";
 
 export const ChatContainer: React.FC = () => {
   const { getCurrentConversation, selectedFeature } = useAppStore();
@@ -42,12 +42,12 @@ export const ChatContainer: React.FC = () => {
 
             {/* Feature Cards - Single line */}
             <div className="flex flex-wrap justify-center gap-2 mb-6">
-              <div className="group bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-200/20 dark:border-blue-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+              <div className="group bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
                 <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 gradient-blue rounded-md flex items-center justify-center shadow-sm">
-                    <Target className="w-3 h-3 text-white" />
+                  <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
+                    <Target className="w-3 h-3 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                  <h3 className="text-xs font-medium text-primary">
                     Strategic Planning
                   </h3>
                 </div>
@@ -75,12 +75,12 @@ export const ChatContainer: React.FC = () => {
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-200/20 dark:border-blue-800/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+              <div className="group bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 hover:shadow-md hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
                 <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 gradient-blue rounded-md flex items-center justify-center shadow-sm">
-                    <TrendingUp className="w-3 h-3 text-white" />
+                  <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
+                    <TrendingUp className="w-3 h-3 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                  <h3 className="text-xs font-medium text-primary">
                     Execution
                   </h3>
                 </div>
@@ -117,7 +117,7 @@ export const ChatContainer: React.FC = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-3 rounded-lg border border-primary/10 max-w-md mx-auto">
+            <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 max-w-md mx-auto">
               <div className="flex items-center justify-center mb-1">
                 <Sparkles className="w-4 h-4 text-primary mr-2" />
                 <span className="text-sm font-medium text-primary">

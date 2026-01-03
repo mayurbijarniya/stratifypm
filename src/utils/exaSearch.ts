@@ -253,7 +253,7 @@ Optimized search query:`;
             }
 
             // Format comprehensive results for AI
-            let context = '\n\n🌐 **CURRENT MARKET INTELLIGENCE** (Live Data):\n';
+            let context = '\n\nCURRENT MARKET INTELLIGENCE (Live Data):\n';
 
             // Use all available results for comprehensive coverage
             data.results.forEach((result, i) => {
@@ -268,7 +268,7 @@ Optimized search query:`;
                 context += '\n';
             });
 
-            context += '🎯 **INSTRUCTION:** Use this comprehensive market intelligence as your primary information source. This data represents the most current available information on the topic.\n';
+            context += '**INSTRUCTION:** Use this comprehensive market intelligence as your primary information source. This data represents the most current available information on the topic.\n';
 
             return context;
         } catch (error) {

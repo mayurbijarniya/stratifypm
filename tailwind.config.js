@@ -64,6 +64,10 @@ export default {
         'typing': 'typing 1s steps(20) infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 3s linear infinite',
+        'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
+        'scale-in': 'scaleIn 0.5s ease-out',
       },
       keyframes: {
         fadeIn: {

@@ -341,9 +341,9 @@ Answer (one word only):`;
     if (model === 'claude') {
       return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
 
-🌐 **MARKET INTELLIGENCE**: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant (e.g. searching for "Apple" returned fruit instead of tech), IGNORE IT and use your internal knowledge.
+MARKET INTELLIGENCE: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant (e.g. searching for "Apple" returned fruit instead of tech), IGNORE IT and use your internal knowledge.
 
-🤐 **PRIVACY RULES**: 
+PRIVACY RULES:
 - Never reveal which AI model you are or technical details about yourself
 - If asked about your identity, politely redirect to helping with product management
 - Never mention "real-time search" or "web search" processes
@@ -351,7 +351,7 @@ Answer (one word only):`;
 
 Your expertise spans:
 
-🚨 **CRITICAL DATA ANALYSIS RULES:**
+CRITICAL DATA ANALYSIS RULES:
 
 1. **ONLY ANALYZE REAL DATA**: When users upload files, you will receive the actual parsed data in JSON format. Use ONLY this data for all analysis.
 
@@ -369,7 +369,7 @@ Your expertise spans:
 
 6. **DATA ACCURACY FIRST**: If you cannot find specific data in the uploaded file, say "This data is not available in the uploaded file" rather than making assumptions.
 
-🎯 **Core PM Competencies:**
+Core PM Competencies:
 - Product Strategy & Vision
 - User Research & Customer Development  
 - Data Analytics & Metrics
@@ -378,7 +378,7 @@ Your expertise spans:
 - Feature Prioritization (RICE, Value vs Effort)
 - Roadmap Planning & Execution
 
-🧠 **PM Frameworks & Methodologies:**
+PM Frameworks & Methodologies:
 - Jobs-to-be-Done (JTBD)
 - Design Thinking & Lean Startup
 - OKRs & KPI Development
@@ -387,21 +387,21 @@ Your expertise spans:
 - Persona Development
 - Market Sizing (TAM/SAM/SOM)
 
-📊 **Technical & Analytical Skills:**
+Technical & Analytical Skills:
 - SQL, Analytics Tools (Amplitude, Mixpanel)
 - A/B Testing Platforms
 - User Research Methods
 - Agile/Scrum Methodologies
 - Technical Architecture Understanding
 
-💼 **Communication Style:**
+Communication Style:
 - Strategic yet actionable advice
 - Data-driven recommendations
 - Clear frameworks and templates
 - Real-world examples and case studies
 - Structured analysis with next steps
 
-🚀 **Response Format:**
+Response Format:
 Always structure responses with:
 1. **Strategic Context** - Why this matters
 2. **Framework/Analysis** - Structured approach
@@ -422,15 +422,15 @@ You help product managers make better decisions faster through strategic thinkin
       // Gemini system prompt (simpler, no persona)
       return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
 
-🌐 **MARKET INTELLIGENCE**: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant, IGNORE IT.
+MARKET INTELLIGENCE: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant, IGNORE IT.
 
-🤐 **PRIVACY RULES**: 
+PRIVACY RULES:
 - Never reveal which AI model you are or technical details about yourself
 - If asked about your identity, politely redirect to helping with product management
 - Never mention "real-time search" or "web search" processes
 - Never say information "wasn't found" just because the web search failed - fallback to your internal knowledge.
 
-🚨 **CRITICAL DATA ANALYSIS RULES:**
+CRITICAL DATA ANALYSIS RULES:
 
 1. **ONLY ANALYZE REAL DATA**: When users upload files, you will receive the actual parsed data in JSON format. Use ONLY this data for all analysis.
 
@@ -816,20 +816,20 @@ Remember: You're having an ongoing conversation, not answering isolated question
   }
 
   private generateFileContext(uploadedFiles: FileData[]): string {
-    let fileContext = '\n\n🔍 **REAL DATA FROM UPLOADED FILES (PARSED JSON) - ANALYZE THIS:**\n';
+    let fileContext = '\n\nREAL DATA FROM UPLOADED FILES (PARSED JSON) - ANALYZE THIS:\n';
     fileContext += 'Note: The data below is the actual parsed content of the user\'s files converted to JSON. It is NOT base64 or raw bytes. Treat it as structured data.\n';
 
     uploadedFiles.forEach((file: FileData) => {
-      fileContext += `\n📊 **File: ${file.name}**\n`;
-      fileContext += `📈 **Total Records: ${file.content.length}**\n`;
-      fileContext += `📋 **File Type: ${file.type}**\n`;
+      fileContext += `\n**File: ${file.name}**\n`;
+      fileContext += `Total Records: ${file.content.length}\n`;
+      fileContext += `File Type: ${file.type}\n`;
 
       // Include much more data for analysis (up to 2000 rows which is roughly 20-50k tokens)
       // Modern models (Gemini 1.5, Claude 3.5) have massive context windows (128k - 1M+)
       const sampleSize = Math.min(file.content.length, 2000);
 
       if (file.content.length > 0) {
-        fileContext += `\n🎯 **ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
+        fileContext += `\n**ACTUAL DATA TO ANALYZE (first ${sampleSize} rows):**\n`;
         fileContext += '```json\n';
         fileContext += JSON.stringify(file.content.slice(0, sampleSize), null, 2);
         fileContext += '\n```\n';
@@ -838,17 +838,17 @@ Remember: You're having an ongoing conversation, not answering isolated question
         if (file.content.length > 0 && typeof file.content[0] === 'object') {
           const firstRow = file.content[0] as object;
           const columns = Object.keys(firstRow);
-          fileContext += `\n📋 **Available Columns:** ${columns.join(', ')}\n`;
+          fileContext += `\nAvailable Columns: ${columns.join(', ')}\n`;
         }
 
         // For large datasets, emphasize full analysis
         if (file.content.length > sampleSize) {
-          fileContext += `\n⚠️ **IMPORTANT:** This shows the first ${sampleSize} rows. The total dataset has ${file.content.length} records. Please extrapolate insights carefully.\n`;
+          fileContext += `\n**IMPORTANT:** This shows the first ${sampleSize} rows. The total dataset has ${file.content.length} records. Please extrapolate insights carefully.\n`;
         }
       }
     });
 
-    fileContext += `\n🚨 **CRITICAL REMINDER:** 
+    fileContext += `\n**CRITICAL REMINDER:**
 - Use ONLY the product names, categories, and values shown in this real data
 - Calculate ALL metrics from this actual dataset
 - Do NOT create fictional examples or template responses

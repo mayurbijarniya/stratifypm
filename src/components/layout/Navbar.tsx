@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Sun, Moon, MessageSquare, X, Trash2, MoreHorizontal } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Sun, Moon, MessageSquare, X, Trash2, MoreHorizontal } from '../ui/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppStore } from '../../stores/appStore';
+import { useAuthStore } from '../../stores/authStore';
+import { logout } from '../../utils/authApi';
 
 export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -11,8 +14,11 @@ export const Navbar: React.FC = () => {
     deleteConversation,
     clearAllConversations,
     setCurrentConversation,
-    currentConversationId
+    currentConversationId,
+    setConversations
   } = useAppStore();
+  const { user, token, clearAuth } = useAuthStore();
+  const navigate = useNavigate();
   const [showHistory, setShowHistory] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState<string | null>(null);
 
@@ -20,12 +26,14 @@ export const Navbar: React.FC = () => {
     setSelectedFeature(null);
     setCurrentConversation(null); // Explicitly reset to "New Chat" state (clears files)
     setShowHistory(false);
+    navigate('/app');
   };
 
   const handleConversationClick = (conversationId: string) => {
     setCurrentConversation(conversationId);
     setSelectedFeature(null);
     setShowHistory(false);
+    navigate(`/app/${conversationId}`);
   };
 
   const handleDeleteConversation = (conversationId: string, e: React.MouseEvent) => {
@@ -39,6 +47,18 @@ export const Navbar: React.FC = () => {
       clearAllConversations();
       setShowDeleteMenu(null);
     }
+  };
+
+  const handleLogout = async () => {
+    // Call logout API to clear server session and cookie
+    await logout(token);
+    // Clear local state - this removes token from localStorage too
+    clearAuth();
+    // Clear conversations from store
+    setConversations([]);
+    setCurrentConversation(null);
+    setShowHistory(false);
+    navigate('/');
   };
 
   return (
@@ -55,12 +75,27 @@ export const Navbar: React.FC = () => {
         </div>
 
         <div className="absolute left-1/2 transform -translate-x-1/2">
-          <h1 className="text-2xl sm:text-3xl font-light tracking-tighter text-foreground font-be-vietnam-pro">
-            stratifypm
-          </h1>
+          <img
+            src="/logo.svg"
+            alt="StratifyPM"
+            className="h-8 sm:h-9 w-auto"
+          />
         </div>
 
         <div className="flex items-center gap-2">
+          {user?.email && (
+            <div className="hidden lg:flex items-center rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+              {user.email}
+            </div>
+          )}
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="inline-flex rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition hover:bg-accent"
+            >
+              Sign out
+            </button>
+          )}
           <button
             onClick={ () => setShowHistory(!showHistory) }
             className={ `rounded-lg transition-all flex items-center gap-2 px-3 py-2 text-sm font-medium ${showHistory

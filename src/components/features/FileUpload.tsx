@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, FileSpreadsheet, FileText, File, BarChart3 } from 'lucide-react';
+import { Upload, X, FileSpreadsheet, FileText, File, BarChart3 } from '../ui/icons';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { useAppStore } from '../../stores/appStore';

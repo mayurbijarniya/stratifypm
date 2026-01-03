@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from './icons';
 
 export type AIModel = 'gemini' | 'claude';
 
@@ -66,9 +66,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 
-          border border-gray-200 dark:border-gray-700 rounded-lg 
-          hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200
+          flex items-center space-x-2 px-3 py-2
+          bg-transparent border-transparent rounded-lg
+          hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
           disabled:opacity-50 disabled:cursor-not-allowed
           min-w-[180px]

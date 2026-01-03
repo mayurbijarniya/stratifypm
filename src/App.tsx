@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
-import { ChatContainer } from './components/chat/ChatContainer';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthGate } from './components/auth/AuthGate';
+import { AboutPage } from './components/marketing/AboutPage';
+import { LandingPage } from './components/marketing/LandingPage';
+import { PrivacyPage } from './components/marketing/PrivacyPage';
+import { AuthScreen } from './components/auth/AuthScreen';
 import { useTheme } from './hooks/useTheme';
+import { AppShell } from './components/app/AppShell';
 
 function App() {
   const { theme } = useTheme();
@@ -11,9 +17,32 @@ function App() {
   }, [theme]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-all duration-500 w-full overflow-x-hidden">
-      <ChatContainer />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/signin" element={<AuthScreen mode="signin" />} />
+        <Route path="/signup" element={<AuthScreen mode="signup" />} />
+        <Route
+          path="/app"
+          element={
+            <AuthGate>
+              <AppShell />
+            </AuthGate>
+          }
+        />
+        <Route
+          path="/app/:conversationId"
+          element={
+            <AuthGate>
+              <AppShell />
+            </AuthGate>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

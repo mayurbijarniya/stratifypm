@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot } from 'lucide-react';
+import { Bot } from '../ui/icons';
 import { MessageContent } from './MessageContent';
 
 interface StreamingMessageProps {

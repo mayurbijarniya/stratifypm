@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Bot } from 'lucide-react';
+import { Bot } from '../ui/icons';
 import { MessageBubble } from './MessageBubble';
 import { StreamingMessage } from './StreamingMessage';
 import { useAppStore } from '../../stores/appStore';

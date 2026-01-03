@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Conversation, Message, FileData } from '../types';
+import { useAuthStore } from './authStore';
+import {
+  createConversation as createConversationApi,
+  upsertConversation,
+  deleteConversation as deleteConversationApi,
+  clearConversations as clearConversationsApi,
+} from '../utils/conversationApi';
 import type { AIModel } from '../components/ui/ModelSelector';
 
 interface AppState {
@@ -19,6 +26,7 @@ interface AppState {
     isLoading: boolean;
     streamingMessage: string | null;
     abortController: AbortController | null;
+    lastProcessedMessageId: string | null;
   }>;
 
   // Web search cache status
@@ -38,6 +46,7 @@ interface AppState {
   updateConversation: (id: string, updates: Partial<Conversation>) => void;
   deleteConversation: (id: string) => void;
   clearAllConversations: () => void;
+  setConversations: (conversations: Conversation[]) => void;
   setCurrentConversation: (id: string | null) => void;
 
   // Message actions
@@ -48,8 +57,9 @@ interface AppState {
   setConversationLoading: (conversationId: string, loading: boolean) => void;
   setConversationStreaming: (conversationId: string, content: string | null) => void;
   setConversationAbortController: (conversationId: string, controller: AbortController | null) => void;
+  setConversationLastProcessedMessage: (conversationId: string, messageId: string | null) => void;
   stopConversationAI: (conversationId: string) => void;
-  getConversationState: (conversationId: string) => { isLoading: boolean; streamingMessage: string | null; };
+  getConversationState: (conversationId: string) => { isLoading: boolean; streamingMessage: string | null; abortController: AbortController | null; lastProcessedMessageId: string | null; };
 
   // File actions
   addFile: (file: FileData) => void;
@@ -87,6 +97,36 @@ const customStorage = {
   },
 };
 
+const getAuthToken = () => useAuthStore.getState().token;
+
+const syncConversationRemote = (conversation: Conversation) => {
+  // Save if we have a token (auth status might still be 'checking' after sign-in)
+  const token = getAuthToken();
+  if (!token) return;
+  void upsertConversation(token, conversation).catch(() => {});
+};
+
+const createConversationRemote = (conversation: Conversation) => {
+  // Save if we have a token
+  const token = getAuthToken();
+  if (!token) return;
+  void createConversationApi(token, conversation).catch(() => {});
+};
+
+const deleteConversationRemote = (conversationId: string) => {
+  // Delete if we have a token
+  const token = getAuthToken();
+  if (!token) return;
+  void deleteConversationApi(token, conversationId).catch(() => {});
+};
+
+const clearConversationsRemote = () => {
+  // Clear if we have a token
+  const token = getAuthToken();
+  if (!token) return;
+  void clearConversationsApi(token).catch(() => {});
+};
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -114,7 +154,9 @@ export const useAppStore = create<AppState>()(
       setSelectedModel: (model) => set({ selectedModel: model }),
 
       createConversation: (title = 'New Conversation') => {
-        const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const newConversation: Conversation = {
           id,
           title,
@@ -136,6 +178,7 @@ export const useAppStore = create<AppState>()(
               isLoading: false,
               streamingMessage: null,
               abortController: null,
+              lastProcessedMessageId: null,
             }
           },
           // IMPORTANT: Do NOT clear uploadedFiles here. 
@@ -143,17 +186,24 @@ export const useAppStore = create<AppState>()(
           // The next time 'createConversation' is called (from a fresh state), uploadedFiles should be empty via UI logic or explicit reset if dealing with "New Chat" button click.
         }));
 
+        createConversationRemote(newConversation);
+
         return id;
       },
 
       updateConversation: (id, updates) => {
-        set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === id
-              ? { ...conv, ...updates, updatedAt: new Date() }
-              : conv
-          ),
-        }));
+        let updatedConversation: Conversation | null = null;
+        set((state) => {
+          const conversations = state.conversations.map((conv) => {
+            if (conv.id !== id) return conv;
+            updatedConversation = { ...conv, ...updates, updatedAt: new Date() };
+            return updatedConversation;
+          });
+          return { conversations };
+        });
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
       },
 
       deleteConversation: (id) => {
@@ -171,6 +221,8 @@ export const useAppStore = create<AppState>()(
             conversationStates: newConversationStates,
           };
         });
+
+        deleteConversationRemote(id);
       },
 
       clearAllConversations: () => {
@@ -186,6 +238,38 @@ export const useAppStore = create<AppState>()(
             conversations: [],
             currentConversationId: null,
             conversationStates: {},
+          };
+        });
+
+        clearConversationsRemote();
+      },
+
+      setConversations: (conversations) => {
+        set((state) => {
+          const conversationStates = conversations.reduce((acc, conv) => {
+            acc[conv.id] = state.conversationStates[conv.id] || {
+              isLoading: false,
+              streamingMessage: null,
+              abortController: null,
+              lastProcessedMessageId: null,
+            };
+            return acc;
+          }, {} as AppState['conversationStates']);
+
+          const currentConversationId = state.currentConversationId &&
+            conversations.some((conv) => conv.id === state.currentConversationId)
+            ? state.currentConversationId
+            : null;
+          const currentConversation = currentConversationId
+            ? conversations.find((conv) => conv.id === currentConversationId) || null
+            : null;
+
+          return {
+            conversations,
+            currentConversationId,
+            conversationStates,
+            selectedFeature: null,
+            uploadedFiles: currentConversation?.files || [],
           };
         });
       },
@@ -208,6 +292,7 @@ export const useAppStore = create<AppState>()(
               isLoading: false,
               streamingMessage: null,
               abortController: null,
+              lastProcessedMessageId: null,
             };
           }
 
@@ -230,37 +315,45 @@ export const useAppStore = create<AppState>()(
           timestamp: new Date(),
         };
 
+        let updatedConversation: Conversation | null = null;
         set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === conversationId
-              ? {
-                ...conv,
-                messages: [...conv.messages, newMessage],
-                updatedAt: new Date(),
-                // Update title based on first user message
-                title: conv.messages.length === 0 && message.role === 'user'
-                  ? message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '')
-                  : conv.title
-              }
-              : conv
-          ),
+          conversations: state.conversations.map((conv) => {
+            if (conv.id !== conversationId) return conv;
+            updatedConversation = {
+              ...conv,
+              messages: [...conv.messages, newMessage],
+              updatedAt: new Date(),
+              // Update title based on first user message
+              title: conv.messages.length === 0 && message.role === 'user'
+                ? message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '')
+                : conv.title
+            };
+            return updatedConversation;
+          }),
         }));
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
       },
 
       updateMessage: (conversationId, messageId, updates) => {
+        let updatedConversation: Conversation | null = null;
         set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === conversationId
-              ? {
-                ...conv,
-                messages: conv.messages.map((msg) =>
-                  msg.id === messageId ? { ...msg, ...updates } : msg
-                ),
-                updatedAt: new Date(),
-              }
-              : conv
-          ),
+          conversations: state.conversations.map((conv) => {
+            if (conv.id !== conversationId) return conv;
+            updatedConversation = {
+              ...conv,
+              messages: conv.messages.map((msg) =>
+                msg.id === messageId ? { ...msg, ...updates } : msg
+              ),
+              updatedAt: new Date(),
+            };
+            return updatedConversation;
+          }),
         }));
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
       },
 
       // Per-conversation AI state management
@@ -300,6 +393,18 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
+      setConversationLastProcessedMessage: (conversationId, messageId) => {
+        set((state) => ({
+          conversationStates: {
+            ...state.conversationStates,
+            [conversationId]: {
+              ...state.conversationStates[conversationId],
+              lastProcessedMessageId: messageId,
+            }
+          }
+        }));
+      },
+
       stopConversationAI: (conversationId) => {
         set((state) => {
           const conversationState = state.conversationStates[conversationId];
@@ -316,6 +421,7 @@ export const useAppStore = create<AppState>()(
                 isLoading: false,
                 streamingMessage: null,
                 abortController: null,
+                lastProcessedMessageId: conversationState?.lastProcessedMessageId || null,
               }
             }
           };
@@ -328,6 +434,8 @@ export const useAppStore = create<AppState>()(
         return {
           isLoading: conversationState?.isLoading || false,
           streamingMessage: conversationState?.streamingMessage || null,
+          abortController: conversationState?.abortController || null,
+          lastProcessedMessageId: conversationState?.lastProcessedMessageId || null,
         };
       },
 
@@ -344,12 +452,17 @@ export const useAppStore = create<AppState>()(
           }
 
           // If active conversation, update conversation AND sync global
+          const updatedConversations = state.conversations.map(conv =>
+            conv.id === currentId
+              ? { ...conv, files: [...(conv.files || []), file] }
+              : conv
+          );
+          const updatedConversation = updatedConversations.find(conv => conv.id === currentId) || null;
+          if (updatedConversation) {
+            syncConversationRemote(updatedConversation);
+          }
           return {
-            conversations: state.conversations.map(conv =>
-              conv.id === currentId
-                ? { ...conv, files: [...(conv.files || []), file] }
-                : conv
-            ),
+            conversations: updatedConversations,
             uploadedFiles: [...state.uploadedFiles, file]
           };
         });
@@ -366,12 +479,17 @@ export const useAppStore = create<AppState>()(
             };
           }
 
+          const updatedConversations = state.conversations.map(conv =>
+            conv.id === currentId
+              ? { ...conv, files: (conv.files || []).filter(f => f.name !== fileName) }
+              : conv
+          );
+          const updatedConversation = updatedConversations.find(conv => conv.id === currentId) || null;
+          if (updatedConversation) {
+            syncConversationRemote(updatedConversation);
+          }
           return {
-            conversations: state.conversations.map(conv =>
-              conv.id === currentId
-                ? { ...conv, files: (conv.files || []).filter(f => f.name !== fileName) }
-                : conv
-            ),
+            conversations: updatedConversations,
             uploadedFiles: state.uploadedFiles.filter(f => f.name !== fileName)
           };
         });
@@ -388,15 +506,20 @@ export const useAppStore = create<AppState>()(
             };
           }
 
+          const updatedConversations = state.conversations.map(conv =>
+            conv.id === currentId
+              ? {
+                ...conv,
+                files: (conv.files || []).map(f => f.name === fileName ? { ...f, ...updates } : f)
+              }
+              : conv
+          );
+          const updatedConversation = updatedConversations.find(conv => conv.id === currentId) || null;
+          if (updatedConversation) {
+            syncConversationRemote(updatedConversation);
+          }
           return {
-            conversations: state.conversations.map(conv =>
-              conv.id === currentId
-                ? {
-                  ...conv,
-                  files: (conv.files || []).map(f => f.name === fileName ? { ...f, ...updates } : f)
-                }
-                : conv
-            ),
+            conversations: updatedConversations,
             uploadedFiles: state.uploadedFiles.map(f => f.name === fileName ? { ...f, ...updates } : f)
           };
         });
@@ -411,10 +534,10 @@ export const useAppStore = create<AppState>()(
       name: 'pm-ai-chat-storage',
       storage: customStorage,
       partialize: (state) => ({
-        conversations: state.conversations,
         theme: state.theme,
-        // Don't persist sidebar state - always start with sidebar visible
-        // Don't persist conversation states (they should reset on app restart)
+        // Don't persist conversations - DB is source of truth
+        // Don't persist sidebar state
+        // Don't persist conversation states
       }),
     }
   )

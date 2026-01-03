@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Sun, Moon, Bot, Sparkles } from 'lucide-react';
+import { Menu, Sun, Moon, Bot, Sparkles } from '../ui/icons';
 import { Button } from '../ui/Button';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppStore } from '../../stores/appStore';
@@ -29,16 +29,16 @@ export const Header: React.FC = () => {
             }
           }}
           className={`hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-2 w-10 h-10 transition-all duration-200 border ${
-            sidebarOpen 
-              ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' 
-              : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+            sidebarOpen
+              ? 'text-primary bg-primary/10 border-primary/30'
+              : 'text-gray-600 dark:text-gray-400 hover:text-primary border-transparent hover:border-gray-200 dark:hover:border-gray-600'
           }`}
           title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         />
-        
+
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md">
@@ -64,7 +64,7 @@ export const Header: React.FC = () => {
       <div className="flex items-center space-x-2">
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 shadow-md hover:shadow-lg hover:scale-105"
+          className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 shadow-md hover:shadow-lg hover:scale-105"
         >
           {theme === 'light' ? (
             <Moon className="w-5 h-5 sm:w-6 sm:h-6" />

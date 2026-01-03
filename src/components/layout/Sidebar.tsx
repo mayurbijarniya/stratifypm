@@ -14,7 +14,7 @@ import {
   Zap,
   Sparkles,
   Rocket,
-} from "lucide-react";
+} from "../ui/icons";
 import { Button } from "../ui/Button";
 import { useAppStore } from "../../stores/appStore";
 import { quickActions } from "../../data/quickActions";
@@ -25,8 +25,8 @@ const categoryConfig = {
   strategy: {
     icon: Target,
     label: "Strategy",
-    color: "text-blue-600 dark:text-blue-400",
-    bgColor: "bg-blue-100 dark:bg-blue-900/30",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
   },
   execution: {
     icon: TrendingUp,
@@ -186,7 +186,7 @@ export const Sidebar: React.FC = () => {
           { !isDesktop && (
             <button
               onClick={ () => setSidebarOpen(false) }
-              className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 mr-3"
+              className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 mr-3"
               title="Close sidebar"
             >
               <Menu className="w-5 h-5" />
@@ -194,7 +194,7 @@ export const Sidebar: React.FC = () => {
           ) }
 
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-            <MessageSquare className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+            <MessageSquare className="w-5 h-5 mr-2 text-primary" />
             Conversations
           </h2>
 
@@ -268,16 +268,16 @@ export const Sidebar: React.FC = () => {
                 ) : (
                   <button
                     onClick={ () => handleConversationSelect(conversation.id) }
-                    className={ `w-full text-left p-4 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${currentConversationId === conversation.id &&
+                    className={ `w-full text-left p-4 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${currentConversationId === conversation.id &&
                       !selectedFeature
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-lg transform scale-[1.02]"
-                      : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-700 hover:shadow-lg hover:transform hover:scale-[1.01]"
+                      ? "bg-primary/10 border-2 border-primary/30 shadow-lg transform scale-[1.02]"
+                      : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-primary/30 hover:shadow-lg hover:transform hover:scale-[1.01]"
                       }` }
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3 flex-1 min-w-0">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md">
-                          <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md">
+                          <MessageSquare className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1">
@@ -316,7 +316,7 @@ export const Sidebar: React.FC = () => {
         {/* PM Features */ }
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-md">
+            <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center shadow-md">
               <Sparkles className="w-3 h-3 text-white" />
             </div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
@@ -370,8 +370,8 @@ export const Sidebar: React.FC = () => {
                         <button
                           key={ action.id }
                           onClick={ () => handleFeatureClick(action.id) }
-                          className={ `w-full text-left px-3 py-3 text-sm rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${selectedFeature === action.id
-                            ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-indigo-300 border border-blue-200 dark:border-indigo-700 shadow-lg font-medium"
+                          className={ `w-full text-left px-3 py-3 text-sm rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 ${selectedFeature === action.id
+                            ? "bg-primary/10 text-primary border border-primary/30 shadow-lg font-medium"
                             : "text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white hover:shadow-md"
                             }` }
                         >

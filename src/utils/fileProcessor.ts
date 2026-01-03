@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import type { FileData } from '../types';
 
 // Define a FileProcessor object to encapsulate file processing and export logic
@@ -62,63 +62,44 @@ const FileProcessor = {
   },
 
   processExcel: async (file: File): Promise<unknown[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(arrayBuffer);
 
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) {
+        throw new Error('Excel file contains no sheets');
+      }
 
-          if (workbook.SheetNames.length === 0) {
-            throw new Error('Excel file contains no sheets');
-          }
+      const rawRows: unknown[][] = [];
+      worksheet.eachRow({ includeEmpty: true }, (row) => {
+        const rowValues = Array.isArray(row.values) ? row.values.slice(1) : [];
+        rawRows.push(rowValues);
+      });
 
-          // Get the first worksheet
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
+      const cleanRows = rawRows.filter(row =>
+        row.length > 0 && row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
+      );
 
-          // Manual parsing for better robustness against formatting issues
-          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
+      if (cleanRows.length === 0) {
+        return [];
+      }
 
-          // Filter out completely empty rows, but keep rows with 0 or false
-          const cleanRows = rawRows.filter(row =>
-            row.length > 0 && row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
-          );
+      const headers = cleanRows[0].map(h => String(h));
+      const dataRows = cleanRows.slice(1);
 
-          if (cleanRows.length === 0) {
-            resolve([]);
-            return;
-          }
-
-          // Assume first row is header
-          const headers = cleanRows[0].map(h => String(h));
-          const dataRows = cleanRows.slice(1);
-
-          // Map to objects
-          const jsonData = dataRows.map(row => {
-            const obj: Record<string, unknown> = {};
-            headers.forEach((h, i) => {
-              // Use empty string as default value to avoid undefined
-              obj[h] = row[i] !== undefined ? row[i] : "";
-            });
-            return obj;
-          });
-
-          resolve(jsonData);
-        } catch (error) {
-          console.error('Excel parsing error details:', error);
-          reject(new Error(`Excel parsing error: ${error}`));
-        }
-      };
-
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        reject(new Error('Failed to read Excel file'));
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
+      return dataRows.map(row => {
+        const obj: Record<string, unknown> = {};
+        headers.forEach((h, i) => {
+          obj[h] = row[i] !== undefined ? row[i] : "";
+        });
+        return obj;
+      });
+    } catch (error) {
+      console.error('Excel parsing error details:', error);
+      throw new Error(`Excel parsing error: ${error}`);
+    }
   },
 
   processJSON: (file: File): Promise<unknown[]> => {
@@ -270,10 +251,30 @@ const FileProcessor = {
   },
 
   exportExcel: (data: unknown[], filename: string) => {
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-    XLSX.writeFile(wb, `${filename}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Sheet1');
+    const rows = Array.isArray(data) ? data : [];
+
+    if (rows.length > 0 && typeof rows[0] === 'object' && rows[0] !== null) {
+      const headers = Object.keys(rows[0] as Record<string, unknown>);
+      worksheet.addRow(headers);
+      rows.forEach((row) => {
+        const rowData = headers.map((header) => (row as Record<string, unknown>)[header]);
+        worksheet.addRow(rowData);
+      });
+    }
+
+    workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
   },
 
   downloadFile: (content: string, filename: string, type: string) => {

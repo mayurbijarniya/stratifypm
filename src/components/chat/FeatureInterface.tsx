@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MessageInput } from './MessageInput';
 import { MessageList } from './MessageList';
 import { useAppStore } from '../../stores/appStore';
 import { quickActions } from '../../data/quickActions';
-import { Target, TrendingUp, Users, BarChart3, Lightbulb } from 'lucide-react';
+import { Target, TrendingUp, Users, BarChart3, Lightbulb } from '../ui/icons';
 
 interface FeatureInterfaceProps {
   featureId: string;
@@ -21,6 +22,7 @@ const getFeatureIcon = (category: string) => {
 
 export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId }) => {
   const { createConversation, getCurrentConversation } = useAppStore();
+  const navigate = useNavigate();
   const [hasStarted, setHasStarted] = useState(false);
 
   const feature = quickActions.find(action => action.id === featureId);
@@ -37,8 +39,9 @@ export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId })
 
   const handleStartChat = () => {
     // Create a new conversation for this feature
-    createConversation(feature.title);
+    const conversationId = createConversation(feature.title);
     setHasStarted(true);
+    navigate(`/app/${conversationId}`);
   };
 
   // If chat has started, show the conversation

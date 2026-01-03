@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Paperclip,
   Square,
@@ -65,6 +66,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     removeFile,
     addFile,
   } = useAppStore();
+
+  const navigate = useNavigate();
 
   // Get conversation-specific state
   const { isLoading } = getConversationState(conversationId);
@@ -357,6 +360,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       const newConversationId = createConversation();
       targetConversationId = newConversationId;
       setCurrentConversation(newConversationId);
+      navigate(`/app/${newConversationId}`);
     }
 
     // Add user message
@@ -638,11 +642,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     type="button"
                     onClick={ () => setShowModelSelector(!showModelSelector) }
                     disabled={ isLoading }
-                    className="group flex items-center gap-2 px-3 py-2 bg-secondary/60 hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm"
+                    className="group flex items-center gap-2 px-3 py-2 bg-transparent hover:bg-accent/50 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <div className="flex items-center gap-2">
                       {/* Model Icon */ }
-                      <div className="relative w-5 h-5 rounded-lg overflow-hidden bg-white/90 flex items-center justify-center shadow-sm">
+                      <div className="relative w-5 h-5 rounded-lg overflow-hidden ">
                         <img
                           src={
                             selectedModel === "claude"
