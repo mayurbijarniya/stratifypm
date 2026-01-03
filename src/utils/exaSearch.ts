@@ -107,12 +107,14 @@ Answer:`;
         const realTimeIndicators = [
             // Time-based
             'latest', 'recent', 'current', 'new', 'updated', 'fresh', 'today', 'now', 'this year',
-            '2024', '2025', 'recently', 'just released', 'just announced', 'breaking',
+            '2024', '2025', '2026', 'recently', 'just released', 'just announced', 'breaking',
 
             // Market & Business
             'market trends', 'market analysis', 'competitive analysis', 'competitor analysis',
             'market research', 'industry trends', 'market size', 'market share', 'benchmarking',
             'pricing trends', 'pricing analysis', 'revenue trends', 'business model trends',
+            'competitors', 'competitor', 'adoption', 'adoption rates', 'churn', 'churn rate',
+            'tam', 'sam', 'som', 'total addressable market', 'serviceable addressable market',
 
             // News & Events
             'news', 'announcement', 'launch', 'release', 'update', 'acquisition', 'merger',
@@ -121,13 +123,18 @@ Answer:`;
             // Technology & Products
             'product launch', 'feature release', 'version', 'beta', 'alpha', 'rollout',
             'ai trends', 'tech trends', 'software trends', 'platform updates',
+            'product hunt', 'g2', 'capterra', 'software reviews',
 
             // Research & Data
             'study', 'report', 'survey', 'research', 'statistics', 'data', 'insights',
             'analysis', 'findings', 'results', 'metrics', 'performance data',
+            'case study', 'case studies', 'benchmark', 'benchmarks',
+
+            // Revenue & Growth
+            'arr', 'mrr', 'revenue', 'growth rate', 'ltv', 'cac', 'unit economics',
 
             // Comparative & Lists
-            'compare', 'comparison', 'vs', 'versus', 'alternatives', 'options',
+            'compare', 'comparison', 'vs', 'versus', 'alternatives', 'alternative', 'options',
             'list of', 'top', 'best', 'leading', 'popular', 'trending',
 
             // Company-specific
