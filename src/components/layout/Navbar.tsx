@@ -74,7 +74,7 @@ export const Navbar: React.FC = () => {
           </button>
         </div>
 
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2">
           <img
             src="/logo.svg"
             alt="StratifyPM"

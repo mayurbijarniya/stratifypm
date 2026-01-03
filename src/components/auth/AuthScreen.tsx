@@ -148,7 +148,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
         </button>
       </div>
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center gap-12 px-6 py-16 lg:flex-row">
-        <div className="max-w-xl space-y-8 text-center lg:text-left">
+        <div className="hidden lg:block max-w-xl space-y-8 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
             <FolderTree className="h-3.5 w-3.5" />
             Product strategy workspace
