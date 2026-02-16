@@ -26,7 +26,7 @@ const sendOtpEmail = async (email, code) => {
   const payload = {
     from: `${resendFromName} <${resendFromEmail}>`,
     to: email,
-    subject: `Your StratifyPM verification code`,
+    subject: `Your StratifyPM verification code: ${code}`,
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
