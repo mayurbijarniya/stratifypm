@@ -303,7 +303,7 @@ Answer (one word only):`;
 
   private async classifyWithClaude(prompt: string): Promise<boolean> {
     const requestBody = {
-      model: "Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
+      model: "MiniMaxAI/MiniMax-M2.5",
       messages: [
         {
           role: 'user',
@@ -908,7 +908,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
     }
 
     const requestBody = {
-      model: "Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
+      model: "MiniMaxAI/MiniMax-M2.5",
       messages: messages,
       temperature: 0.7,
       max_tokens: 8192,
