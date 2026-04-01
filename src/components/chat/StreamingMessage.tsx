@@ -13,7 +13,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({ content }) =
         <Bot className="w-4 h-4 text-muted-foreground" />
       </div>
       
-      <div className="flex-1 max-w-3xl">
+      <div className="flex-1 max-w-[95%] sm:max-w-[85%]">
         <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
           <MessageContent content={content} />
           

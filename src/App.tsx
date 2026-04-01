@@ -4,6 +4,7 @@ import { AuthGate } from './components/auth/AuthGate';
 import { AboutPage } from './components/marketing/AboutPage';
 import { LandingPage } from './components/marketing/LandingPage';
 import { PrivacyPage } from './components/marketing/PrivacyPage';
+import { TermsPage } from './components/marketing/TermsPage';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { useTheme } from './hooks/useTheme';
 import { AppShell } from './components/app/AppShell';
@@ -22,6 +23,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/signin" element={<AuthScreen mode="signin" />} />
         <Route path="/signup" element={<AuthScreen mode="signup" />} />
         <Route

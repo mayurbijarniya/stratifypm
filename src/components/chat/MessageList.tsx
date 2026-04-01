@@ -24,7 +24,7 @@ export const MessageList: React.FC<MessageListProps> = ({ conversation }) => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background scrollbar-hide" style={ { height: 'calc(100vh - 200px)' } }>
-      <div className="w-full max-w-4xl mx-auto px-6 py-6 space-y-6">
+      <div className="w-full max-w-6xl mx-auto px-3 py-6 space-y-6 sm:px-6">
         { conversation.messages.length === 0 && !isLoading && !streamingMessage ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

@@ -481,14 +481,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     <div
       ref={ dropZoneRef }
       className={ `transition-all duration-500 bg-background ${isEmptyConversation
-        ? "relative max-w-2xl mx-auto w-full p-4"
-        : "relative w-full p-4"
+        ? "relative max-w-2xl mx-auto w-full px-3 py-4 sm:px-4"
+        : "relative w-full px-3 py-4 sm:px-4"
         } ${isDragOver ? "drag-over" : ""}` }
       onDragOver={ handleDragOver }
       onDragLeave={ handleDragLeave }
       onDrop={ handleDrop }
     >
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
         {/* Drag overlay */ }
         { isDragOver && (
           <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-2xl flex items-center justify-center z-50 backdrop-blur-sm">
@@ -546,7 +546,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                   <div
                     key={ file.name }
                     className="flex items-center space-x-2 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl px-3 py-2 shadow-sm hover:shadow-md hover:shadow-primary/10 transition-all duration-200 group flex-shrink-0"
-                    style={ { minWidth: "200px", maxWidth: "280px" } }
+                    style={ { minWidth: "150px", maxWidth: "280px" } }
                   >
                     <div
                       className={ `w-6 h-6 sm:w-8 sm:h-8 ${iconColor} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm` }
@@ -597,14 +597,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     : "Ask about product strategy, roadmapping, user research, or any PM topic..."
                 }
                 disabled={ isLoading }
-                className="relative w-full px-6 py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent scrollbar-hide"
+                className="relative w-full px-3 py-3 sm:px-6 sm:py-4 resize-none focus:outline-none bg-transparent text-foreground disabled:opacity-50 transition-all duration-300 text-base leading-relaxed min-h-[60px] auto-resize z-10 rounded-3xl border-0 outline-0 ring-0 focus:border-0 focus:outline-0 focus:ring-0 placeholder-muted-foreground/70 sm:placeholder-transparent scrollbar-hide"
                 rows={ 1 }
                 style={ { minHeight: "44px" } }
               />
               {/* Desktop-only placeholder overlay */ }
               { !message && (
                 <div
-                  className={ `hidden sm:block absolute left-6 top-4 pointer-events-none text-base z-5 ${isListening ? "text-red-500" : "text-muted-foreground/70"
+                  className={ `hidden sm:block absolute left-6 top-4 pointer-events-none text-base z-[5] ${isListening ? "text-red-500" : "text-muted-foreground/70"
                     }` }
                 >
                   { isListening
@@ -664,8 +664,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                       {/* Model Name */ }
                       <span className="text-sm font-medium text-foreground hidden sm:block">
                         { selectedModel === "claude"
-                          ? "Claude 4.0"
-                          : "Gemini 2.5" }
+                          ? "Claude 4.6"
+                          : "Gemini 3.1" }
                       </span>
                     </div>
                     <ChevronDown
@@ -676,7 +676,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
                   {/* Model Selector Dropdown - Simple original design */ }
                   { showModelSelector && (
-                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
+                    <div className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
                       <button
                         type="button"
                         onClick={ () => {
@@ -694,7 +694,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                             target.style.display = "none";
                           } }
                         />
-                        <span>Claude 4.0 Sonnet</span>
+                        <span>Claude 4.6</span>
                         { selectedModel === "claude" && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
                         ) }
@@ -716,7 +716,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                             target.style.display = "none";
                           } }
                         />
-                        <span>Gemini 2.5 Pro</span>
+                        <span>Gemini 3.1</span>
                         { selectedModel === "gemini" && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
                         ) }
@@ -788,7 +788,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         {/* Compact Footer info - Hidden on mobile */ }
         <div className="hidden sm:flex items-center justify-center mt-3 text-xs text-muted-foreground">
           Powered by{ " " }
-          { selectedModel === "claude" ? "Claude 4.0 Sonnet" : "Gemini 2.5 Pro" }.
+          { selectedModel === "claude" ? "Claude 4.6" : "Gemini 3.1" }.
           AI can make mistakes. Always verify important information.
         </div>
       </div>

@@ -69,7 +69,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           },
           th({ children }) {
             return (
-              <th className="px-4 py-3 text-left text-xs font-semibold text-foreground uppercase tracking-wider border-b border-border">
+              <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-foreground uppercase tracking-wider border-b border-border">
                 { children }
               </th>
             );
@@ -89,7 +89,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
             };
 
             return (
-              <td className="px-4 py-3 text-sm text-foreground border-r border-border last:border-r-0 whitespace-pre-wrap">
+              <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-foreground border-r border-border last:border-r-0 whitespace-pre-wrap">
                 { Array.isArray(children)
                   ? children.map((child) => processContent(child))
                   : processContent(children) }

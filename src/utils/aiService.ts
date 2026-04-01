@@ -303,7 +303,7 @@ Answer (one word only):`;
 
   private async classifyWithClaude(prompt: string): Promise<boolean> {
     const requestBody = {
-      model: "MiniMaxAI/MiniMax-M2.5",
+      model: "stepfun-ai/Step-3.5-Flash",
       messages: [
         {
           role: 'user',
@@ -908,7 +908,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
     }
 
     const requestBody = {
-      model: "MiniMaxAI/MiniMax-M2.5",
+      model: "stepfun-ai/Step-3.5-Flash",
       messages: messages,
       temperature: 0.7,
       max_tokens: 8192,

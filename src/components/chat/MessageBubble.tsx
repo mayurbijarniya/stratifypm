@@ -28,7 +28,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   if (isUser) {
     return (
       <div className="flex items-start space-x-3 mb-6 justify-end px-4 sm:px-6">
-        <div className="flex-1 max-w-3xl flex justify-end">
+        <div className="flex-1 flex justify-end">
           <div className="group relative max-w-[85%] sm:max-w-[75%]">
             <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 shadow-md ml-auto">
               <MessageContent content={message.content} />
@@ -60,8 +60,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         <Bot className="w-4 h-4 text-slate-600 dark:text-slate-300" />
       </div>
       
-      <div className="flex-1 max-w-3xl">
-        <div className="group relative max-w-[85%] sm:max-w-[75%]">
+      <div className="flex-1">
+        <div className="group relative max-w-[95%] sm:max-w-[85%]">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
             <MessageContent content={message.content} />
           </div>

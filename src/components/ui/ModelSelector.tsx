@@ -14,15 +14,15 @@ interface ModelOption {
 const modelOptions: ModelOption[] = [
   {
     id: 'claude',
-    name: 'Claude 4.0 Sonnet',
-    fullName: 'Claude 4.0 Sonnet',
+    name: 'Claude 4.6',
+    fullName: 'Claude 4.6',
     icon: '/claude-color.svg',
     color: '#FF7A00'
   },
   {
     id: 'gemini',
-    name: 'Gemini 2.5 Pro',
-    fullName: 'Gemini 2.5 Pro',
+    name: 'Gemini 3.1',
+    fullName: 'Gemini 3.1',
     icon: '/gemini-color.svg',
     color: '#4285F4'
   }

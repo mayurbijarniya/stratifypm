@@ -132,7 +132,7 @@ export const Navbar: React.FC = () => {
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={ () => setShowHistory(false) }
           />
-          <div className="fixed right-0 top-0 h-full w-80 bg-card border-l border-border z-50 shadow-xl">
+          <div className="fixed right-0 top-0 h-full w-full sm:w-80 bg-card border-l border-border z-50 shadow-xl">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h2 className="font-semibold">Chat History</h2>
