@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { requestOtp, verifyOtp } from '../../utils/authApi';
 import { useAuthStore } from '../../stores/authStore';
-import { ArrowLeft, Terminal, AlertTriangle, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Terminal, Fingerprint } from 'lucide-react';
 
 type Step = 'email' | 'verify';
 
@@ -22,10 +22,6 @@ const formatCooldown = (seconds: number) => {
   return `${secs}s`;
 };
 
-const isGmailEmail = (email: string) => {
-  return email.trim().toLowerCase().endsWith('@gmail.com');
-};
-
 export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirectTo = '/app' }) => {
   const { token, setAuth } = useAuthStore();
   const navigate = useNavigate();
@@ -36,7 +32,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
 
   const canSend = useMemo(() => email.trim().length > 3, [email]);
   const canVerify = useMemo(() => /^\d{6}$/.test(code.trim()), [code]);
@@ -67,7 +62,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
       setStep('verify');
       setCode('');
       setCooldown(60);
-      setShowEmailDialog(false);
       if (response?.expiresIn) {
         setInfo(`CODE VALID FOR ${Math.floor(response.expiresIn / 60)} MINUTES.`);
       }
@@ -84,11 +78,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
   };
 
   const handleContinue = () => {
-    if (isGmailEmail(email)) {
-      handleSendCode();
-    } else {
-      setShowEmailDialog(true);
-    }
+    handleSendCode();
   };
 
   const handleVerify = async () => {
@@ -238,28 +228,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
          </div>
       </div>
 
-      {/* Non-Gmail Dialog */}
-      {showEmailDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-sm">
-           <div className="w-full max-w-md border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-950 p-8">
-             <div className="flex flex-col border-l-4 border-zinc-900 dark:border-zinc-100 pl-6 mb-8">
-               <AlertTriangle className="h-8 w-8 text-zinc-900 dark:text-zinc-100 mb-4" />
-               <h3 className="text-xl font-bold font-heading uppercase text-zinc-900 dark:text-zinc-50 mb-2">
-                 EMAIL NOTICE
-               </h3>
-               <p className="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed uppercase">
-                 For optimal delivery, Gmail domains are strictly recommended for this session.
-               </p>
-             </div>
-             <Button
-                onClick={() => setShowEmailDialog(false)}
-                className="w-full rounded-none border-2 border-zinc-900 dark:border-zinc-100 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-xs py-4 shadow-[6px_6px_0_0_#18181b] dark:shadow-[6px_6px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:scale-95"
-              >
-                Acknowledge
-              </Button>
-           </div>
-        </div>
-      )}
     </div>
   );
 };
