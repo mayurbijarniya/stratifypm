@@ -150,7 +150,7 @@ export const AboutPage: React.FC = () => {
             </h2>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/signup" className="w-full sm:w-auto inline-block">
-                <Button className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10 shadow-[6px_6px_0_0_#CCFF00]">
+                <Button className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-colors uppercase tracking-widest font-black text-sm py-4 px-8 md:px-10 shadow-[6px_6px_0_0_#18181b] dark:shadow-[6px_6px_0_0_#f4f4f5] active:scale-95">
                   Start Building Better Products
                 </Button>
               </Link>

@@ -44,7 +44,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                 Sign in
               </Link>
               <Link to="/signup">
-                <Button className="rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-xs py-2 px-6">
+                <Button className="rounded-none border-2 border-zinc-900 dark:border-zinc-100 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-[10px] py-1.5 px-5 shadow-[4px_4px_0_0_#18181b] dark:shadow-[4px_4px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none">
                   Get Started
                 </Button>
               </Link>

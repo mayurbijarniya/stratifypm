@@ -28,12 +28,12 @@ export const Button: React.FC<ButtonProps> = ({
   const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group';
 
   const variantClasses = {
-    primary: 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg focus:ring-primary',
-    secondary: 'bg-secondary hover:bg-secondary/80 text-secondary-foreground shadow-sm hover:shadow-md focus:ring-secondary border border-border',
-    outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground shadow-sm hover:shadow-md focus:ring-primary',
-    ghost: 'text-foreground hover:bg-accent hover:text-accent-foreground focus:ring-accent rounded-none',
-    danger: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-md hover:shadow-lg focus:ring-destructive',
-    success: 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg focus:ring-green-500',
+    primary: 'bg-zinc-900 hover:bg-zinc-800 text-zinc-50 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 focus:ring-zinc-500',
+    secondary: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 focus:ring-zinc-500 border border-zinc-200 dark:border-zinc-700',
+    outline: 'border-2 border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-zinc-50 dark:border-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-100 dark:hover:text-zinc-900 focus:ring-zinc-500',
+    ghost: 'text-zinc-900 hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800 focus:ring-zinc-500 rounded-none',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
+    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
   };
 
   const sizeClasses = {

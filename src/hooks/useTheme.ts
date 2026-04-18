@@ -10,8 +10,8 @@ export const useTheme = () => {
     // Remove previous theme classes
     root.classList.remove('light', 'dark');
     
-    // Add current theme class
-    root.classList.add(theme);
+    // Add current theme class, default to light
+    root.classList.add(theme || 'light');
     
     // Update meta theme-color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');

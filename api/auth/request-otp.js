@@ -32,71 +32,73 @@ const sendOtpEmail = async (email, code) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify your email</title>
+  <title>Your Verification Code</title>
   <style>
-    /* Reset styles */
+    /* Reset & Base */
     body, table, td, p, a, h1, h2 { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
     body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
 
-    /* Dark mode support */
+    .main-body { background-color: #f4f4f5; color: #18181b; }
+    .content-box { border: 3px solid #18181b; background-color: #ffffff; }
+    .code-box { border: 3px solid #18181b; background-color: #CCFF00; box-shadow: 6px 6px 0 0 #18181b; }
+    .text-main { color: #18181b; }
+    .text-muted { color: #71717a; }
+
+    /* Dark Mode Override */
     @media (prefers-color-scheme: dark) {
-      .email-body { background-color: #0f172a !important; }
-      .email-text { color: #e2e8f0 !important; }
-      .email-text-muted { color: #94a3b8 !important; }
-      .email-heading { color: #f8fafc !important; }
-      .email-strong { color: #f8fafc !important; }
-      .email-footer { color: #94a3b8 !important; }
-      .email-box { background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important; }
+      .main-body { background-color: #09090b !important; color: #f4f4f5 !important; }
+      .content-box { border: 3px solid #f4f4f5 !important; background-color: #09090b !important; }
+      .code-box { border: 3px solid #f4f4f5 !important; background-color: #CCFF00 !important; box-shadow: 6px 6px 0 0 #f4f4f5 !important; }
+      .text-main { color: #f4f4f5 !important; }
+      .text-muted { color: #a1a1aa !important; }
+      .text-code { color: #000000 !important; }
     }
   </style>
 </head>
-<body class="email-body" style="margin: 0; padding: 0; font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; line-height: 1.6;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; margin: 0 auto; padding: 60px 20px;">
-    <!-- Content - Starts directly with Welcome -->
+<body class="main-body" style="margin: 0; padding: 0; font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; line-height: 1.5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding: 40px 20px;">
     <tr>
-      <td style="text-align: center;">
-        <!-- Welcome Message -->
-        <h1 class="email-heading" style="margin: 0 0 12px; font-size: 28px; font-weight: 700; color: #0f172a;">Welcome to StratifyPM!</h1>
-        <p class="email-text" style="margin: 0 0 28px; font-size: 16px; color: #475569;">Hi ${emailUsername},</p>
-
-        <!-- Main Text -->
-        <p class="email-text" style="margin: 0 0 16px; font-size: 15px; color: #334155;">
-          Thanks for signing up! To get started, please verify your email address by entering the code below.
-        </p>
-        <p class="email-text-muted" style="margin: 0 0 32px; font-size: 14px; color: #64748b;">
-          This code will expire in <strong class="email-strong" style="color: #0f172a;">${OTP_TTL_MINUTES} minutes</strong>.
-        </p>
-
-        <!-- OTP Code Box -->
-        <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+      <td align="center">
+        <!-- Content Container -->
+        <table role="presentation" class="content-box" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 500px; padding: 40px;">
           <tr>
-            <td class="email-box" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 20px 36px; border-radius: 12px;">
-              <span style="color: white; font-size: 34px; font-weight: 700; letter-spacing: 8px; font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;">${code}</span>
+            <td>
+              <!-- Header -->
+              <p style="margin: 0 0 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; color: #71717a;">[ SECURITY CODE ]</p>
+              <h1 class="text-main" style="margin: 0 0 24px; font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em;">StratifyPM Access</h1>
+
+              <p class="text-main" style="margin: 0 0 24px; font-size: 16px; font-weight: 500;">
+                Hello, use the following code to sign in to your StratifyPM account. This code ensures your account remains secure.
+              </p>
+
+              <!-- OTP Code Module -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="width: 100%; margin: 32px 0;">
+                <tr>
+                  <td class="code-box" style="padding: 24px; text-align: center;">
+                    <span class="text-code" style="color: #000000; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 42px; font-weight: 900; letter-spacing: 0.2em;">${code}</span>
+                  </td>
+                </tr>
+              </table>
+
+              <p class="text-muted" style="margin: 24px 0 0; font-size: 14px;">
+                Valid for <span style="font-weight: bold; text-decoration: underline;">${OTP_TTL_MINUTES} minutes</span>.
+                If you didn't request this, you can safely ignore this email.
+              </p>
             </td>
           </tr>
         </table>
 
-        <!-- Help Text -->
-        <p class="email-text-muted" style="margin: 32px 0 0; font-size: 13px; color: #64748b;">
-          Didn't request this code? You can safely ignore this email.
-        </p>
-      </td>
-    </tr>
-
-    <!-- Footer -->
-    <tr>
-      <td style="padding-top: 48px; text-align: center;">
-        <p class="email-text-muted" style="margin: 0 0 6px; font-size: 14px; color: #64748b;">
-          <strong class="email-strong" style="color: #0f172a;">StratifyPM</strong> — AI-Powered Product Management
-        </p>
-        <p class="email-footer" style="margin: 0; font-size: 12px; color: #94a3b8;">
-          Strategic planning, user research, and data-driven insights.
-        </p>
-        <p class="email-footer" style="margin: 16px 0 0; font-size: 11px; color: #94a3b8;">
-          © 2025 StratifyPM. All rights reserved.
-        </p>
+        <!-- Footer -->
+        <table role="presentation" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 500px; padding: 24px 0;">
+          <tr>
+            <td align="left">
+              <p class="text-muted" style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                © ${new Date().getFullYear()} STRATIFYPM // AI-DRIVEN PRODUCT STRATEGY
+              </p>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   </table>

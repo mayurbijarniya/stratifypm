@@ -226,7 +226,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
                 loading={loading}
                 disabled={step === 'email' ? !canSend : !canVerify}
                 onClick={step === 'email' ? handleContinue : handleVerify}
-                className="w-full rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10 disabled:opacity-50 shadow-[6px_6px_0_0_#CCFF00] hover:translate-y-1 hover:translate-x-1 hover:shadow-none"
+                className="w-full rounded-none border-2 border-zinc-900 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-sm py-4 disabled:opacity-70 shadow-[6px_6px_0_0_#18181b] dark:shadow-[6px_6px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:scale-95"
               >
                 {step === 'email' ? 'SEND CODE' : 'VERIFY CODE'}
               </Button>
@@ -253,7 +253,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
              </div>
              <Button
                 onClick={() => setShowEmailDialog(false)}
-                className="w-full rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-xs py-4"
+                className="w-full rounded-none border-2 border-zinc-900 dark:border-zinc-100 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-xs py-4 shadow-[6px_6px_0_0_#18181b] dark:shadow-[6px_6px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:scale-95"
               >
                 Acknowledge
               </Button>

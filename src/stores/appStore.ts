@@ -535,6 +535,7 @@ export const useAppStore = create<AppState>()(
       storage: customStorage,
       partialize: (state) => ({
         theme: state.theme,
+        selectedModel: state.selectedModel,
         // Don't persist conversations - DB is source of truth
         // Don't persist sidebar state
         // Don't persist conversation states
