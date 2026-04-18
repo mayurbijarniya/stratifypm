@@ -76,7 +76,7 @@ export const Navbar: React.FC = () => {
 
         <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2">
           <img
-            src="/logo.svg"
+            src={theme === 'dark' ? "/sp_dark.svg" : "/sp_light.svg"}
             alt="StratifyPM"
             className="h-8 sm:h-9 w-auto"
           />

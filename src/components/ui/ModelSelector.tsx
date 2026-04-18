@@ -1,30 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from './icons';
 
-export type AIModel = 'gemini' | 'claude';
+export type AIModel = 'gemini' | 'claude' | 'openrouter';
 
 interface ModelOption {
   id: AIModel;
   name: string;
   fullName: string;
   icon: string;
+  darkIcon?: string;
   color: string;
 }
 
 const modelOptions: ModelOption[] = [
   {
     id: 'claude',
-    name: 'Claude 4.6',
-    fullName: 'Claude 4.6',
-    icon: '/claude-color.svg',
+    name: 'Claude',
+    fullName: 'Claude',
+    icon: '/claude-ai-icon.svg',
     color: '#FF7A00'
   },
   {
     id: 'gemini',
-    name: 'Gemini 3.1',
-    fullName: 'Gemini 3.1',
-    icon: '/gemini-color.svg',
+    name: 'Gemini',
+    fullName: 'Gemini',
+    icon: '/gemini.svg',
     color: '#4285F4'
+  },
+  {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    fullName: 'OpenRouter',
+    icon: '/openrouter_light.svg',
+    darkIcon: '/openrouter_dark.svg',
+    color: '#000000'
   }
 ];
 
@@ -79,8 +88,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             <img 
               src={selectedOption.icon} 
               alt={selectedOption.name}
-              className="w-5 h-5 flex-shrink-0"
+              className={`w-5 h-5 flex-shrink-0 ${selectedOption.darkIcon ? 'dark:hidden' : ''}`}
             />
+            {selectedOption.darkIcon && (
+              <img 
+                src={selectedOption.darkIcon} 
+                alt={selectedOption.name}
+                className="w-5 h-5 flex-shrink-0 hidden dark:block"
+              />
+            )}
             <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
               {selectedOption.name}
             </span>
@@ -110,8 +126,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
               <img 
                 src={option.icon} 
                 alt={option.name}
-                className="w-5 h-5 flex-shrink-0"
+                className={`w-5 h-5 flex-shrink-0 ${option.darkIcon ? 'dark:hidden' : ''}`}
               />
+              {option.darkIcon && (
+                <img 
+                  src={option.darkIcon} 
+                  alt={option.name}
+                  className="w-5 h-5 flex-shrink-0 hidden dark:block"
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
                   {option.name}

@@ -36,3 +36,5 @@ dist-ssr
 # Test files with API keys
 test-*.js
 test-*.sh
+
+.*/

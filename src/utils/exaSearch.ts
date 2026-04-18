@@ -179,7 +179,10 @@ Answer:`;
     // Use Gemini to optimize search query (cost-effective)
     private async optimizeSearchQuery(userQuery: string): Promise<string> {
         try {
-            const optimizationPrompt = `Convert this user question into the perfect web search query for finding current, accurate information. Focus on key terms and recent timeframes. Return ONLY the optimized search query, nothing else.
+            const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const currentYear = new Date().getFullYear();
+            const lastYear = currentYear - 1;
+            const optimizationPrompt = `Today's date is ${today}. Convert this user question into the perfect web search query for finding current, accurate information from ${lastYear} and ${currentYear}. Focus on key terms and the most recent data available. Return ONLY the optimized search query, nothing else.
 
 User question: "${userQuery}"
 

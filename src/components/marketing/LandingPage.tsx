@@ -1,599 +1,304 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../ui/Button';
-import { PublicLayout } from './PublicLayout';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
-import {
-  ArrowRight,
-  Shield,
-  BarChart3,
+import { motion } from 'framer-motion';
+import { 
+  BarChart3, 
+  Target, 
+  Users, 
+  Shield, 
   MessageSquare,
-  FileText,
-  Users,
-  CheckCircle,
-  ChevronRight,
-  Target,
-  TrendingUp,
-} from '../ui/icons';
+  ArrowRight,
+  FileSearch,
+  CheckCircle2
+} from 'lucide-react';
+import { PublicLayout } from './PublicLayout';
+import { Button } from '../ui/Button';
 
-// ─── Animation ───────────────────────────────────────────────────────
+// Brutalist Reveal
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-100px" }}
+    transition={{ duration: 0.8, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
+  >
+    {children}
+  </motion.div>
+);
 
-const Reveal: React.FC<{
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}> = ({ children, delay = 0, className }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 28 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-// ─── Data ────────────────────────────────────────────────────────────
-
-const features = [
-  {
-    icon: MessageSquare,
-    title: 'Dual AI Models',
-    description: 'Claude and Gemini working together — deep analysis meets fast classification.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Market Intelligence',
-    description: 'Real-time web search pulls current market data, competitor moves, and industry trends.',
-  },
-  {
-    icon: FileText,
-    title: 'Data Analysis',
-    description: 'Upload CSV, Excel, or JSON. Get instant insights — no data pipeline needed.',
-  },
-  {
-    icon: Target,
-    title: 'PM Frameworks',
-    description: 'RICE scoring, SWOT, OKRs, competitive matrices — structured thinking on demand.',
-  },
-  {
-    icon: Shield,
-    title: 'Private by Default',
-    description: 'Encrypted storage, no model training on your data, session-based auth.',
-  },
-  {
-    icon: Users,
-    title: 'Built for Teams',
-    description: 'Share analyses, export decisions, and align stakeholders from one place.',
-  },
-];
-
-const steps = [
-  { title: 'Ask a question', desc: 'Type naturally about strategy, roadmaps, metrics — or upload a dataset.' },
-  { title: 'AI does the work', desc: 'Get structured analysis with frameworks, live data, and clear recommendations.' },
-  { title: 'Ship with confidence', desc: 'Export insights, share with your team, and move forward with clarity.' },
-];
-
-const faqs = [
-  {
-    q: 'What AI models does Stratify use?',
-    a: 'Claude by Anthropic for deep strategic analysis, and Gemini by Google for fast classification and query optimization. Both work together seamlessly.',
-  },
-  {
-    q: 'Is my data secure?',
-    a: 'Yes. All data is encrypted at rest and in transit. We never use your data for model training. Sessions expire after 30 days.',
-  },
-  {
-    q: 'What file formats can I upload?',
-    a: 'CSV, Excel (XLSX/XLS), JSON, and plain text files. Data is analyzed instantly with up to 2,000 rows of context sent to the AI.',
-  },
-  {
-    q: 'Is this actually free?',
-    a: 'Completely. Every feature — AI chat, file analysis, frameworks, web search — is free with no usage limits and no credit card required.',
-  },
-];
-
-const pricingItems = [
-  'Unlimited conversations',
-  'Claude & Gemini models',
-  'File uploads & analysis',
-  'Export to Markdown / CSV',
-  'PM frameworks & templates',
-  'Real-time web search',
-];
-
-// ─── Border color helpers (DRY) ──────────────────────────────────────
-
-const border = 'border-slate-200 dark:border-slate-800';
-const borderB = `border-b ${border}`;
-
-// ─── FAQ Accordion (exclusive: one open at a time) ──────────────────
-
-const FaqSection: React.FC = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggle = (i: number) => {
-    setOpenIndex(openIndex === i ? null : i);
-  };
-
-  return (
-    <section className={borderB}>
-      <div className="mx-auto w-full max-w-3xl px-6 py-20 lg:py-24">
-        <Reveal>
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            Questions & Answers
-          </h2>
-        </Reveal>
-
-        <div className={`overflow-hidden rounded-lg border ${border}`}>
-          {faqs.map((faq, i) => (
-            <Reveal key={i} delay={i * 0.04}>
-              <div className={i < faqs.length - 1 ? borderB : ''}>
-                <button
-                  type="button"
-                  onClick={() => toggle(i)}
-                  className="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60"
-                >
-                  <span className="pr-4 text-[15px] font-medium text-slate-900 dark:text-white">
-                    {faq.q}
-                  </span>
-                  <ChevronRight
-                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${
-                      openIndex === i ? 'rotate-90' : ''
-                    }`}
-                  />
-                </button>
-                <AnimatePresence initial={false}>
-                  {openIndex === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-6 pb-5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                        {faq.a}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// ─── Component ───────────────────────────────────────────────────────
-
-export const LandingPage: React.FC = () => {
+const LandingPage: React.FC = () => {
   return (
     <PublicLayout>
-      {/* ━━ Hero ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={`${borderB}`}>
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-14 px-6 py-20 lg:grid-cols-2 lg:gap-20 lg:py-28">
-          {/* Copy */}
-          <Reveal>
-            <div className="space-y-8">
-              <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-[3.5rem]">
-                Ship the right product,{' '}
-                <span className="text-primary">faster</span>
-              </h1>
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] flex flex-col justify-center overflow-hidden border-b-2 border-zinc-900 dark:border-zinc-100">
+        {/* Background Layer: Grid & Matrix */}
+        <div className="absolute inset-0 pointer-events-none -z-10 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+          {/* Brutalist Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
+               style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+          <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" 
+               style={{ backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)', backgroundSize: '128px 128px' }} />
+          
+          {/* Animated Scanning Line */}
+          <div className="absolute inset-0 w-full h-[2px] bg-zinc-900/5 dark:bg-zinc-100/5 animate-slide-down pointer-events-none" style={{ animationDuration: '8s', animationIterationCount: 'indefinite' }} />
 
-              <p className="max-w-lg text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-                Stratify helps product managers research, prioritize, and
-                strategize using proven frameworks and real-time data.
-              </p>
+          {/* Tech/Brutalist SVG Graphic - Centered & Immersive */}
+          <svg
+            viewBox="0 0 1000 800"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vh] text-zinc-200 dark:text-zinc-800/40 opacity-80"
+          >
+            <style>
+              {`
+                .svgo-grid-line { stroke: currentColor; stroke-width: 1; fill: none; opacity: 0.3; }
+                .svgo-anim-line { stroke: currentColor; stroke-width: 3; fill: none; }
+                .svgo-point { fill: currentColor; }
+                .svgo-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; fill: currentColor; opacity: 0.5; font-weight: bold; }
+              `}
+            </style>
+            
+            <g transform="translate(500, 400)">
+              {/* Massive Isometric Coordinate Space */}
+              {[...Array(5)].map((_, i) => (
+                <g key={i} opacity={1 - (i * 0.15)}>
+                  <path d={`M ${-400 + (i*80)} ${240 - (i*48)} L ${400 - (i*80)} ${-240 + (i*48)}`} className="svgo-grid-line" />
+                  <path d={`M ${-400 + (i*80)} ${-240 + (i*48)} L ${400 - (i*80)} ${240 - (i*48)}`} className="svgo-grid-line" />
+                </g>
+              ))}
 
-              <div className="flex flex-wrap items-center gap-4">
-                <Link to="/signup">
-                  <Button size="lg" className="rounded-lg text-base">
-                    Get started free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/signin">
-                  <button className={`flex items-center gap-2 rounded-lg border ${border} bg-white px-6 py-3 text-base font-medium text-slate-700 transition hover:bg-slate-50 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-900`}>
-                    Sign in
-                  </button>
-                </Link>
-              </div>
+              {/* Vertical Pillars */}
+              <line x1="-300" y1="-180" x2="-300" y2="180" className="svgo-grid-line" />
+              <line x1="300" y1="-180" x2="300" y2="180" className="svgo-grid-line" />
+              <line x1="0" y1="-400" x2="0" y2="400" className="svgo-grid-line" />
+              
+              {/* Dynamic Path Injections */}
+              <path d="M -300 -180 L 0 0 L 300 -180" className="svgo-anim-line" strokeDasharray="60 400" strokeDashoffset="400">
+                <animate attributeName="stroke-dashoffset" values="400; -60" dur="4s" repeatCount="indefinite" />
+              </path>
+              <path d="M -300 180 L 0 0 L 300 180" className="svgo-anim-line" strokeDasharray="60 400" strokeDashoffset="400">
+                <animate attributeName="stroke-dashoffset" values="400; -60" dur="3s" repeatCount="indefinite" />
+              </path>
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" /> Free forever
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" /> No credit card
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" /> Ready in seconds
-                </span>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* App preview */}
-          <Reveal delay={0.12}>
-            <div className={`overflow-hidden rounded-lg border ${border}`}>
-              {/* Window bar */}
-              <div className={`flex items-center gap-2 ${borderB} px-4 py-3`}>
-                <div className="flex gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                </div>
-                <div className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">
-                  stratifypm.com/app
-                </div>
-              </div>
-
-              {/* Chat mock */}
-              <div className="space-y-5 p-5 sm:p-6">
-                {/* User */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                    M
-                  </div>
-                  <div className={`rounded-lg border ${border} px-4 py-2.5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300`}>
-                    How should I prioritize features for our Q2 roadmap?
-                  </div>
-                </div>
-
-                {/* Assistant */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
-                    S
-                  </div>
-                  <div className={`flex-1 space-y-3 rounded-lg border ${border} px-4 py-3`}>
-                    <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">
-                      Here's a RICE analysis based on your inputs:
-                    </p>
-                    <div className={`overflow-hidden rounded-md border ${border}`}>
-                      <table className="w-full text-[11px]">
-                        <thead>
-                          <tr className={`${borderB} text-left text-slate-500 dark:text-slate-400`}>
-                            <th className="px-3 py-2 font-medium">Feature</th>
-                            <th className="px-3 py-2 font-medium">Reach</th>
-                            <th className="px-3 py-2 font-medium">Impact</th>
-                            <th className="px-3 py-2 font-medium">Score</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-slate-700 dark:text-slate-300">
-                          <tr className={borderB}>
-                            <td className="px-3 py-2">SSO Integration</td>
-                            <td className="px-3 py-2">8K</td>
-                            <td className="px-3 py-2">High</td>
-                            <td className="px-3 py-2 font-semibold text-emerald-600 dark:text-emerald-400">92</td>
-                          </tr>
-                          <tr className={borderB}>
-                            <td className="px-3 py-2">Dashboard v2</td>
-                            <td className="px-3 py-2">5K</td>
-                            <td className="px-3 py-2">Med</td>
-                            <td className="px-3 py-2 font-semibold text-amber-600 dark:text-amber-400">78</td>
-                          </tr>
-                          <tr>
-                            <td className="px-3 py-2">Mobile App</td>
-                            <td className="px-3 py-2">12K</td>
-                            <td className="px-3 py-2">Low</td>
-                            <td className="px-3 py-2 font-semibold text-slate-500">54</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400">
-                      SSO has the highest RICE score. I'd recommend leading with it for Q2.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
+              {/* Central Hub Matrix */}
+              <rect x="-60" y="-30" width="120" height="60" className="svgo-grid-line" strokeWidth="2" />
+              <text x="-55" y="-35" className="svgo-text">STRATEGY_CORE // ACTIVE</text>
+              <text x="-55" y="45" className="svgo-text">VERSION_2.0.4</text>
+              
+              {/* Annotated Nodes */}
+              <g transform="translate(200, 120)">
+                <circle r="4" className="svgo-point" />
+                <text x="10" y="5" className="svgo-text">0x_DATA_01</text>
+              </g>
+              <g transform="translate(-250, -150)">
+                <circle r="4" className="svgo-point" />
+                <text x="-80" y="5" className="svgo-text">VAL_PROP_NODE</text>
+              </g>
+              
+              {/* Floating Data Points */}
+              <circle cx="0" cy="0" r="12" className="svgo-point" opacity="0.1">
+                <animate attributeName="r" values="12; 20; 12" dur="3s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          </svg>
         </div>
-      </section>
 
-      {/* ━━ Features ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-24 md:py-32 flex flex-col items-center text-center">
           <Reveal>
-            <div className="mx-auto mb-14 max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                Tools that match how PMs actually work
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                Not another generic chat. Every feature is built for product thinking.
-              </p>
+            <div className="inline-block border-2 border-zinc-900 dark:border-zinc-100 bg-chartreuse text-zinc-900 px-4 py-1 font-bold uppercase tracking-widest text-xs md:text-sm mb-8 shadow-[4px_4px_0_0_#18181b] dark:shadow-[4px_4px_0_0_#f4f4f5]">
+              [ STRATEGY TO EXECUTION ]
             </div>
           </Reveal>
-
-          {/* 3×2 bordered grid — shared borders between cells */}
-          <Reveal delay={0.05}>
-            <div className={`overflow-hidden rounded-lg border ${border}`}>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3">
-                {features.map((f, i) => {
-                  // Right border unless last in row, bottom border unless last row
-                  const isLastCol3 = (i + 1) % 3 === 0;
-                  const isLastCol2 = (i + 1) % 2 === 0;
-                  const isLastRow3 = i >= 3; // row 2 of 2 in 3-col
-                  const isLastRow2 = i >= 4; // row 3 of 3 in 2-col
-
-                  return (
-                    <div
-                      key={f.title}
-                      className={[
-                        'p-6 sm:p-8 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60',
-                        // Right border
-                        !isLastCol3 ? 'lg:border-r' : '',
-                        !isLastCol2 ? 'sm:max-lg:border-r' : '',
-                        // Bottom border
-                        !isLastRow3 ? 'lg:border-b' : '',
-                        !isLastRow2 ? 'sm:max-lg:border-b' : '',
-                        // Mobile: always bottom border except last
-                        i < features.length - 1 ? 'max-sm:border-b' : '',
-                        border,
-                      ].join(' ')}
-                    >
-                      <f.icon className="mb-4 h-5 w-5 text-slate-900 dark:text-white" />
-                      <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                        {f.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                        {f.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          <Reveal delay={100}>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter font-heading text-zinc-900 dark:text-zinc-50 leading-tight mb-6 uppercase">
+              Stop Guessing. <br />
+              <span className="italic font-light tracking-wide text-zinc-500">Start Shipping.</span>
+            </h1>
           </Reveal>
-        </div>
-      </section>
 
-      {/* ━━ How it works ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-24">
-          <Reveal>
-            <h2 className="mb-4 text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              Three steps. That's it.
-            </h2>
-            <p className="mx-auto mb-16 max-w-md text-center text-base text-slate-600 dark:text-slate-400">
-              No setup, no onboarding flows, no configuration.
+          <Reveal delay={200}>
+            <p className="text-base md:text-lg font-normal text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed mb-12">
+              The AI co-pilot for Product Managers. <br className="hidden md:block" />
+              Turn scattered data into clear roadmaps in seconds.
             </p>
           </Reveal>
 
-          <Reveal delay={0.05}>
-            <div className={`overflow-hidden rounded-lg border ${border}`}>
-              <div className="grid md:grid-cols-3">
-                {steps.map((s, i) => (
-                  <div
-                    key={s.title}
-                    className={[
-                      'p-8 sm:p-10',
-                      i < steps.length - 1 ? `md:border-r max-md:border-b ${border}` : '',
-                    ].join(' ')}
-                  >
-                    <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-md border border-slate-900 text-sm font-bold text-slate-900 dark:border-white dark:text-white">
-                      {i + 1}
+          <Reveal delay={300}>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <Link to="/signup" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10 shadow-[6px_6px_0_0_#CCFF00]">
+                  Try StratifyPM Free
+                </Button>
+              </Link>
+              <Link to="/about" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-900 hover:text-zinc-50 dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10">
+                  About
+                </Button>
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Trust Bar (Social Proof) */}
+      <section className="bg-zinc-50 dark:bg-zinc-950 border-b-2 border-zinc-900 dark:border-zinc-100 py-6">
+         <div className="max-w-7xl mx-auto px-6 flex flex-wrap justify-center items-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+           <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-tighter text-zinc-900 dark:text-zinc-100">
+             <Shield className="w-4 h-4" /> Bank-Level Security
+           </div>
+           <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-tighter text-zinc-900 dark:text-zinc-100">
+             <Shield className="w-4 h-4" /> No Model Training
+           </div>
+           <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-tighter text-zinc-900 dark:text-zinc-100">
+             <Shield className="w-4 h-4" /> Encrypted Data
+           </div>
+         </div>
+      </section>
+
+      {/* Problem Section (Agitation) */}
+      <section className="py-24 md:py-32 bg-zinc-900 text-zinc-50 border-b-2 border-zinc-100 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-heading mb-6 leading-tight uppercase tracking-tighter">
+              Product Management <br/> Is Chaos.
+            </h2>
+            <div className="max-w-2xl mx-auto space-y-6 text-base md:text-lg text-zinc-300 leading-relaxed font-normal">
+              <p>Too much data. Too many opinions. Not enough time.</p>
+              <p>You're drowning in spreadsheets when you should be strategizing.</p>
+              <p className="text-white font-bold inline-block border-b-2 border-chartreuse pb-1 mt-4">It’s time to change how you work.</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Ticker / Banner Section */}
+      <section className="border-b-2 border-zinc-900 dark:border-zinc-100 bg-neonorange overflow-hidden py-4">
+        <div className="flex whitespace-nowrap animate-marquee">
+          {[...Array(20)].map((_, i) => (
+            <span key={i} className="text-white font-bold uppercase tracking-widest text-lg font-heading mx-8 flex items-center">
+              Research <ArrowRight className="mx-4 w-6 h-6" /> Prioritize <ArrowRight className="mx-4 w-6 h-6" /> Build <ArrowRight className="mx-4 w-6 h-6" /> Launch
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Features Grid - Brutalist Matrix */}
+      <section className="py-24 md:py-32 bg-zinc-50 dark:bg-zinc-950 border-b-2 border-zinc-900 dark:border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-heading text-zinc-900 dark:text-white mb-16 leading-tight uppercase">
+              Clarity <br/> On Command.
+            </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+            {features.map((feature, idx) => (
+              <div key={idx} className="border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-950 p-8 md:p-10 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900 group h-full">
+                <div className="w-16 h-16 border-2 border-zinc-900 dark:border-zinc-100 flex items-center justify-center mb-8 group-hover:bg-chartreuse group-hover:text-zinc-900 transition-colors">
+                  <feature.icon className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-semibold font-heading text-zinc-900 dark:text-white mb-4 uppercase">
+                  {feature.title}
+                </h3>
+                <p className="text-base font-normal text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison/Value Prop */}
+      <section className="py-24 md:py-32 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 overflow-hidden relative">
+        <div className="absolute inset-0 opacity-10 blur-sm pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.2) 2px, transparent 2px)', backgroundSize: '40px 40px' }} />
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full text-center flex flex-col items-center">
+            <Reveal>
+               <div className="inline-block border-2 border-current px-4 py-1 font-medium uppercase tracking-widest text-xs md:text-sm mb-8">
+                [ VALUE PROPOSITION ]
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-heading mb-12 leading-tight uppercase">
+                Build better products, <br/><span className="italic text-zinc-400">faster.</span>
+              </h2>
+              <div className="grid md:grid-cols-3 gap-8 md:gap-10 text-left max-w-6xl mx-auto">
+                {benefits.map((benefit, idx) => (
+                  <div key={idx} className="flex flex-col items-start border-2 border-current p-8 bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 hover:-translate-y-2 transition-transform">
+                    <div className="mb-6 border-2 border-current p-3 bg-chartreuse text-zinc-950">
+                      <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {s.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                      {s.desc}
-                    </p>
+                    <h4 className="font-semibold uppercase text-xl md:text-2xl mb-4">{benefit.title}</h4>
+                    <p className="text-base text-zinc-300 dark:text-zinc-600 font-normal leading-relaxed">{benefit.description}</p>
                   </div>
                 ))}
               </div>
-            </div>
-          </Reveal>
+            </Reveal>
         </div>
       </section>
 
-      {/* ━━ Use cases — alternating 2-col grid ━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl">
-          {/* Row 1 */}
-          <div className={`grid md:grid-cols-2 ${borderB}`}>
-            <div className={`flex flex-col justify-center p-8 sm:p-12 lg:p-16 md:border-r ${border}`}>
-              <Reveal>
-                <TrendingUp className="mb-4 h-6 w-6 text-slate-900 dark:text-white" />
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Competitive Analysis
-                </h3>
-                <p className="mt-3 max-w-md text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                  Pull real-time competitor data from the web and get structured comparisons, market positioning maps, and strategic recommendations — in seconds.
-                </p>
-              </Reveal>
-            </div>
-            <div className="flex items-center justify-center bg-slate-50 p-6 sm:p-12 dark:bg-slate-900/40">
-              <Reveal delay={0.08}>
-                <div className={`w-full max-w-xs rounded-lg border ${border} bg-white p-4 sm:p-5 dark:bg-slate-950`}>
-                  <p className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">Competitor Matrix</p>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Feature parity', pct: 82 },
-                      { label: 'Pricing model', pct: 91 },
-                      { label: 'Market share', pct: 65 },
-                      { label: 'User satisfaction', pct: 74 },
-                    ].map((item) => (
-                      <div key={item.label}>
-                        <div className="mb-1 flex items-center justify-between text-xs sm:text-sm">
-                          <span className="text-slate-700 dark:text-slate-300">{item.label}</span>
-                          <span className="ml-2 text-xs font-medium text-slate-400">{item.pct}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                          <div
-                            className="h-full rounded-full bg-slate-900 dark:bg-white"
-                            style={{ width: `${item.pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-
-          {/* Row 2 — reversed */}
-          <div className={`grid md:grid-cols-2 ${borderB}`}>
-            <div className={`flex items-center justify-center bg-slate-50 p-6 sm:p-12 dark:bg-slate-900/40 md:border-r ${border} max-md:order-2`}>
-              <Reveal delay={0.08}>
-                <div className={`w-full max-w-xs rounded-lg border ${border} bg-white p-4 sm:p-5 dark:bg-slate-950`}>
-                  <p className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">Metrics Dashboard</p>
-                  <div className="flex h-24 items-end gap-1.5 sm:gap-2">
-                    {[44, 72, 50, 89, 61, 78, 100, 67, 94].map((pct, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 rounded-sm bg-slate-900 dark:bg-white"
-                        style={{ height: `${pct}%` }}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-3 flex items-baseline justify-between text-sm">
-                    <span className="font-semibold text-slate-900 dark:text-white">+23%</span>
-                    <span className="text-xs text-slate-400">vs last quarter</span>
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-            <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16 max-md:order-1">
-              <Reveal>
-                <BarChart3 className="mb-4 h-6 w-6 text-slate-900 dark:text-white" />
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Metrics & KPIs
-                </h3>
-                <p className="mt-3 max-w-md text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                  Upload your data, ask questions in plain language, and get clear visualizations and trend analysis without touching a spreadsheet.
-                </p>
-              </Reveal>
-            </div>
-          </div>
-
-          {/* Row 3 */}
-          <div className="grid md:grid-cols-2">
-            <div className={`flex flex-col justify-center p-8 sm:p-12 lg:p-16 md:border-r ${border}`}>
-              <Reveal>
-                <Target className="mb-4 h-6 w-6 text-slate-900 dark:text-white" />
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Roadmap Planning
-                </h3>
-                <p className="mt-3 max-w-md text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                  Prioritize with RICE, build quarterly plans, and get AI-powered recommendations on what to ship next — backed by data, not gut feel.
-                </p>
-              </Reveal>
-            </div>
-            <div className="flex items-center justify-center bg-slate-50 p-6 sm:p-12 dark:bg-slate-900/40">
-              <Reveal delay={0.08}>
-                <div className={`w-full max-w-xs rounded-lg border ${border} bg-white p-4 sm:p-5 dark:bg-slate-950`}>
-                  <p className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">RICE Scores</p>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'SSO Integration', score: 92 },
-                      { name: 'Dashboard v2', score: 78 },
-                      { name: 'Mobile App', score: 54 },
-                    ].map((item) => (
-                      <div key={item.name}>
-                        <div className="mb-1 flex items-center justify-between text-xs sm:text-sm">
-                          <span className="text-slate-700 dark:text-slate-300">{item.name}</span>
-                          <span className="ml-2 font-semibold text-slate-900 dark:text-white">{item.score}</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                          <div
-                            className="h-full rounded-full bg-slate-900 dark:bg-white"
-                            style={{ width: `${item.score}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ━━ Pricing ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-24">
+      {/* CTA Section */}
+      <section className="py-24 md:py-32 relative overflow-hidden bg-zinc-50 dark:bg-zinc-950 border-t-2 border-zinc-900 dark:border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10 flex flex-col items-center">
           <Reveal>
-            <h2 className="mb-4 text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              No pricing tiers. Just free.
+            <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold font-heading text-zinc-900 dark:text-zinc-50 uppercase leading-tight mb-10">
+              Ready to elevate <br/> Your Strategy?
             </h2>
-            <p className="mx-auto mb-14 max-w-md text-center text-base text-slate-600 dark:text-slate-400">
-              Every feature, every model — zero cost.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.08}>
-            <div className={`mx-auto max-w-sm overflow-hidden rounded-lg border ${border}`}>
-              <div className={`${borderB} p-8`}>
-                <p className="text-sm font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Full access</p>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-slate-900 dark:text-white">$0</span>
-                  <span className="text-slate-400">/forever</span>
-                </div>
-              </div>
-              <div className="p-8">
-                <ul className="space-y-3">
-                  {pricingItems.map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
-                      <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/signup">
-                  <Button fullWidth className="mt-8 rounded-lg">
-                    Get started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ━━ FAQ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <FaqSection />
-
-      {/* ━━ Final CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-28">
-          <Reveal>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                Start making better product decisions
-              </h2>
-              <p className="mx-auto mt-4 max-w-md text-base text-slate-600 dark:text-slate-400">
-                It takes 30 seconds to set up. No credit card, no onboarding call.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link to="/signup">
-                  <Button size="lg" className="rounded-lg text-base">
-                    Get started free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/signin">
-                  <button className={`rounded-lg border ${border} px-6 py-3 text-base font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900`}>
-                    Sign in
-                  </button>
-                </Link>
-              </div>
-            </div>
+            <Link to="/signup" className="w-full sm:w-auto inline-block">
+              <Button className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10 shadow-[6px_6px_0_0_#CCFF00]">
+                Get Started
+              </Button>
+            </Link>
           </Reveal>
         </div>
       </section>
     </PublicLayout>
   );
 };
+
+const features = [
+  {
+    icon: MessageSquare,
+    title: 'Multi-Model Intelligence',
+    description: 'Leverage the unique strengths of Claude, Gemini, and GPT in one unified workspace designed for deep product analysis.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Instant Data Insights',
+    description: 'Upload your CSV or Excel files to automatically generate PRDs and clear data visualizations from your own product data.',
+  },
+  {
+    icon: Target,
+    title: 'Smart Frameworks',
+    description: 'Base every interaction around proven product goals, RICE scoring, and clear execution matrices to ensure organizational alignment.',
+  },
+  {
+    icon: FileSearch,
+    title: 'User Research',
+    description: 'Identify market trends, competitor strategies, and industry benchmarks with real-time web search and empathy-driven mapping.',
+  },
+  {
+    icon: Shield,
+    title: 'Privacy First',
+    description: 'We do not train models on your data. Your product strategy and sensitive documents remain your own and encrypted at rest.',
+  },
+  {
+    icon: Users,
+    title: 'Senior PM Co-Pilot',
+    description: 'A powerful, efficient platform built for product leaders who need speed and intelligent companionship in every high-stakes decision.',
+  },
+];
+
+const benefits = [
+  {
+    title: 'Instant Blueprints',
+    description: 'Transform vague ideas into high-quality execution plans, specs, and roadmaps instantly.',
+  },
+  {
+    title: 'Live Data Streams',
+    description: 'Stop relying on old data. Connect your strategy to actual market moves with live search capability.',
+  },
+  {
+    title: 'Unified Workspace',
+    description: 'Bring strategy, research, and analysis into a single interface built for execution.',
+  },
+];
+
+export default LandingPage;

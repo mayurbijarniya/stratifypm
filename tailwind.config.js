@@ -8,11 +8,9 @@ export default {
         'xs': '475px',
       },
       fontFamily: {
-        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
-        'be-vietnam-pro': ['Be Vietnam Pro', 'system-ui', 'sans-serif'],
-        // Keep existing fonts as fallback
-        heading: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
-        body: ['Geist', 'system-ui', 'sans-serif'],
+        sans: ['Geist', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        heading: ['Geist', 'system-ui', 'sans-serif'],
         inter: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
@@ -37,6 +35,8 @@ export default {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         // Keep existing colors for compatibility
+        chartreuse: '#CCFF00',
+        neonorange: '#FF2A00',
         success: {
           light: '#059669',
           dark: '#10B981',
@@ -68,8 +68,13 @@ export default {
         'shimmer': 'shimmer 3s linear infinite',
         'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
         'scale-in': 'scaleIn 0.5s ease-out',
+        'marquee': 'marquee 20s linear infinite',
       },
       keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0%)' },
+        },
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
@@ -101,9 +106,15 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        none: '0',
+        sm: '0',
+        DEFAULT: '0',
+        md: '0',
+        lg: '0',
+        xl: '0',
+        '2xl': '0',
+        '3xl': '0',
+        full: '9999px',
       },
     },
   },

@@ -1,209 +1,159 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { PublicLayout } from './PublicLayout';
 import { Button } from '../ui/Button';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  ArrowRight,
   Target,
   Users,
   Shield,
   MessageSquare,
   BarChart3,
   FileText,
-} from '../ui/icons';
+} from 'lucide-react';
 
-// ─── Animation ───────────────────────────────────────────────────────
-
-const Reveal: React.FC<{
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}> = ({ children, delay = 0, className }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 28 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-// ─── Data ────────────────────────────────────────────────────────────
-
-const border = 'border-slate-200 dark:border-slate-800';
-const borderB = `border-b ${border}`;
+const Reveal = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ duration: 0.6, delay: delay / 1000, ease: "easeOut" }}
+  >
+    {children}
+  </motion.div>
+);
 
 const principles = [
   {
     icon: Target,
-    title: 'Built for PM workflows',
-    description: 'Every response is structured around real PM artifacts — roadmaps, KPI dashboards, RICE scores, competitive matrices.',
+    title: 'Product-Focused AI',
+    description: 'Generic AI outputs are often too vague. We specialize in generating exact PRDs, RICE scoring matrices, and execution roadmaps.',
   },
   {
     icon: MessageSquare,
-    title: 'Two models, one workspace',
-    description: 'Claude handles deep strategic analysis. Gemini handles fast classification and query optimization. You get the best of both.',
+    title: 'Multi-Model Intelligence',
+    description: 'Leverage the unique strengths of Claude, Gemini, and GPT-4 in a single workspace designed for product strategy.',
   },
   {
     icon: BarChart3,
-    title: 'Real-time data',
-    description: 'Web search pulls current market data, competitor moves, and industry trends — so your decisions aren\'t based on stale information.',
+    title: 'Real-Time Insights',
+    description: 'Our engine connects to live web data to provide you with the most up-to-date market trends and competitor analysis.',
   },
   {
     icon: FileText,
-    title: 'Your data, analyzed',
-    description: 'Upload CSV, Excel, or JSON files. Get instant insights, visualizations, and trends without touching a spreadsheet.',
+    title: 'Document Analysis',
+    description: 'Upload your CSV or Excel data to instantly generate product insights and structured visualizations without any manual work.',
   },
   {
     icon: Shield,
-    title: 'Privacy first',
-    description: 'Encrypted storage, session-based auth, and we never train models on your data. Your workspace stays yours.',
+    title: 'Full Privacy',
+    description: 'Your data is never used for model training. We prioritize security and ensure your strategic plans remain private.',
   },
   {
     icon: Users,
-    title: 'Open and free',
-    description: 'Every feature is free — no paywalls, no usage limits, no credit card. We believe PM tools should be accessible to everyone.',
+    title: 'Open Platform',
+    description: 'A professional-grade environment built for product leaders who need power and precision without the corporate complexity.',
   },
 ];
 
 const timeline = [
-  { label: 'Idea', description: 'Born from frustration with generic AI tools that don\'t understand product management.' },
-  { label: 'Built', description: 'Designed and developed as a focused workspace where PM frameworks meet AI intelligence.' },
-  { label: 'Shipped', description: 'Launched free for anyone who makes product decisions — from solo PMs to team leads.' },
+  { label: 'GENESIS', description: 'Born from the need for precise, professional-grade AI responses that go beyond generic chat hallucinations.' },
+  { label: 'ARCHITECTURE', description: 'Engineered with a dual-model framework optimized for strategic PM frameworks and high-integrity data analysis.' },
+  { label: 'DEPLOYMENT', description: 'Built for product leaders who require speed, clarity, and absolute data privacy in their daily operations.' },
 ];
 
-// ─── Component ───────────────────────────────────────────────────────
-
 export const AboutPage: React.FC = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   return (
     <PublicLayout>
-      {/* ━━ Hero ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-28">
-          <Reveal>
-            <div className="mx-auto max-w-3xl">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-                About StratifyPM
-              </p>
-              <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-                A focused workspace for product decision makers
-              </h1>
-              <p className="mt-6 text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-                StratifyPM is designed for product leaders who need structured thinking, fast synthesis, and dependable insights. We combine proven frameworks with AI models so your team can keep momentum without losing rigor.
-              </p>
-            </div>
+      {/* Hero Section */}
+      <section className="relative min-h-[70vh] flex flex-col justify-center border-b-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] opacity-10 dark:opacity-20 pointer-events-none">
+           {/* Abstract geometric elements removed per user request to maintain simplicity */}
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-24 md:py-32">
+          
+          <Reveal delay={100}>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter font-heading text-zinc-900 dark:text-zinc-50 leading-tight mb-6 uppercase">
+              ABOUT <br/> THE <span className="italic font-light tracking-wide text-zinc-500 dark:text-zinc-400">PLATFORM.</span>
+            </h1>
+          </Reveal>
+          
+          <Reveal delay={200}>
+            <p className="text-base md:text-lg font-normal leading-relaxed text-zinc-600 dark:text-zinc-400 max-w-2xl">
+              StratifyPM is your senior AI partner for product leadership. We’ve built a specialized workspace that strips away the noise, allowing you to focus on high-level strategy, deep analysis, and precisely crafted roadmaps.
+            </p>
           </Reveal>
         </div>
       </section>
 
-      {/* ━━ Story timeline ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl">
-          <Reveal delay={0.05}>
-            <div className={`overflow-hidden rounded-none border-x-0`}>
-              <div className="grid md:grid-cols-3">
-                {timeline.map((item, i) => (
-                  <div
-                    key={item.label}
-                    className={[
-                      'p-8 sm:p-12',
-                      i < timeline.length - 1 ? `md:border-r max-md:border-b ${border}` : '',
-                    ].join(' ')}
-                  >
-                    <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-md border border-slate-900 text-sm font-bold text-slate-900 dark:border-white dark:text-white`}>
-                      {i + 1}
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {item.label}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                      {item.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
+      {/* Timeline Section */}
+      <section className="border-b-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+            {timeline.map((item, i) => (
+              <Reveal key={item.label} delay={i * 150}>
+                <div className="border-2 border-zinc-800 dark:border-zinc-200 bg-zinc-900 dark:bg-zinc-100 p-8 md:p-10 h-full transition-transform hover:-translate-y-2 hover:-translate-x-2 hover:border-zinc-50 dark:hover:border-zinc-900 hover:bg-zinc-950 dark:hover:bg-zinc-50 group">
+                  <div className="text-zinc-400 dark:text-zinc-500 font-bold text-xs md:text-sm tracking-widest uppercase mb-6 group-hover:text-chartreuse transition-colors">[ PHASE 0{i + 1} ]</div>
+                  <h3 className="text-xl md:text-2xl font-semibold font-heading uppercase tracking-tight mb-4">
+                    {item.label}
+                  </h3>
+                  <p className="text-base font-normal text-zinc-400 dark:text-zinc-600 leading-relaxed max-w-sm">
+                    {item.description}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ━━ Principles grid ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className={borderB}>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-24">
+      {/* Principles Section */}
+      <section className="py-24 md:py-32 bg-zinc-50 dark:bg-zinc-950 border-b-2 border-zinc-900 dark:border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6">
           <Reveal>
-            <h2 className="mb-14 text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              What we believe
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-heading text-zinc-900 dark:text-zinc-50 uppercase leading-tight mb-16 text-center">
+              Our Core Principles.
             </h2>
           </Reveal>
 
-          <Reveal delay={0.05}>
-            <div className={`overflow-hidden rounded-lg border ${border}`}>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3">
-                {principles.map((p, i) => {
-                  const isLastCol3 = (i + 1) % 3 === 0;
-                  const isLastCol2 = (i + 1) % 2 === 0;
-                  const isLastRow3 = i >= 3;
-                  const isLastRow2 = i >= 4;
-
-                  return (
-                    <div
-                      key={p.title}
-                      className={[
-                        'p-6 sm:p-8 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/60',
-                        !isLastCol3 ? 'lg:border-r' : '',
-                        !isLastCol2 ? 'sm:max-lg:border-r' : '',
-                        !isLastRow3 ? 'lg:border-b' : '',
-                        !isLastRow2 ? 'sm:max-lg:border-b' : '',
-                        i < principles.length - 1 ? 'max-sm:border-b' : '',
-                        border,
-                      ].join(' ')}
-                    >
-                      <p.icon className="mb-4 h-5 w-5 text-slate-900 dark:text-white" />
-                      <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                        {p.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                        {p.description}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Reveal>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+            {principles.map((p, i) => (
+              <Reveal key={p.title} delay={i * 100}>
+                <div className="border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-950 p-8 md:p-10 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all h-full">
+                  <div className="flex items-center justify-between mb-8 border-b-2 border-zinc-900 dark:border-zinc-100 pb-4">
+                    <p.icon className="h-8 w-8 text-zinc-900 dark:text-zinc-100" />
+                    <span className="font-medium text-xs tracking-widest text-zinc-500 dark:text-zinc-400 uppercase">P_{i+1}</span>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-semibold font-heading uppercase text-zinc-900 dark:text-zinc-50 mb-4">
+                    {p.title}
+                  </h3>
+                  <p className="text-base font-normal text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm">
+                    {p.description}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ━━ CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section>
-        <div className="mx-auto w-full max-w-7xl px-6 py-20 lg:py-28">
+      {/* CTA */}
+      <section className="py-24 md:py-32 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden flex flex-col items-center text-center">
+        <div className="absolute inset-0 z-0">
+          <div className="w-full h-full bg-[linear-gradient(45deg,transparent_25%,rgba(161,161,170,0.1)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full text-center">
           <Reveal>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                Ready to try it?
-              </h2>
-              <p className="mx-auto mt-4 max-w-md text-base text-slate-600 dark:text-slate-400">
-                Free forever. Set up in 30 seconds.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link to="/signup">
-                  <Button size="lg" className="rounded-lg text-base">
-                    Get started free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+            <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold font-heading text-zinc-900 uppercase leading-tight mb-8 bg-chartreuse inline-block px-6 py-2 border-2 border-zinc-900">
+              BUILD BETTER.
+            </h2>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/signup" className="w-full sm:w-auto inline-block">
+                <Button className="w-full sm:w-auto rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 hover:bg-zinc-50 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-50 transition-colors uppercase tracking-widest font-bold text-sm py-3 px-8 md:py-4 md:px-10 shadow-[6px_6px_0_0_#CCFF00]">
+                  Start Building Better Products
+                </Button>
+              </Link>
             </div>
           </Reveal>
         </div>
@@ -211,3 +161,5 @@ export const AboutPage: React.FC = () => {
     </PublicLayout>
   );
 };
+
+export default AboutPage;

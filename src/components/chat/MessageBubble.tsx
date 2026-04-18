@@ -30,8 +30,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       <div className="flex items-start space-x-3 mb-6 justify-end px-4 sm:px-6">
         <div className="flex-1 flex justify-end">
           <div className="group relative max-w-[85%] sm:max-w-[75%]">
-            <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 shadow-md ml-auto">
-              <MessageContent content={message.content} />
+            <div className={`bg-black dark:bg-zinc-100 text-zinc-50 dark:text-black rounded-none border-2 border-zinc-900 dark:border-zinc-100 px-6 py-4 shadow-none`}>
+              <MessageContent content={message.content} isUser={true} />
             </div>
             
             <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg border border-border flex items-center shadow-lg">
@@ -47,8 +47,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           </div>
         </div>
         
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md flex-shrink-0">
-          <User className="w-4 h-4 text-primary-foreground" />
+        <div className="w-8 h-8 rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-chartreuse flex items-center justify-center flex-shrink-0 shadow-[2px_2px_0_0_#18181b] dark:shadow-[2px_2px_0_0_#f4f4f5]">
+          <User className="w-4 h-4 text-zinc-900" />
         </div>
       </div>
     );
@@ -56,14 +56,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   return (
     <div className="flex items-start space-x-3 mb-6 px-4 sm:px-6">
-      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm flex-shrink-0">
-        <Bot className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+      <div className="w-8 h-8 rounded-none border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center flex-shrink-0 shadow-[2px_2px_0_0_#18181b] dark:shadow-[2px_2px_0_0_#f4f4f5]">
+        <Bot className="w-4 h-4 text-zinc-50 dark:text-zinc-900" />
       </div>
       
       <div className="flex-1">
         <div className="group relative max-w-[95%] sm:max-w-[85%]">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-            <MessageContent content={message.content} />
+          <div className={`bg-zinc-50 dark:bg-black border-2 border-zinc-900 dark:border-zinc-100 rounded-none px-6 py-4 shadow-none text-black dark:text-zinc-50`}>
+            <MessageContent content={message.content} isUser={false} />
           </div>
           
           <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg border border-border flex items-center shadow-lg">

@@ -10,16 +10,6 @@ interface FeatureInterfaceProps {
   featureId: string;
 }
 
-const getFeatureIcon = (category: string) => {
-  switch (category) {
-    case 'strategy': return Target;
-    case 'execution': return TrendingUp;
-    case 'research': return Users;
-    case 'analytics': return BarChart3;
-    default: return Lightbulb;
-  }
-};
-
 export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId }) => {
   const { createConversation, getCurrentConversation } = useAppStore();
   const navigate = useNavigate();
@@ -34,8 +24,6 @@ export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId })
       </div>
     );
   }
-
-  const IconComponent = getFeatureIcon(feature.category);
 
   const handleStartChat = () => {
     // Create a new conversation for this feature
@@ -61,7 +49,13 @@ export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId })
         <div className="bg-primary-50 dark:bg-primary-900/20 p-6 sm:p-8 rounded-2xl border border-primary-200 dark:border-primary-800 shadow-light-lg dark:shadow-dark-lg">
           <div className="text-center mb-6 sm:mb-8">
             <div className="w-16 h-16 bg-white dark:bg-dark-surface rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-light dark:shadow-dark">
-              <IconComponent className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+              {feature.category === 'strategy' && <Target className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
+              {feature.category === 'execution' && <TrendingUp className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
+              {feature.category === 'research' && <Users className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
+              {feature.category === 'analytics' && <BarChart3 className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
+              {!['strategy', 'execution', 'research', 'analytics'].includes(feature.category) && (
+                <Lightbulb className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+              )}
             </div>
 
             <h1 className="text-xl sm:text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-2">

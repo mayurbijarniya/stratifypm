@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthGate } from './components/auth/AuthGate';
 import { AboutPage } from './components/marketing/AboutPage';
-import { LandingPage } from './components/marketing/LandingPage';
+import LandingPage from './components/marketing/LandingPage';
 import { PrivacyPage } from './components/marketing/PrivacyPage';
 import { TermsPage } from './components/marketing/TermsPage';
 import { AuthScreen } from './components/auth/AuthScreen';

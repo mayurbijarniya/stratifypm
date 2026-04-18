@@ -74,8 +74,10 @@ export class UnifiedAIService {
   private static instance: UnifiedAIService;
   private geminiApiKey: string;
   private claudeApiKey: string;
+  private openrouterApiKey: string;
   private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent';
   private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
+  private openrouterBaseUrl: string = 'https://openrouter.ai/api/v1';
 
   // Context persistence for web search
   private webSearchCache: {
@@ -92,6 +94,7 @@ export class UnifiedAIService {
     // Get API keys from environment variables
     this.geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     this.claudeApiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
+    this.openrouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 
     if (!this.geminiApiKey) {
       // console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
@@ -99,6 +102,10 @@ export class UnifiedAIService {
 
     if (!this.claudeApiKey) {
       // console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
+    }
+
+    if (!this.openrouterApiKey) {
+      // console.error('VITE_OPENROUTER_API_KEY environment variable is required for OpenRouter');
     }
 
     // Unified AI service initialized with both Gemini and Claude
@@ -231,6 +238,8 @@ Answer (one word only):`;
 
       if (model === 'gemini') {
         return await this.classifyWithGemini(classificationPrompt);
+      } else if (model === 'openrouter') {
+        return await this.classifyWithOpenRouter(classificationPrompt);
       } else {
         return await this.classifyWithClaude(classificationPrompt);
       }
@@ -336,9 +345,43 @@ Answer (one word only):`;
     return result === 'yes';
   }
 
+  private async classifyWithOpenRouter(prompt: string): Promise<boolean> {
+    const requestBody = {
+      model: "openrouter/elephant-alpha",
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 10,
+      stream: false
+    };
+
+    const response = await fetch(`${this.openrouterBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.openrouterApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      // console.error('OpenRouter classification API error:', response.status, response.statusText);
+      return true;
+    }
+
+    const data: ClaudeResponse = await response.json();
+    const result = data.choices[0]?.message?.content?.toLowerCase().trim();
+
+    return result === 'yes';
+  }
+
   // Get system prompt based on model
   private getSystemPrompt(model: AIModel): string {
-    if (model === 'claude') {
+    if (model === 'claude' || model === 'openrouter') {
       return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
 
 MARKET INTELLIGENCE: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant (e.g. searching for "Apple" returned fruit instead of tech), IGNORE IT and use your internal knowledge.
@@ -608,6 +651,8 @@ Remember: You're having an ongoing conversation, not answering isolated question
 
       if (model === 'gemini') {
         return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal, webContext);
+      } else if (model === 'openrouter') {
+        return await this.sendOpenRouterMessage(message, conversationHistory, onStream, abortSignal, webContext);
       } else {
         return await this.sendClaudeMessage(message, conversationHistory, onStream, abortSignal, webContext);
       }
@@ -920,6 +965,137 @@ Remember: You're having an ongoing conversation, not answering isolated question
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.claudeApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+      signal: abortSignal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    if (onStream) {
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      try {
+        while (true) {
+          if (abortSignal?.aborted) {
+            reader.cancel();
+            throw new Error('Request aborted');
+          }
+
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed: StreamChunk = JSON.parse(data);
+                const content = parsed.choices[0]?.delta?.content;
+
+                if (content) {
+                  fullResponse += content;
+                  onStream(fullResponse);
+                }
+              } catch {
+                continue;
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      return fullResponse;
+    } else {
+      // Handle non-streaming response
+      const data: ClaudeResponse = await response.json();
+      const content = data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No content in API response');
+      }
+
+      return content;
+    }
+  }
+
+  private async sendOpenRouterMessage(
+    message: string,
+    conversationHistory: Array<{ role: string; content: string }> = [],
+    onStream?: (chunk: string) => void,
+    abortSignal?: AbortSignal,
+    webContext: string = ''
+  ): Promise<string> {
+    // Prepare the conversation messages for OpenRouter
+    const messages = [];
+
+    // Add system message
+    messages.push({
+      role: 'system',
+      content: this.getSystemPrompt('openrouter')
+    });
+
+    // Add conversation history
+    conversationHistory.forEach(msg => {
+      messages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      });
+    });
+
+    // Add current message with file context
+    let enhancedMessageWithFiles = message;
+    const uploadedFiles = this.getUploadedFiles();
+
+    if (uploadedFiles.length > 0) {
+      const fileContext = this.generateFileContext(uploadedFiles);
+      enhancedMessageWithFiles = `${message}\n\n${fileContext}`;
+    }
+
+    // Add web context
+    const finalMessage = enhancedMessageWithFiles + webContext;
+
+    messages.push({
+      role: 'user',
+      content: finalMessage
+    });
+
+    // Enhanced prompt for table requests
+    if (this.isTableRequest(message)) {
+      messages.push({
+        role: 'system',
+        content: "The user is requesting a table. Ensure the response contains a MARKDOWN TABLE with detailed information."
+      });
+    }
+
+    const requestBody = {
+      model: "openrouter/elephant-alpha",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 8192,
+      stream: !!onStream
+    };
+
+    const response = await fetch(`${this.openrouterBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.openrouterApiKey}`,
       },
       body: JSON.stringify(requestBody),
       signal: abortSignal,

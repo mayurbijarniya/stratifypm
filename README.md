@@ -1,10 +1,10 @@
 # StratifyPM
 
-AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Choose between Claude 4.0 Sonnet and Gemini 2.5 Pro models.
+AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Use Claude via DeepInfra, Gemini via Google AI, or OpenRouter from one workspace.
 
 ## Features
 
-- **Dual AI Models** - Claude 4.0 Sonnet and Gemini 2.5 Pro
+- **Multi-Model AI** - Claude, Gemini, and OpenRouter
 - **Real-time Web Search** - Current market data and trends via Exa AI
 - **PM Frameworks** - RICE scoring, competitive analysis, user research
 - **File Analysis** - Upload CSV/Excel/JSON for insights
@@ -45,6 +45,7 @@ This starts:
 |----------|-------------|----------|
 | `VITE_GEMINI_API_KEY` | Google AI Studio API key for Gemini | Yes |
 | `VITE_DEEPINFRA_API_KEY` | DeepInfra API key for Claude | Yes |
+| `VITE_OPENROUTER_API_KEY` | OpenRouter API key for OpenRouter | Yes for OpenRouter |
 | `VITE_EXA_API_KEY` | Exa AI API key for web search | Yes |
 | `DATABASE_URL` | Neon Postgres connection string | Yes |
 | `AUTH_SECRET` | Secret for hashing OTPs and sessions | Yes |
@@ -55,6 +56,7 @@ This starts:
 Get API keys:
 - **Google AI Studio**: [API Keys](https://makersuite.google.com/app/apikey)
 - **DeepInfra**: [Dashboard](https://deepinfra.com/dash/api_keys)
+- **OpenRouter**: [Dashboard](https://openrouter.ai/)
 - **Exa AI**: [Dashboard](https://exa.ai/)
 - **Neon**: [Console](https://neon.tech/)
 - **Resend**: [API Keys](https://resend.com/api-keys)
@@ -70,7 +72,7 @@ StratifyPM uses email-based OTP authentication via Resend:
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand
 - **Backend**: Express.js, Neon PostgreSQL, cookie-parser
-- **AI**: Claude 4.0 Sonnet (DeepInfra), Gemini 2.5 Pro (Google AI)
+- **AI**: Claude (DeepInfra), Gemini (Google AI), OpenRouter (elephant-alpha)
 - **Web Search**: Exa AI
 - **Email**: Resend
 - **Build**: Vite

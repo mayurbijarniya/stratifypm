@@ -10,13 +10,16 @@ import { useTheme } from "../../hooks/useTheme";
 
 interface MessageContentProps {
   content: string;
+  isUser?: boolean;
 }
 
-export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
+export const MessageContent: React.FC<MessageContentProps> = ({ content, isUser }) => {
   const { isDark } = useTheme();
 
+  void isUser;
+
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
+    <div className="prose prose-sm max-w-none">
       <ReactMarkdown
         remarkPlugins={ [remarkGfm] }
         components={ {
@@ -69,7 +72,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           },
           th({ children }) {
             return (
-              <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-foreground uppercase tracking-wider border-b border-border">
+              <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-current uppercase tracking-wider border-b border-border">
                 { children }
               </th>
             );
@@ -89,7 +92,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
             };
 
             return (
-              <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-foreground border-r border-border last:border-r-0 whitespace-pre-wrap">
+              <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-current border-r border-border last:border-r-0 whitespace-pre-wrap">
                 { Array.isArray(children)
                   ? children.map((child) => processContent(child))
                   : processContent(children) }
@@ -98,35 +101,35 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           },
           h1({ children }) {
             return (
-              <h1 className="text-2xl font-bold text-foreground mb-4 mt-6 first:mt-0 leading-tight">
+              <h1 className="text-2xl font-bold text-current mb-4 mt-6 first:mt-0 leading-tight">
                 { children }
               </h1>
             );
           },
           h2({ children }) {
             return (
-              <h2 className="text-xl font-bold text-foreground mb-3 mt-5 first:mt-0 leading-tight">
+              <h2 className="text-xl font-bold text-current mb-3 mt-5 first:mt-0 leading-tight">
                 { children }
               </h2>
             );
           },
           h3({ children }) {
             return (
-              <h3 className="text-lg font-bold text-foreground mb-2 mt-4 first:mt-0 leading-tight">
+              <h3 className="text-lg font-bold text-current mb-2 mt-4 first:mt-0 leading-tight">
                 { children }
               </h3>
             );
           },
           h4({ children }) {
             return (
-              <h4 className="text-base font-bold text-foreground mb-2 mt-3 first:mt-0 leading-tight">
+              <h4 className="text-base font-bold text-current mb-2 mt-3 first:mt-0 leading-tight">
                 { children }
               </h4>
             );
           },
           p({ children }) {
             return (
-              <p className="text-foreground leading-relaxed mb-4 last:mb-0">
+              <p className="text-current leading-relaxed mb-4 last:mb-0">
                 { children }
               </p>
             );
@@ -134,7 +137,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           strong({ children }) {
             return (
               <strong
-                className="font-bold text-foreground"
+                className="font-bold text-current"
                 style={ { fontWeight: 700 } }
               >
                 { children }
@@ -142,7 +145,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
             );
           },
           em({ children }) {
-            return <em className="italic text-foreground">{ children }</em>;
+            return <em className="italic text-current">{ children }</em>;
           },
           ul({ children }) {
             return <ul className="mb-4 space-y-2 pl-0">{ children }</ul>;
@@ -159,7 +162,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           },
           li({ children }) {
             return (
-              <li className="text-foreground leading-relaxed pl-6 relative">
+              <li className="text-current leading-relaxed pl-6 relative">
                 { children }
               </li>
             );

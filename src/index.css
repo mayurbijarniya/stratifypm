@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Editorial Tech-Brutalism Fonts loaded via index.html */
 
 @tailwind base;
 @tailwind components;
@@ -13,54 +12,54 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 221.2 70% 60%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --primary: 240 5.9% 10%; /* zinc-900 */
+    --primary-foreground: 0 0% 98%; /* zinc-50 */
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0rem; /* Enforce total brutalism */
     
-    /* Custom colors for better design */
-    --blue: 221.2 83.2% 53.3%;
-    --blue-foreground: 210 20% 98%;
+    /* Custom colors for better design - Restored for feature cards */
+    --blue: 217.2 91.2% 54.8%;
+    --blue-foreground: 0 0% 98%;
     --green: 142.1 76.2% 36.3%;
     --green-foreground: 355.7 100% 97.3%;
-    --orange: 24.6 95% 53.1%;
-    --orange-foreground: 60 9.1% 97.8%;
-    --purple: 262.1 83.3% 57.8%;
-    --purple-foreground: 210 20% 98%;
+    --orange: 20.5 90.2% 48.2%;
+    --orange-foreground: 0 0% 98%;
+    --purple: 263.4 70% 50.4%;
+    --purple-foreground: 0 0% 98%;
     --pink: 336 75% 40%;
-    --pink-foreground: 355.7 100% 97.3%;
+    --pink-foreground: 0 0% 98%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%; /* zinc-50 */
+    --primary-foreground: 240 5.9% 10%; /* zinc-900 */
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 217.2 91.2% 59.8%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
     
     /* Custom colors for dark mode */
     --blue: 217.2 91.2% 59.8%;
@@ -82,7 +81,7 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
@@ -91,7 +90,7 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-be-vietnam-pro;
+    @apply font-heading tracking-tight;
     line-height: 1.2;
   }
   
@@ -399,7 +398,7 @@ html {
 /* Enhanced markdown formatting for better readability */
 .prose strong {
   font-weight: 700 !important;
-  color: hsl(var(--foreground)) !important;
+  color: inherit !important;
 }
 
 .prose ul {
@@ -417,17 +416,17 @@ html {
 .prose li {
   margin-bottom: 0.5rem !important;
   line-height: 1.6 !important;
-  color: hsl(var(--foreground)) !important;
+  color: inherit !important;
 }
 
 .prose p {
   margin-bottom: 1rem !important;
   line-height: 1.6 !important;
-  color: hsl(var(--foreground)) !important;
+  color: inherit !important;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-  color: hsl(var(--foreground)) !important;
+  color: inherit !important;
   font-weight: 700 !important;
   margin-top: 1.5rem !important;
   margin-bottom: 0.75rem !important;
@@ -511,8 +510,7 @@ html {
 .prose strong,
 .prose b {
   font-weight: 700 !important;
-  color: hsl(var(--foreground)) !important;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  color: inherit !important;
 }
 
 /* Dark mode adjustments */
