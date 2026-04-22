@@ -347,7 +347,7 @@ Answer (one word only):`;
 
   private async classifyWithOpenRouter(prompt: string): Promise<boolean> {
     const requestBody = {
-      model: "openrouter/elephant-alpha",
+      model: "openrouter/free",
       messages: [
         {
           role: 'user',
@@ -1084,7 +1084,7 @@ Remember: You're having an ongoing conversation, not answering isolated question
     }
 
     const requestBody = {
-      model: "openrouter/elephant-alpha",
+      model: "openrouter/free",
       messages: messages,
       temperature: 0.7,
       max_tokens: 8192,

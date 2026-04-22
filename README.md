@@ -72,7 +72,7 @@ StratifyPM uses email-based OTP authentication via Resend:
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand
 - **Backend**: Express.js, Neon PostgreSQL, cookie-parser
-- **AI**: Claude (DeepInfra), Gemini (Google AI), OpenRouter (elephant-alpha)
+- **AI**: Claude, Gemini, OpenRouter
 - **Web Search**: Exa AI
 - **Email**: Resend
 - **Build**: Vite
