@@ -75,7 +75,7 @@ export class UnifiedAIService {
   private geminiApiKey: string;
   private claudeApiKey: string;
   private openrouterApiKey: string;
-  private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent';
+  private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent';
   private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
   private openrouterBaseUrl: string = 'https://openrouter.ai/api/v1';
 
