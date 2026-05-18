@@ -108,7 +108,9 @@ const syncConversationRemote = (conversation: Conversation) => {
   // Save if we have a token (auth status might still be 'checking' after sign-in)
   const token = getAuthToken();
   if (!token) return;
-  void upsertConversation(token, conversation).catch(() => {});
+  void upsertConversation(token, conversation).catch((err) => {
+    console.error('Failed to sync conversation:', err);
+  });
 };
 
 const createConversationRemote = (conversation: Conversation) => {

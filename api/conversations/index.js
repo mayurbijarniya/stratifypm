@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         ${JSON.stringify(conversation.messages || [])},
         ${JSON.stringify(conversation.files || [])},
         ${conversation.pinned || false},
-        ${JSON.stringify(conversation.tags || [])},
+        ${conversation.tags || []},
         ${createdAt},
         ${updatedAt}
       )
