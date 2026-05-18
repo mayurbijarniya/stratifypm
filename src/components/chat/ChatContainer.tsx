@@ -31,9 +31,11 @@ export const ChatContainer: React.FC = () => {
     return (
       <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
         <Navbar />
-        <WelcomeScreen />
-        <div className="flex-shrink-0">
-          <MessageInput conversationId="" />
+        <div className="flex-1 flex flex-col mt-16 overflow-hidden">
+          <WelcomeScreen />
+          <div className="flex-shrink-0">
+            <MessageInput conversationId="" />
+          </div>
         </div>
       </div>
     );
