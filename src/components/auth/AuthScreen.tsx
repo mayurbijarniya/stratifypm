@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { requestOtp, verifyOtp } from '../../utils/authApi';
 import { useAuthStore } from '../../stores/authStore';
-import { ArrowLeft, Terminal, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Fingerprint, CheckCircle2 } from 'lucide-react';
 
 type Step = 'email' | 'verify';
 
@@ -21,6 +21,14 @@ const formatCooldown = (seconds: number) => {
   }
   return `${secs}s`;
 };
+
+const leftPanelFeatures = [
+  'RICE scoring, competitive analysis & roadmaps',
+  'Claude, Gemini, and GPT in one workspace',
+  'Upload CSV/Excel for instant data insights',
+  'Live market intelligence via real-time search',
+  'No passwords — just your email and a code',
+];
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirectTo = '/app' }) => {
   const { token, setAuth } = useAuthStore();
@@ -63,10 +71,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
       setCode('');
       setCooldown(60);
       if (response?.expiresIn) {
-        setInfo(`CODE VALID FOR ${Math.floor(response.expiresIn / 60)} MINUTES.`);
+        setInfo(`Code valid for ${Math.floor(response.expiresIn / 60)} minutes.`);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Uplink Failed';
+      const message = err instanceof Error ? err.message : 'Failed to send code';
       const retryAfter = (err as { retryAfter?: number })?.retryAfter;
       if (retryAfter) {
         setCooldown(retryAfter);
@@ -88,7 +96,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
     try {
       const result = await verifyOtp(email.trim(), code.trim());
       if (!result.token || !result.user) {
-        throw new Error('Key Validation Failed');
+        throw new Error('Verification failed');
       }
       setAuth(result.token, {
         id: result.user.id,
@@ -97,7 +105,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
       });
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Invalid Key Sequence';
+      const message = err instanceof Error ? err.message : 'Invalid code. Please try again.';
       setError(message);
     } finally {
       setLoading(false);
@@ -111,11 +119,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
     setInfo('');
   };
 
-  const headline = mode === 'signup' ? 'SIGN UP' : 'SIGN IN';
+  const headline = mode === 'signup' ? 'Create Account' : 'Welcome Back';
+  const subline = mode === 'signup'
+    ? 'Enter your email to get started — no password needed.'
+    : 'Enter your email to receive a sign-in code.';
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-zinc-50 dark:bg-zinc-950 font-sans">
-      {/* Back Button Overlay */}
+      {/* Back button */}
       <button
         onClick={() => navigate('/')}
         className="absolute left-6 top-6 z-20 flex items-center gap-2 border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900 px-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-50 hover:bg-zinc-900 hover:text-zinc-50 dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-colors shadow-[4px_4px_0_0_#18181b] dark:shadow-[4px_4px_0_0_#f4f4f5] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
@@ -124,110 +135,158 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ mode = 'signin', redirec
         Back
       </button>
 
-      {/* Left side Graphic (Brutalist panel) */}
-      <div className="hidden lg:flex w-1/2 border-r-2 border-zinc-900 dark:border-zinc-100 flex-col justify-between px-12 pb-12 pt-32 bg-zinc-900 text-zinc-50 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 2px, transparent 2px, transparent 10px)' }} />
-         <div className="relative z-10 w-full">
-            <h1 className="text-8xl font-bold font-heading uppercase leading-none tracking-tighter mb-8">
-              STRATIFY <br/> DIRECT.
-            </h1>
-            <div className="border-l-4 border-zinc-50 pl-6 space-y-4 font-mono font-bold uppercase">
-              <p>Welcome to StratifyPM</p>
-              <p>Please connect to continue.</p>
+      {/* Left panel */}
+      <div className="hidden lg:flex w-1/2 border-r-2 border-zinc-900 flex-col justify-between px-12 pb-12 pt-32 bg-zinc-900 text-zinc-50 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+        <div className="relative z-10 w-full">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 border-2 border-zinc-700 bg-chartreuse text-zinc-900 px-3 py-1 font-mono font-bold uppercase tracking-widest text-xs mb-10">
+            <div className="w-1.5 h-1.5 rounded-full bg-zinc-900 animate-pulse" />
+            AI-POWERED PM ASSISTANT
+          </div>
+
+          <h1 className="text-6xl xl:text-7xl font-extrabold font-heading uppercase leading-[0.9] tracking-tighter mb-6">
+            Your Senior<br />
+            <span className="relative inline-block">
+              <span className="relative z-10">PM Co-Pilot.</span>
+              <span className="absolute bottom-1 left-0 w-full h-3 bg-chartreuse -z-0 opacity-60" />
+            </span>
+          </h1>
+
+          <p className="text-zinc-400 text-base font-sans leading-relaxed mb-10 max-w-sm">
+            The AI assistant built exclusively for Product Managers. Make faster, smarter decisions — starting today.
+          </p>
+
+          <div className="space-y-3">
+            {leftPanelFeatures.map((feat, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-chartreuse flex-shrink-0 mt-0.5" />
+                <span className="font-sans text-sm text-zinc-300">{feat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative z-10 w-full mt-auto">
+          <div className="border-t-2 border-zinc-800 pt-6 flex items-end justify-between font-mono text-xs font-bold uppercase text-zinc-500">
+            <span>No credit card required</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-chartreuse animate-pulse" />
+              <span>System online</span>
             </div>
-         </div>
-         <div className="relative z-10 w-full mt-auto">
-            <div className="border-t-4 border-zinc-50 pt-6 flex items-end justify-between font-mono font-bold uppercase">
-               <span>SYSTEM ONLINE</span>
-               <Terminal className="h-8 w-8" />
-            </div>
-         </div>
+          </div>
+        </div>
       </div>
 
-      {/* Right side form */}
+      {/* Right panel: form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative">
-         <div className="w-full max-w-md">
-            <div className="mb-12">
-               <div className="inline-block border-2 border-zinc-900 dark:border-zinc-100 px-3 py-1 font-mono font-bold text-xs uppercase mb-4 dark:text-zinc-400">
-                 [ AUTH_{step.toUpperCase()} ]
-               </div>
-               <h2 className="text-4xl font-bold font-heading uppercase text-zinc-900 dark:text-zinc-50">
-                 {headline}
-               </h2>
+        <div className="w-full max-w-md">
+          <div className="mb-10">
+            <div className="inline-block border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-zinc-50 dark:text-zinc-900 px-3 py-1 font-mono font-bold text-xs uppercase tracking-widest mb-5">
+              [ {step === 'email' ? 'STEP 1 OF 2' : 'STEP 2 OF 2'} ]
             </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold font-heading uppercase text-zinc-900 dark:text-zinc-50 tracking-tighter mb-2">
+              {headline}
+            </h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 font-sans">{subline}</p>
+          </div>
 
-            <div className="space-y-6">
-              {step === 'email' ? (
+          <div className="space-y-5">
+            {step === 'email' ? (
+              <div className="space-y-2">
+                <label className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && canSend && !loading && handleContinue()}
+                  disabled={loading}
+                  className="w-full border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900 p-4 text-zinc-900 dark:text-zinc-50 font-sans text-base focus:outline-none focus:ring-0 focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors rounded-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                />
+                {error && (
+                  <p className="text-red-500 dark:text-red-400 font-mono text-xs uppercase mt-2">{error}</p>
+                )}
+              </div>
+            ) : (
+              <>
                 <div className="space-y-2">
-                  <label className="font-mono text-xs font-bold uppercase tracking-widest dark:text-zinc-400">Email Address</label>
+                  <label className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
+                    6-Digit Code
+                  </label>
+                  <p className="font-sans text-xs text-zinc-500 dark:text-zinc-400">
+                    Sent to <span className="font-bold text-zinc-900 dark:text-zinc-100">{email}</span>
+                  </p>
                   <input
-                    type="email"
-                    placeholder="operator@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                    onKeyDown={(e) => e.key === 'Enter' && canVerify && !loading && handleVerify()}
                     disabled={loading}
-                    className="w-full border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900 p-4 text-zinc-900 dark:text-zinc-50 font-mono focus:outline-none focus:ring-0 focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors rounded-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                    autoFocus
+                    className="w-full border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900 p-4 text-center tracking-[0.8em] text-2xl font-bold text-zinc-900 dark:text-zinc-50 font-mono focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors rounded-none placeholder:tracking-normal placeholder:text-base placeholder:font-normal placeholder:opacity-40"
                   />
-                  {error && <p className="text-red-600 font-mono text-xs uppercase mt-2">{error}</p>}
+                  {error && (
+                    <p className="text-red-500 dark:text-red-400 font-mono text-xs uppercase mt-2">{error}</p>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <label className="font-mono text-xs font-bold uppercase tracking-widest dark:text-zinc-400">Verification Code</label>
-                    <input
-                      type="text"
-                      placeholder="000 000"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                      disabled={loading}
-                      className="w-full border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900 p-4 text-center tracking-[1em] text-xl font-bold text-zinc-900 dark:text-zinc-50 font-mono focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 transition-colors rounded-none placeholder:tracking-normal placeholder:text-sm placeholder:font-normal placeholder:opacity-50"
-                    />
-                    {error && <p className="text-red-600 font-mono text-xs uppercase mt-2">{error}</p>}
-                  </div>
-                  
-                  <div className="flex items-center justify-between font-mono text-xs font-bold uppercase">
-                    <button
-                      type="button"
-                      onClick={handleChangeEmail}
-                      className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 underline decoration-2 underline-offset-4"
-                    >
-                      Change Email
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSendCode}
-                      disabled={loading || cooldown > 0}
-                      className="text-zinc-500 hover:text-zinc-900 disabled:opacity-50 dark:hover:text-zinc-50"
-                    >
-                      {cooldown > 0 ? `RESEND ${formatCooldown(cooldown)}` : 'Resend Code'}
-                    </button>
-                  </div>
-                </>
-              )}
 
-              {info && (
-                <div className="border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-900 p-4 flex items-start gap-3">
-                  <Fingerprint className="h-5 w-5 text-zinc-900 dark:text-zinc-100 shrink-0 mt-0.5" />
-                  <span className="font-mono text-xs font-bold uppercase text-zinc-900 dark:text-zinc-100">{info}</span>
+                <div className="flex items-center justify-between font-mono text-xs font-bold uppercase">
+                  <button
+                    type="button"
+                    onClick={handleChangeEmail}
+                    className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 underline decoration-2 underline-offset-4 transition-colors"
+                  >
+                    Change Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendCode}
+                    disabled={loading || cooldown > 0}
+                    className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 disabled:opacity-40 transition-colors"
+                  >
+                    {cooldown > 0 ? `Resend in ${formatCooldown(cooldown)}` : 'Resend Code'}
+                  </button>
                 </div>
-              )}
+              </>
+            )}
 
-              <Button
-                loading={loading}
-                disabled={step === 'email' ? !canSend : !canVerify}
-                onClick={step === 'email' ? handleContinue : handleVerify}
-                className="w-full rounded-none border-2 border-zinc-900 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-sm py-4 disabled:opacity-70 shadow-[6px_6px_0_0_#18181b] dark:shadow-[6px_6px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none active:scale-95"
-              >
-                {step === 'email' ? 'SEND CODE' : 'VERIFY CODE'}
-              </Button>
+            {info && (
+              <div className="border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-900 p-4 flex items-start gap-3">
+                <Fingerprint className="h-4 w-4 text-zinc-900 dark:text-zinc-100 shrink-0 mt-0.5" />
+                <span className="font-sans text-xs text-zinc-700 dark:text-zinc-300">{info}</span>
+              </div>
+            )}
 
-              <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-400 text-center mt-8">
-                By continuing, you agree to our Terms of Operation.
-              </p>
-            </div>
-         </div>
+            <Button
+              loading={loading}
+              disabled={step === 'email' ? !canSend : !canVerify}
+              onClick={step === 'email' ? handleContinue : handleVerify}
+              className="w-full rounded-none border-2 border-zinc-900 dark:border-zinc-100 !bg-chartreuse !text-zinc-900 hover:!bg-zinc-900 dark:hover:!bg-zinc-100 hover:!text-zinc-50 dark:hover:!text-zinc-900 transition-all uppercase tracking-widest font-black text-sm py-4 disabled:opacity-50 shadow-[5px_5px_0_0_#18181b] dark:shadow-[5px_5px_0_0_#f4f4f5] hover:translate-y-1 hover:translate-x-1 hover:shadow-none"
+            >
+              {step === 'email' ? 'Send Code →' : 'Verify & Sign In →'}
+            </Button>
+
+            <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-500 text-center pt-2">
+              By continuing, you agree to our{' '}
+              <a href="/terms" className="underline hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+                Terms of Service
+              </a>
+              {' '}and{' '}
+              <a href="/privacy" className="underline hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
+        </div>
       </div>
-
     </div>
   );
 };
