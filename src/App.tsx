@@ -8,6 +8,7 @@ import { TermsPage } from './components/marketing/TermsPage';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { useTheme } from './hooks/useTheme';
 import { AppShell } from './components/app/AppShell';
+import { SettingsPage } from './components/settings/SettingsPage';
 
 function App() {
   const { theme } = useTheme();
@@ -39,6 +40,14 @@ function App() {
           element={
             <AuthGate>
               <AppShell />
+            </AuthGate>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <AuthGate>
+              <SettingsPage />
             </AuthGate>
           }
         />

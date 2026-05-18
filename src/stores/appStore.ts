@@ -48,6 +48,11 @@ interface AppState {
   clearAllConversations: () => void;
   setConversations: (conversations: Conversation[]) => void;
   setCurrentConversation: (id: string | null) => void;
+  togglePinConversation: (id: string) => void;
+  renameConversation: (id: string, title: string) => void;
+  addTagToConversation: (id: string, tag: string) => void;
+  removeTagFromConversation: (id: string, tag: string) => void;
+  searchConversations: (query: string) => Conversation[];
 
   // Message actions
   addMessage: (conversationId: string, message: Omit<Message, 'id' | 'timestamp'>) => void;
@@ -163,6 +168,8 @@ export const useAppStore = create<AppState>()(
           messages: [],
           createdAt: new Date(),
           updatedAt: new Date(),
+          pinned: false,
+          tags: [],
           // Inherit currently uploaded files (pending files) if any
           files: get().uploadedFiles || [],
         };
@@ -264,8 +271,15 @@ export const useAppStore = create<AppState>()(
             ? conversations.find((conv) => conv.id === currentConversationId) || null
             : null;
 
+          // Sort: pinned first, then by updatedAt desc
+          const sorted = [...conversations].sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+
           return {
-            conversations,
+            conversations: sorted,
             currentConversationId,
             conversationStates,
             selectedFeature: null,
@@ -304,6 +318,86 @@ export const useAppStore = create<AppState>()(
             // Sync global files state with selected conversation's files
             uploadedFiles: targetConv?.files || [],
           };
+        });
+      },
+
+      togglePinConversation: (id) => {
+        let updatedConversation: Conversation | null = null;
+        set((state) => {
+          const conversations = state.conversations.map((conv) => {
+            if (conv.id !== id) return conv;
+            updatedConversation = { ...conv, pinned: !conv.pinned, updatedAt: new Date() };
+            return updatedConversation;
+          });
+          // Sort: pinned first, then by updatedAt desc
+          const sorted = [...conversations].sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          });
+          return { conversations: sorted };
+        });
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
+      },
+
+      renameConversation: (id, title) => {
+        let updatedConversation: Conversation | null = null;
+        set((state) => {
+          const conversations = state.conversations.map((conv) => {
+            if (conv.id !== id) return conv;
+            updatedConversation = { ...conv, title, updatedAt: new Date() };
+            return updatedConversation;
+          });
+          return { conversations };
+        });
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
+      },
+
+      addTagToConversation: (id, tag) => {
+        let updatedConversation: Conversation | null = null;
+        set((state) => {
+          const conversations = state.conversations.map((conv) => {
+            if (conv.id !== id) return conv;
+            const tags = [...(conv.tags || [])];
+            if (!tags.includes(tag)) tags.push(tag);
+            updatedConversation = { ...conv, tags, updatedAt: new Date() };
+            return updatedConversation;
+          });
+          return { conversations };
+        });
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
+      },
+
+      removeTagFromConversation: (id, tag) => {
+        let updatedConversation: Conversation | null = null;
+        set((state) => {
+          const conversations = state.conversations.map((conv) => {
+            if (conv.id !== id) return conv;
+            const tags = (conv.tags || []).filter((t) => t !== tag);
+            updatedConversation = { ...conv, tags, updatedAt: new Date() };
+            return updatedConversation;
+          });
+          return { conversations };
+        });
+        if (updatedConversation) {
+          syncConversationRemote(updatedConversation);
+        }
+      },
+
+      searchConversations: (query) => {
+        const state = get();
+        const lowerQuery = query.toLowerCase();
+        return state.conversations.filter((conv) => {
+          const inTitle = conv.title.toLowerCase().includes(lowerQuery);
+          const inMessages = conv.messages.some((msg) => msg.content.toLowerCase().includes(lowerQuery));
+          const inTags = (conv.tags || []).some((tag) => tag.toLowerCase().includes(lowerQuery));
+          return inTitle || inMessages || inTags;
         });
       },
 

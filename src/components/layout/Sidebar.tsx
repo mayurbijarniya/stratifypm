@@ -15,6 +15,7 @@ import {
   Sparkles,
   Rocket,
 } from "../ui/icons";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { Button } from "../ui/Button";
 import { useAppStore } from "../../stores/appStore";
 import { quickActions } from "../../data/quickActions";
@@ -80,6 +81,7 @@ export const Sidebar: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   // Track screen size changes
@@ -141,13 +143,12 @@ export const Sidebar: React.FC = () => {
   };
 
   const handleClearAll = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete all conversations? This action cannot be undone."
-      )
-    ) {
-      clearAllConversations();
-    }
+    setShowClearAllDialog(true);
+  };
+
+  const confirmClearAll = () => {
+    clearAllConversations();
+    setShowClearAllDialog(false);
   };
 
   const handleNewConversation = () => {
@@ -389,6 +390,18 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Clear All Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showClearAllDialog}
+        title="Delete All Conversations?"
+        description="Are you sure you want to delete all conversations? This action cannot be undone."
+        confirmLabel="Delete All"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={confirmClearAll}
+        onCancel={() => setShowClearAllDialog(false)}
+      />
     </div>
   );
 };

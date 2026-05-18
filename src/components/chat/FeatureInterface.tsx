@@ -1,190 +1,237 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageInput } from './MessageInput';
-import { MessageList } from './MessageList';
 import { useAppStore } from '../../stores/appStore';
 import { quickActions } from '../../data/quickActions';
-import { Target, TrendingUp, Users, BarChart3, Lightbulb } from '../ui/icons';
+import {
+  Target,
+  TrendingUp,
+  Users,
+  BarChart3,
+  Lightbulb,
+  ArrowRight,
+  Zap,
+  MessageSquare,
+} from '../ui/icons';
 
 interface FeatureInterfaceProps {
   featureId: string;
 }
 
+const categoryIcons: Record<string, typeof Target> = {
+  strategy: Target,
+  execution: TrendingUp,
+  research: Users,
+  analytics: BarChart3,
+};
+
+const categoryLabels: Record<string, string> = {
+  strategy: 'Strategy',
+  execution: 'Execution',
+  research: 'Research',
+  analytics: 'Analytics',
+};
+
 export const FeatureInterface: React.FC<FeatureInterfaceProps> = ({ featureId }) => {
-  const { createConversation, getCurrentConversation } = useAppStore();
+  const { createConversation, setCurrentConversation, addMessage, setConversationLoading } = useAppStore();
   const navigate = useNavigate();
-  const [hasStarted, setHasStarted] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [isStarting, setIsStarting] = useState(false);
 
   const feature = quickActions.find(action => action.id === featureId);
 
   if (!feature) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white dark:bg-dark-primary">
-        <p className="text-light-text-muted dark:text-dark-text-muted">Feature not found</p>
+      <div className="flex-1 flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Feature not found</p>
       </div>
     );
   }
 
-  const handleStartChat = () => {
+  const Icon = categoryIcons[feature.category] || Lightbulb;
+  const categoryLabel = categoryLabels[feature.category] || 'Framework';
+
+  const handleStartChat = (promptOverride?: string) => {
+    if (isStarting) return;
+    setIsStarting(true);
+
+    const promptToSend = promptOverride || customPrompt || feature.prompt;
+
     // Create a new conversation for this feature
     const conversationId = createConversation(feature.title);
-    setHasStarted(true);
+    setCurrentConversation(conversationId);
     navigate(`/app/${conversationId}`);
+
+    // Auto-send the feature prompt
+    setTimeout(() => {
+      addMessage(conversationId, {
+        content: promptToSend,
+        role: 'user',
+      });
+      setConversationLoading(conversationId, true);
+      setIsStarting(false);
+    }, 150);
   };
 
-  // If chat has started, show the conversation
-  const currentConversation = getCurrentConversation();
-  if (hasStarted && currentConversation) {
-    return (
-      <div className="flex-1 flex flex-col bg-white dark:bg-dark-primary">
-        <MessageList conversation={ currentConversation } />
-        <MessageInput conversationId={ currentConversation.id } />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 flex items-center justify-center bg-white dark:bg-dark-primary p-4 sm:p-6">
-      <div className="max-w-2xl w-full">
-        <div className="bg-primary-50 dark:bg-primary-900/20 p-6 sm:p-8 rounded-2xl border border-primary-200 dark:border-primary-800 shadow-light-lg dark:shadow-dark-lg">
-          <div className="text-center mb-6 sm:mb-8">
-            <div className="w-16 h-16 bg-white dark:bg-dark-surface rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-light dark:shadow-dark">
-              {feature.category === 'strategy' && <Target className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
-              {feature.category === 'execution' && <TrendingUp className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
-              {feature.category === 'research' && <Users className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
-              {feature.category === 'analytics' && <BarChart3 className="w-8 h-8 text-primary-600 dark:text-primary-400" />}
-              {!['strategy', 'execution', 'research', 'analytics'].includes(feature.category) && (
-                <Lightbulb className="w-8 h-8 text-primary-600 dark:text-primary-400" />
-              )}
-            </div>
-
-            <h1 className="text-xl sm:text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-2">
-              { feature.title }
-            </h1>
-
-            <p className="text-light-text-secondary dark:text-dark-text-secondary text-base sm:text-lg">
-              { feature.description }
-            </p>
+    <div className="flex-1 flex items-center justify-start bg-background p-4 sm:p-8 overflow-y-auto">
+      <div className="w-full max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium mb-4">
+            <Zap className="w-3 h-3" />
+            {categoryLabel} Framework
           </div>
-
-          <div className="bg-white dark:bg-dark-surface p-4 sm:p-6 rounded-xl border border-light-border dark:border-dark-border mb-6 shadow-light dark:shadow-dark">
-            <h3 className="font-semibold text-light-text-primary dark:text-dark-text-primary mb-3 flex items-center">
-              <Lightbulb className="w-5 h-5 text-warning-light dark:text-warning-dark mr-2" />
-              How to Use This Feature
-            </h3>
-
-            { feature.id === 'feature-prioritization' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> List your potential features and any context about your goals or constraints.</p>
-                <p><strong>Example:</strong> "For a fitness app, prioritize: social sharing, new workout types, and a diet tracker."</p>
-                <p><strong>You'll get:</strong> RICE scoring matrix, prioritization recommendations, and implementation roadmap.</p>
-              </div>
-            ) }
-
-            { feature.id === 'competitive-analysis' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your industry, product category, or specific competitors you want to analyze.</p>
-                <p><strong>Example:</strong> "Analyze the project management software market including Asana, Monday, and Notion."</p>
-                <p><strong>You'll get:</strong> Competitive matrix, positioning analysis, and strategic recommendations.</p>
-              </div>
-            ) }
-
-            { feature.id === 'user-persona' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your product type, target market, or existing user research data.</p>
-                <p><strong>Example:</strong> "Create personas for a B2B SaaS tool targeting small business owners."</p>
-                <p><strong>You'll get:</strong> Detailed personas, behavioral insights, and journey mapping.</p>
-              </div>
-            ) }
-
-            { feature.id === 'kpi-dashboard' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your business type, key objectives, or current metrics you're tracking.</p>
-                <p><strong>Example:</strong> "Design KPI dashboard for an e-commerce platform focused on growth."</p>
-                <p><strong>You'll get:</strong> Metric hierarchy, dashboard design, and measurement framework.</p>
-              </div>
-            ) }
-
-            { feature.id === 'market-opportunity' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> The market or industry you want to analyze for opportunities.</p>
-                <p><strong>Example:</strong> "Assess market opportunity for AI-powered customer service tools in healthcare."</p>
-                <p><strong>You'll get:</strong> TAM/SAM/SOM analysis, growth potential assessment, and market entry strategies.</p>
-              </div>
-            ) }
-
-            { feature.id === 'business-model-canvas' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your business concept, product idea, or existing business model to analyze.</p>
-                <p><strong>Example:</strong> "Create business model canvas for a subscription-based meal planning app."</p>
-                <p><strong>You'll get:</strong> Complete canvas with value propositions, revenue streams, and validation framework.</p>
-              </div>
-            ) }
-
-            { feature.id === 'roadmap-timeline' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your product vision, key features, or initiatives you want to roadmap.</p>
-                <p><strong>Example:</strong> "Create 6-month roadmap for mobile app with user profiles, payments, and analytics."</p>
-                <p><strong>You'll get:</strong> Quarterly timeline, milestone planning, and dependency mapping.</p>
-              </div>
-            ) }
-
-            { feature.id === 'sprint-planning' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your sprint goals, team size, and stories or features to plan.</p>
-                <p><strong>Example:</strong> "Plan 2-week sprint for 5-person team focusing on checkout flow improvements."</p>
-                <p><strong>You'll get:</strong> Capacity planning, story estimation, and sprint optimization recommendations.</p>
-              </div>
-            ) }
-
-            { feature.id === 'customer-journey' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your product/service and the customer experience you want to map.</p>
-                <p><strong>Example:</strong> "Map customer journey for online banking app from sign-up to first transaction."</p>
-                <p><strong>You'll get:</strong> End-to-end journey map, touchpoint analysis, and optimization opportunities.</p>
-              </div>
-            ) }
-
-            { feature.id === 'interview-guide' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your research objectives and what you want to learn from users.</p>
-                <p><strong>Example:</strong> "Create interview guide to understand how remote workers use productivity tools."</p>
-                <p><strong>You'll get:</strong> Structured questions, research methodology, and analysis framework.</p>
-              </div>
-            ) }
-
-            { feature.id === 'cohort-analysis' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Your product type and the user behavior you want to analyze.</p>
-                <p><strong>Example:</strong> "Analyze retention cohorts for SaaS platform focusing on feature adoption."</p>
-                <p><strong>You'll get:</strong> Cohort tables, retention patterns, and actionable insights for growth.</p>
-              </div>
-            ) }
-
-            { feature.id === 'ab-test-planner' && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> The feature or hypothesis you want to test with your goals.</p>
-                <p><strong>Example:</strong> "Test new onboarding flow to improve user activation rates by 15%."</p>
-                <p><strong>You'll get:</strong> Experiment design, statistical framework, and success measurement plan.</p>
-              </div>
-            ) }
-
-            { !['feature-prioritization', 'competitive-analysis', 'user-persona', 'kpi-dashboard', 'market-opportunity', 'business-model-canvas', 'roadmap-timeline', 'sprint-planning', 'customer-journey', 'interview-guide', 'cohort-analysis', 'ab-test-planner'].includes(feature.id) && (
-              <div className="space-y-3 text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                <p><strong>What to provide:</strong> Context about your product, business, or specific challenge you're facing.</p>
-                <p><strong>You'll get:</strong> Strategic analysis, actionable recommendations, and implementation guidance.</p>
-              </div>
-            ) }
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
+            <Icon className="w-7 h-7 text-primary" />
           </div>
-
-          <button
-            onClick={ handleStartChat }
-            className="w-full py-3 sm:py-4 px-6 bg-primary-600 hover:bg-primary-700 dark:bg-primary-400 dark:hover:bg-primary-300 text-white dark:text-dark-primary rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 shadow-light dark:shadow-dark hover:shadow-light-md dark:hover:shadow-dark-md transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary-600 dark:focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-primary-50 dark:focus:ring-offset-primary-900"
-          >
-            Start { feature.title } Analysis
-          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            {feature.title}
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+            {feature.description}
+          </p>
         </div>
+
+        {/* How it works */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 text-primary" />
+            How It Works
+          </h3>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>1. The framework prompt is pre-loaded below</p>
+            <p>2. You can customize it with your specific context</p>
+            <p>3. Click "Run Analysis" and the AI will generate the full framework output</p>
+          </div>
+        </div>
+
+        {/* Customizable Prompt */}
+        <div className="bg-card border border-border rounded-xl p-5 mb-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-primary" />
+            Your Input
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Customize the prompt with your specific context, or use one of the examples below:
+          </p>
+          <textarea
+            value={customPrompt}
+            onChange={(e) => setCustomPrompt(e.target.value)}
+            placeholder={feature.prompt}
+            rows={6}
+            className="w-full px-4 py-3 bg-background border-2 border-border rounded-xl text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all text-sm resize-none"
+          />
+        </div>
+
+        {/* Example Prompts */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Quick Examples</h3>
+          <div className="flex flex-wrap gap-2">
+            {getExamples(feature.id).map((example, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCustomPrompt(example)}
+                className="px-3 py-2 bg-muted hover:bg-primary/10 hover:text-primary border border-border hover:border-primary/30 rounded-lg text-xs font-medium transition-all text-left"
+              >
+                {example.length > 60 ? example.slice(0, 60) + '...' : example}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={() => handleStartChat()}
+          disabled={isStarting}
+          className="w-full py-3.5 px-6 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isStarting ? (
+            <>
+              <Zap className="w-4 h-4 animate-pulse" />
+              Starting...
+            </>
+          ) : (
+            <>
+              Run {feature.title}
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
+
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          The AI will generate a structured {feature.title.toLowerCase()} based on your input.
+        </p>
       </div>
     </div>
   );
 };
+
+function getExamples(featureId: string): string[] {
+  const examples: Record<string, string[]> = {
+    'competitive-analysis': [
+      'Analyze the project management software market including Asana, Monday, and Notion.',
+      'Do a competitive analysis of Figma vs Sketch vs Adobe XD for enterprise design teams.',
+      'Compare Spotify, Apple Music, and YouTube Music in the Indian streaming market.',
+    ],
+    'market-opportunity': [
+      'Assess market opportunity for AI-powered customer service tools in healthcare.',
+      'Evaluate the market for electric vehicle charging infrastructure in Europe.',
+      'Analyze the growth potential of no-code platforms for SMBs.',
+    ],
+    'business-model-canvas': [
+      'Create business model canvas for a subscription-based meal planning app.',
+      'Design a canvas for a B2B SaaS analytics platform targeting e-commerce.',
+      'Map the business model for a peer-to-peer rental marketplace.',
+    ],
+    'feature-prioritization': [
+      'For a fitness app, prioritize: social sharing, new workout types, and a diet tracker.',
+      'Score these 12 features using RICE and rank them by priority for our Q3 roadmap.',
+      'Help me decide between: dark mode, API access, and mobile app for our MVP.',
+    ],
+    'roadmap-timeline': [
+      'Create 6-month roadmap for mobile app with user profiles, payments, and analytics.',
+      'Build a Q1-Q4 roadmap for our AI assistant product launch.',
+      'Plan a 3-month roadmap for improving user onboarding and activation.',
+    ],
+    'sprint-planning': [
+      'Plan 2-week sprint for 5-person team focusing on checkout flow improvements.',
+      'Help me plan a sprint with 3 engineers for payment gateway integration.',
+      'Estimate story points for user profile, search, and notification features.',
+    ],
+    'user-persona': [
+      'Create personas for a B2B SaaS tool targeting small business owners.',
+      'Build 3 user personas for a meditation app targeting busy professionals.',
+      'Design personas for our fintech app used by millennials and Gen Z.',
+    ],
+    'customer-journey': [
+      'Map customer journey for online banking app from sign-up to first transaction.',
+      'Design the journey for a first-time e-commerce buyer from discovery to repeat purchase.',
+      'Map the onboarding journey for a project management tool.',
+    ],
+    'interview-guide': [
+      'Create interview guide to understand how remote workers use productivity tools.',
+      'Design a user research study for mobile app onboarding optimization.',
+      'Build an interview guide for understanding developer tool preferences.',
+    ],
+    'kpi-dashboard': [
+      'Design KPI dashboard for an e-commerce platform focused on growth.',
+      'Build a metrics framework for a SaaS product tracking MRR and churn.',
+      'Create a dashboard strategy for tracking product engagement and retention.',
+    ],
+    'cohort-analysis': [
+      'Analyze retention cohorts for SaaS platform focusing on feature adoption.',
+      'Build a cohort analysis for our mobile app user engagement.',
+      'Compare monthly cohorts for our subscription product over the last year.',
+    ],
+    'ab-test-planner': [
+      'Test new onboarding flow to improve user activation rates by 15%.',
+      'Design an A/B test for our pricing page to increase conversions.',
+      'Plan an experiment for push notification timing to maximize open rates.',
+    ],
+  };
+
+  return examples[featureId] || [
+    'Give me a detailed framework analysis for my product.',
+    'Walk me through the step-by-step process for this framework.',
+  ];
+}

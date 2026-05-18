@@ -5,6 +5,8 @@ type ConversationRow = {
   title: string;
   messages: Message[] | Array<Omit<Message, 'timestamp'> & { timestamp: string | number }> | string;
   files?: Conversation['files'] | string;
+  pinned?: boolean;
+  tags?: string[] | string;
   created_at: string;
   updated_at: string;
 };
@@ -33,6 +35,7 @@ const parseJsonField = <T,>(value: T | string | undefined) => {
 const deserializeConversation = (row: ConversationRow): Conversation => {
   const rawMessages = parseJsonField<ConversationRow['messages']>(row.messages);
   const rawFiles = parseJsonField<ConversationRow['files']>(row.files);
+  const rawTags = parseJsonField<string[]>(row.tags);
 
   return {
     id: row.id,
@@ -41,6 +44,8 @@ const deserializeConversation = (row: ConversationRow): Conversation => {
     createdAt: toDate(row.created_at),
     updatedAt: toDate(row.updated_at),
     files: Array.isArray(rawFiles) ? rawFiles : [],
+    pinned: row.pinned || false,
+    tags: Array.isArray(rawTags) ? rawTags : [],
   };
 };
 
@@ -52,6 +57,8 @@ const serializeConversation = (conversation: Conversation) => ({
     timestamp: toDate(message.timestamp).toISOString(),
   })),
   files: conversation.files || [],
+  pinned: conversation.pinned || false,
+  tags: conversation.tags || [],
   createdAt: toDate(conversation.createdAt).toISOString(),
   updatedAt: toDate(conversation.updatedAt).toISOString(),
 });

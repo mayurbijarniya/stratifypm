@@ -20,10 +20,10 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const rows = await sql`
-      select id, title, messages, files, created_at, updated_at
+      select id, title, messages, files, pinned, tags, created_at, updated_at
       from conversations
       where user_id = ${session.user.id}
-      order by updated_at desc
+      order by pinned desc, updated_at desc
     `;
 
     return res.status(200).json({ conversations: rows });
@@ -41,13 +41,15 @@ export default async function handler(req, res) {
     const updatedAt = conversation.updatedAt ? new Date(conversation.updatedAt) : new Date();
 
     await sql`
-      insert into conversations (id, user_id, title, messages, files, created_at, updated_at)
+      insert into conversations (id, user_id, title, messages, files, pinned, tags, created_at, updated_at)
       values (
         ${conversation.id},
         ${session.user.id},
         ${conversation.title},
         ${JSON.stringify(conversation.messages || [])},
         ${JSON.stringify(conversation.files || [])},
+        ${conversation.pinned || false},
+        ${JSON.stringify(conversation.tags || [])},
         ${createdAt},
         ${updatedAt}
       )
@@ -55,6 +57,8 @@ export default async function handler(req, res) {
         title = excluded.title,
         messages = excluded.messages,
         files = excluded.files,
+        pinned = excluded.pinned,
+        tags = excluded.tags,
         updated_at = excluded.updated_at
       where conversations.user_id = excluded.user_id
     `;

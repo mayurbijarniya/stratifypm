@@ -44,6 +44,22 @@ import Twitter from 'lucide-react/dist/esm/icons/twitter.js';
 import Linkedin from 'lucide-react/dist/esm/icons/linkedin.js';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle.js';
 import Info from 'lucide-react/dist/esm/icons/info.js';
+import Pin from 'lucide-react/dist/esm/icons/pin.js';
+import PinOff from 'lucide-react/dist/esm/icons/pin-off.js';
+import Search from 'lucide-react/dist/esm/icons/search.js';
+import Edit from 'lucide-react/dist/esm/icons/pencil.js';
+import RotateCcw from 'lucide-react/dist/esm/icons/rotate-ccw.js';
+import ThumbsUp from 'lucide-react/dist/esm/icons/thumbs-up.js';
+import ThumbsDown from 'lucide-react/dist/esm/icons/thumbs-down.js';
+import Download from 'lucide-react/dist/esm/icons/download.js';
+import SlidersHorizontal from 'lucide-react/dist/esm/icons/sliders-horizontal.js';
+import LayoutTemplate from 'lucide-react/dist/esm/icons/layout-template.js';
+import Calculator from 'lucide-react/dist/esm/icons/calculator.js';
+import Tag from 'lucide-react/dist/esm/icons/tag.js';
+import Filter from 'lucide-react/dist/esm/icons/filter.js';
+import Globe from 'lucide-react/dist/esm/icons/globe.js';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link.js';
+import Save from 'lucide-react/dist/esm/icons/save.js';
 
 export {
   ArrowRight,
@@ -92,4 +108,20 @@ export {
   Linkedin,
   AlertTriangle,
   Info,
+  Pin,
+  PinOff,
+  Search,
+  Edit,
+  RotateCcw,
+  ThumbsUp,
+  ThumbsDown,
+  Download,
+  SlidersHorizontal,
+  LayoutTemplate,
+  Calculator,
+  Tag,
+  Filter,
+  Globe,
+  ExternalLink,
+  Save,
 };

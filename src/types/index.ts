@@ -22,6 +22,7 @@ export interface Conversation {
   tags?: string[];
   category?: PMCategory;
   files?: FileData[];
+  pinned?: boolean;
 }
 
 export type PMCategory =

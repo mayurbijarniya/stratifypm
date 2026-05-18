@@ -35,8 +35,11 @@ create table if not exists conversations (
   title text not null,
   messages jsonb not null default '[]',
   files jsonb,
+  pinned boolean not null default false,
+  tags text[] default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists conversations_user_idx on conversations (user_id);
+create index if not exists conversations_pinned_idx on conversations (user_id, pinned desc, updated_at desc);
