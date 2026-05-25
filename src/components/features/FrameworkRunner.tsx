@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pmFrameworks } from '../../data/pmFrameworks';
 import { useAppStore } from '../../stores/appStore';
-import { Button } from '../ui/Button';
 import {
   Calculator,
   ArrowRight,
@@ -10,7 +9,7 @@ import {
   Check,
   Save,
 } from '../ui/icons';
-import type { PMFramework, FrameworkField } from '../../types';
+import type { FrameworkField } from '../../types';
 
 interface FrameworkRunnerProps {
   frameworkId: string;

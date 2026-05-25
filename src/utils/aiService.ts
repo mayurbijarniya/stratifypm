@@ -72,12 +72,9 @@ interface StreamChunk {
 
 export class UnifiedAIService {
   private static instance: UnifiedAIService;
-  private geminiApiKey: string;
-  private claudeApiKey: string;
-  private openrouterApiKey: string;
-  private geminiBaseUrl: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent';
-  private claudeBaseUrl: string = 'https://api.deepinfra.com/v1/openai';
-  private openrouterBaseUrl: string = 'https://openrouter.ai/api/v1';
+  private geminiBaseUrl: string = '/api/ai/gemini';
+  private claudeBaseUrl: string = '/api/ai/deepinfra';
+  private openrouterBaseUrl: string = '/api/ai/openrouter';
 
   // Context persistence for web search
   private webSearchCache: {
@@ -91,23 +88,6 @@ export class UnifiedAIService {
   private currentSessionId: string = this.generateSessionId();
 
   private constructor() {
-    // Get API keys from environment variables
-    this.geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-    this.claudeApiKey = import.meta.env.VITE_DEEPINFRA_API_KEY || '';
-    this.openrouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-
-    if (!this.geminiApiKey) {
-      // console.error('VITE_GEMINI_API_KEY environment variable is required for Gemini');
-    }
-
-    if (!this.claudeApiKey) {
-      // console.error('VITE_DEEPINFRA_API_KEY environment variable is required for Claude');
-    }
-
-    if (!this.openrouterApiKey) {
-      // console.error('VITE_OPENROUTER_API_KEY environment variable is required for OpenRouter');
-    }
-
     // Unified AI service initialized with both Gemini and Claude
   }
 
@@ -284,12 +264,12 @@ Answer (one word only):`;
       ]
     };
 
-    const response = await fetch(`${this.geminiBaseUrl}?key=${this.geminiApiKey}`, {
+    const response = await fetch(this.geminiBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({ body: requestBody }),
     });
 
     if (!response.ok) {
@@ -324,11 +304,10 @@ Answer (one word only):`;
       stream: false
     };
 
-    const response = await fetch(`${this.claudeBaseUrl}/chat/completions`, {
+    const response = await fetch(this.claudeBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.claudeApiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
@@ -359,11 +338,10 @@ Answer (one word only):`;
       stream: false
     };
 
-    const response = await fetch(`${this.openrouterBaseUrl}/chat/completions`, {
+    const response = await fetch(this.openrouterBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.openrouterApiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
@@ -674,11 +652,6 @@ Remember: You're having an ongoing conversation, not answering isolated question
     abortSignal?: AbortSignal,
     webContext: string = ''
   ): Promise<string> {
-    // Check for API key
-    if (!this.geminiApiKey) {
-      throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
-    }
-
     // Construct the conversation history for Gemini
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
@@ -780,12 +753,12 @@ Remember: You're having an ongoing conversation, not answering isolated question
     const maxRetries = 1;
 
     while (retryCount <= maxRetries) {
-      const response = await fetch(`${this.geminiBaseUrl}?key=${this.geminiApiKey}`, {
+      const response = await fetch(this.geminiBaseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ body: requestBody }),
         signal: abortSignal,
       });
 
@@ -960,11 +933,10 @@ Remember: You're having an ongoing conversation, not answering isolated question
       stream: !!onStream
     };
 
-    const response = await fetch(`${this.claudeBaseUrl}/chat/completions`, {
+    const response = await fetch(this.claudeBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.claudeApiKey}`,
       },
       body: JSON.stringify(requestBody),
       signal: abortSignal,
@@ -1091,11 +1063,10 @@ Remember: You're having an ongoing conversation, not answering isolated question
       stream: !!onStream
     };
 
-    const response = await fetch(`${this.openrouterBaseUrl}/chat/completions`, {
+    const response = await fetch(this.openrouterBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.openrouterApiKey}`,
       },
       body: JSON.stringify(requestBody),
       signal: abortSignal,

@@ -63,16 +63,6 @@ export const WelcomeScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'frameworks' | 'templates' | 'tools'>('frameworks');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleStartChat = (suggestion: string) => {
-    const id = createConversation();
-    setCurrentConversation(id);
-    navigate(`/app/${id}`);
-    setTimeout(() => {
-      const event = new CustomEvent('setSuggestion', { detail: suggestion });
-      window.dispatchEvent(event);
-    }, 100);
-  };
-
   const handleFeatureClick = (featureId: string) => {
     setSelectedFeature(featureId);
     setCurrentConversation(null);

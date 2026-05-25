@@ -43,10 +43,10 @@ This starts:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `VITE_GEMINI_API_KEY` | Google AI Studio API key for Gemini | Yes |
-| `VITE_DEEPINFRA_API_KEY` | DeepInfra API key for Claude | Yes |
-| `VITE_OPENROUTER_API_KEY` | OpenRouter API key for OpenRouter | Yes for OpenRouter |
-| `VITE_EXA_API_KEY` | Exa AI API key for web search | Yes |
+| `GEMINI_API_KEY` | Google AI Studio API key for Gemini, server-side only | Yes |
+| `DEEPINFRA_API_KEY` | DeepInfra API key for Claude, server-side only | Yes |
+| `OPENROUTER_API_KEY` | OpenRouter API key, server-side only | Yes for OpenRouter |
+| `EXA_API_KEY` | Exa AI API key for web search, server-side only | Yes |
 | `DATABASE_URL` | Neon Postgres connection string | Yes |
 | `AUTH_SECRET` | Secret for hashing OTPs and sessions | Yes |
 | `RESEND_API_KEY` | Resend API key for OTP email | Yes |

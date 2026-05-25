@@ -1,3 +1,5 @@
+import { getAuthSession } from '../_utils/auth.js';
+
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://stratifypm.mayur.app',
@@ -24,11 +26,20 @@ export default async function handler(req, res) {
       return res.status(204).end();
     }
 
-    const apiKey = process.env.VITE_EXA_API_KEY;
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const auth = await getAuthSession(req);
+    if (!auth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const apiKey = process.env.EXA_API_KEY;
     // console.log('API Key check:', { hasKey: !!apiKey, keyLength: apiKey?.length });
 
     if (!apiKey) {
-      console.error('Missing VITE_EXA_API_KEY environment variable');
+      console.error('Missing EXA_API_KEY environment variable');
       return res.status(500).json({ error: 'Missing API key configuration' });
     }
 

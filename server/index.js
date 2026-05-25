@@ -1,6 +1,9 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 
+import geminiHandler from '../api/ai/gemini.js';
+import deepinfraHandler from '../api/ai/deepinfra.js';
+import openrouterHandler from '../api/ai/openrouter.js';
 import exaSearchHandler from '../api/exa/search.js';
 import requestOtpHandler from '../api/auth/request-otp.js';
 import verifyOtpHandler from '../api/auth/verify-otp.js';
@@ -36,6 +39,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.all('/api/ai/gemini', geminiHandler);
+app.all('/api/ai/deepinfra', deepinfraHandler);
+app.all('/api/ai/openrouter', openrouterHandler);
 app.all('/api/exa/search', exaSearchHandler);
 
 app.all('/api/auth/request-otp', requestOtpHandler);

@@ -6,7 +6,6 @@ import { logout } from '../../utils/authApi';
 import {
   SlidersHorizontal,
   User,
-  Bot,
   Trash2,
   Download,
   Moon,
@@ -14,9 +13,6 @@ import {
   AlertTriangle,
   Check,
   ChevronDown,
-  ChevronRight,
-  Globe,
-  X,
 } from '../ui/icons';
 import { useTheme } from '../../hooks/useTheme';
 import type { AIModel } from '../ui/ModelSelector';

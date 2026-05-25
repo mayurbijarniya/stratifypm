@@ -15,34 +15,10 @@ interface ExaResponse {
 
 class ExaSearchService {
     private static instance: ExaSearchService;
-    private apiKey: string;
     private baseUrl: string;
 
-    private useDirectApi: boolean;
-
-    private getApiConfig(): { baseUrl: string; useDirectApi: boolean } {
-        const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-
-        if (isLocalhost) {
-            // Use direct Exa API for localhost (no CORS issue)
-            return {
-                baseUrl: 'https://api.exa.ai/search',
-                useDirectApi: true
-            };
-        } else {
-            // Use proxy for production
-            return {
-                baseUrl: '/api/exa/search',
-                useDirectApi: false
-            };
-        }
-    }
-
     private constructor() {
-        this.apiKey = import.meta.env.VITE_EXA_API_KEY || '';
-        const config = this.getApiConfig();
-        this.baseUrl = config.baseUrl;
-        this.useDirectApi = config.useDirectApi;
+        this.baseUrl = '/api/exa/search';
     }
 
     static getInstance(): ExaSearchService {
@@ -53,7 +29,7 @@ class ExaSearchService {
     }
 
     isAvailable(): boolean {
-        return !!this.apiKey;
+        return true;
     }
 
 
@@ -77,12 +53,14 @@ User question: "${message}"
 
 Answer:`;
 
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY, {
+            const response = await fetch('/api/ai/gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: detectionPrompt }] }],
-                    generationConfig: { temperature: 0.1, maxOutputTokens: 10 }
+                    body: {
+                        contents: [{ role: 'user', parts: [{ text: detectionPrompt }] }],
+                        generationConfig: { temperature: 0.1, maxOutputTokens: 10 }
+                    }
                 })
             });
 
@@ -188,12 +166,14 @@ User question: "${userQuery}"
 
 Optimized search query:`;
 
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY, {
+            const response = await fetch('/api/ai/gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: optimizationPrompt }] }],
-                    generationConfig: { temperature: 0.1, maxOutputTokens: 50 }
+                    body: {
+                        contents: [{ role: 'user', parts: [{ text: optimizationPrompt }] }],
+                        generationConfig: { temperature: 0.1, maxOutputTokens: 50 }
+                    }
                 })
             });
 
@@ -220,29 +200,14 @@ Optimized search query:`;
             // Use Gemini to optimize the search query
             const optimizedQuery = await this.optimizeSearchQuery(query);
 
-            // Prepare headers based on environment
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
             };
 
-            // Add API key for direct Exa API calls (localhost)
-            if (this.useDirectApi) {
-                headers['x-api-key'] = this.apiKey;
-            }
-
-            // Prepare body based on environment
-            const body = this.useDirectApi
-                ? JSON.stringify({
-                    query: optimizedQuery,
-                    type: 'neural',
-                    numResults: 25,
-                    contents: { text: true },
-                    livecrawl: 'always'
-                })
-                : JSON.stringify({
-                    query: optimizedQuery,
-                    numResults: 25
-                });
+            const body = JSON.stringify({
+                query: optimizedQuery,
+                numResults: 25
+            });
 
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
