@@ -651,36 +651,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                           src={
                             selectedModel === "claude"
                               ? "/claude-ai-icon.svg"
-                              : selectedModel === "gemini"
-                              ? "/gemini.svg"
-                              : "/openrouter_light.svg"
+                              : "/gemini.svg"
                           }
-                          alt={ selectedModel === "claude" ? "Claude" : selectedModel === "gemini" ? "Gemini" : "OpenRouter" }
-                          className={`w-4 h-4 ${selectedModel === "openrouter" ? "dark:hidden" : ""}`}
+                          alt={ selectedModel === "claude" ? "Claude" : "Gemini" }
+                          className="w-4 h-4"
                           onError={ (e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
                           } }
                         />
-                        { selectedModel === "openrouter" && (
-                          <img
-                            src="/openrouter_dark.svg"
-                            alt="OpenRouter"
-                            className="w-4 h-4 hidden dark:block"
-                            onError={ (e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                            } }
-                          />
-                        ) }
                       </div>
                       {/* Model Name */ }
                       <span className="text-sm font-medium text-foreground hidden sm:block">
-                        { selectedModel === "claude"
-                          ? "Claude"
-                          : selectedModel === "gemini"
-                          ? "Gemini"
-                          : "OpenRouter" }
+                        { selectedModel === "claude" ? "Claude" : "Gemini" }
                       </span>
                     </div>
                     <ChevronDown
@@ -720,7 +703,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                           setSelectedModel("gemini");
                           setShowModelSelector(false);
                         } }
-                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200"
+                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
                       >
                         <img
                           src="/gemini.svg"
@@ -733,37 +716,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                         />
                         <span>Gemini</span>
                         { selectedModel === "gemini" && (
-                          <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                        ) }
-                      </button>
-                      <button
-                        type="button"
-                        onClick={ () => {
-                          setSelectedModel("openrouter");
-                          setShowModelSelector(false);
-                        } }
-                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
-                      >
-                        <img
-                          src="/openrouter_light.svg"
-                          alt="OpenRouter"
-                          className="w-4 h-4 mr-2 dark:hidden"
-                          onError={ (e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                          } }
-                        />
-                        <img
-                          src="/openrouter_dark.svg"
-                          alt="OpenRouter"
-                          className="w-4 h-4 mr-2 hidden dark:block"
-                          onError={ (e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                          } }
-                        />
-                        <span>OpenRouter</span>
-                        { selectedModel === "openrouter" && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
                         ) }
                       </button>
@@ -834,7 +786,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         {/* Compact Footer info - Hidden on mobile */ }
         <div className="hidden sm:flex items-center justify-center mt-3 text-xs text-muted-foreground">
           Powered by{ " " }
-          { selectedModel === "claude" ? "Claude" : selectedModel === "gemini" ? "Gemini" : "OpenRouter" }.
+          { selectedModel === "claude" ? "Claude" : "Gemini" }.
           AI can make mistakes. Always verify important information.
         </div>
       </div>

@@ -101,7 +101,6 @@ export const SettingsPage: React.FC = () => {
   const modelOptions: { id: AIModel; name: string; description: string }[] = [
     { id: 'claude', name: 'Claude', description: 'Best for strategy & analysis' },
     { id: 'gemini', name: 'Gemini', description: 'Fast, great for research' },
-    { id: 'openrouter', name: 'OpenRouter', description: 'Free tier, general purpose' },
   ];
 
   return (

@@ -26,7 +26,7 @@ const sections = [
   {
     title: 'How we use your data',
     items: [
-      { term: 'AI responses', detail: 'Your messages transit to Claude (DeepInfra), Gemini (Google AI), or OpenRouter depending on your model selection. We do not control how these providers process data in transit.' },
+      { term: 'AI responses', detail: 'Your messages transit to Claude or Gemini depending on your model selection. We do not control how these providers process data in transit.' },
       { term: 'Web search', detail: 'Real-time queries are sent to Exa AI when market intelligence is needed. Results are cached for 10 minutes per conversation to minimize redundant external calls.' },
       { term: 'No training', detail: 'We never use your conversations, uploaded files, or any usage data to train AI models — proprietary or third-party. Your strategy stays yours.' },
       { term: 'No advertising', detail: 'Zero advertising infrastructure. We do not sell, share, or broker your data with any third party for commercial purposes.' },

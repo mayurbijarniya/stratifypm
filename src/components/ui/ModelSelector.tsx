@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from './icons';
 
-export type AIModel = 'gemini' | 'claude' | 'openrouter';
+export type AIModel = 'gemini' | 'claude';
 
 interface ModelOption {
   id: AIModel;
@@ -26,14 +26,6 @@ const modelOptions: ModelOption[] = [
     fullName: 'Gemini',
     icon: '/gemini.svg',
     color: '#4285F4'
-  },
-  {
-    id: 'openrouter',
-    name: 'OpenRouter',
-    fullName: 'OpenRouter',
-    icon: '/openrouter_light.svg',
-    darkIcon: '/openrouter_dark.svg',
-    color: '#000000'
   }
 ];
 

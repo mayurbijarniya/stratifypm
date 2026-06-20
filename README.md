@@ -1,10 +1,10 @@
 # StratifyPM
 
-AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Use Claude via DeepInfra, Gemini via Google AI, or OpenRouter from one workspace.
+AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Use Claude or Gemini from one workspace.
 
 ## Features
 
-- **Multi-Model AI** - Claude, Gemini, and OpenRouter
+- **Multi-Model AI** - Claude and Gemini
 - **Real-time Web Search** - Current market data and trends via Exa AI
 - **PM Frameworks** - RICE scoring, competitive analysis, user research
 - **File Analysis** - Upload CSV/Excel/JSON for insights
@@ -44,8 +44,7 @@ This starts:
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GEMINI_API_KEY` | Google AI Studio API key for Gemini, server-side only | Yes |
-| `DEEPINFRA_API_KEY` | DeepInfra API key for Claude, server-side only | Yes |
-| `OPENROUTER_API_KEY` | OpenRouter API key, server-side only | Yes for OpenRouter |
+| `OPENROUTER_API_KEY` | OpenRouter API key (powers the Claude model), server-side only | Yes |
 | `EXA_API_KEY` | Exa AI API key for web search, server-side only | Yes |
 | `DATABASE_URL` | Neon Postgres connection string | Yes |
 | `AUTH_SECRET` | Secret for hashing OTPs and sessions | Yes |
@@ -55,7 +54,6 @@ This starts:
 
 Get API keys:
 - **Google AI Studio**: [API Keys](https://makersuite.google.com/app/apikey)
-- **DeepInfra**: [Dashboard](https://deepinfra.com/dash/api_keys)
 - **OpenRouter**: [Dashboard](https://openrouter.ai/)
 - **Exa AI**: [Dashboard](https://exa.ai/)
 - **Neon**: [Console](https://neon.tech/)
@@ -72,7 +70,7 @@ StratifyPM uses email-based OTP authentication via Resend:
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand
 - **Backend**: Express.js, Neon PostgreSQL, cookie-parser
-- **AI**: Claude, Gemini, OpenRouter
+- **AI**: Claude, Gemini
 - **Web Search**: Exa AI
 - **Email**: Resend
 - **Build**: Vite
