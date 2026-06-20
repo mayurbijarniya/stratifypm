@@ -16,10 +16,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.role === 'user';
 
   const {
-    updateMessage,
     setConversationLoading,
     currentConversationId,
+    conversations,
+    conversationStates,
   } = useAppStore();
+
+  // Determine if this message is the last of its role (edit/regenerate only apply to the last pair)
+  const conversation = conversations.find((c) => c.id === currentConversationId);
+  const messages = conversation?.messages ?? [];
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+  const lastAssistantMessage = [...messages].reverse().find((m) => m.role === 'assistant');
+  const isLastUserMessage = isUser && lastUserMessage?.id === message.id;
+  const isLastAssistantMessage = !isUser && lastAssistantMessage?.id === message.id;
+
+  // Don't allow edit/regenerate while a response is streaming
+  const isBusy = currentConversationId
+    ? Boolean(conversationStates[currentConversationId]?.isLoading || conversationStates[currentConversationId]?.streamingMessage !== null)
+    : false;
 
   const handleCopy = async () => {
     try {
@@ -38,8 +52,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   const handleSaveEdit = () => {
     if (!editContent.trim() || !currentConversationId) return;
-    updateMessage(currentConversationId, message.id, { content: editContent.trim() });
+    const conv = useAppStore.getState().getCurrentConversation();
+    if (!conv) return;
+    const msgIndex = conv.messages.findIndex((m) => m.id === message.id);
+    if (msgIndex === -1) return;
+
+    // Keep messages up to and including this user message, apply the edit,
+    // and drop the stale assistant response that followed.
+    const newMessages = conv.messages.slice(0, msgIndex + 1);
+    newMessages[msgIndex] = { ...newMessages[msgIndex], content: editContent.trim() };
+    useAppStore.getState().updateConversation(currentConversationId, { messages: newMessages });
+
     setIsEditing(false);
+    // Trigger regeneration based on the edited input
+    setConversationLoading(currentConversationId, true);
   };
 
   const handleCancelEdit = () => {
@@ -56,8 +82,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     const msgIndex = conversation.messages.findIndex((m) => m.id === message.id);
     if (msgIndex === -1) return;
 
-    // Remove all messages after this one
-    const newMessages = conversation.messages.slice(0, msgIndex + 1);
+    // Remove this assistant message and everything after it,
+    // leaving the preceding user message as the last message so the
+    // auto-trigger effect picks it up and regenerates the response.
+    const newMessages = conversation.messages.slice(0, msgIndex);
     useAppStore.getState().updateConversation(currentConversationId, { messages: newMessages });
     setConversationLoading(currentConversationId, true);
   };
@@ -98,14 +126,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
                 </div>
 
                 <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/95 backdrop-blur-sm rounded-lg border border-border flex items-center shadow-lg">
-                  <button
-                    onClick={handleEdit}
-                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
-                    aria-label="Edit message"
-                    title="Edit message"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                  </button>
+                  {isLastUserMessage && !isBusy && (
+                    <button
+                      onClick={handleEdit}
+                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
+                      aria-label="Edit message"
+                      title="Edit message"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={handleCopy}
                     className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
@@ -160,14 +190,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
             >
               <ThumbsDown className="h-3.5 w-3.5" />
             </button>
-            <button
-              onClick={handleRegenerate}
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
-              aria-label="Regenerate"
-              title="Regenerate response"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </button>
+            {isLastAssistantMessage && !isBusy && (
+              <button
+                onClick={handleRegenerate}
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
+                aria-label="Regenerate"
+                title="Regenerate response"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+            )}
             <button
               onClick={handleCopy}
               className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
