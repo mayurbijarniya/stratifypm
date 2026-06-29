@@ -99,6 +99,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const modelOptions: { id: AIModel; name: string; description: string }[] = [
+    { id: 'subconscious-glm', name: 'GLM 5.2', description: 'Powerful thinking model, great for complex strategy' },
     { id: 'claude', name: 'Claude', description: 'Best for strategy & analysis' },
     { id: 'gemini', name: 'Gemini', description: 'Fast, great for research' },
   ];

@@ -141,7 +141,7 @@ export const useAppStore = create<AppState>()(
       sidebarOpen: false,
       theme: 'light',
       selectedFeature: null,
-      selectedModel: 'claude' as AIModel,
+      selectedModel: 'subconscious-glm' as AIModel,
       conversations: [],
       currentConversationId: null,
       conversationStates: {},

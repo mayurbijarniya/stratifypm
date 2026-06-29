@@ -649,11 +649,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                       <div className="relative w-5 h-5 rounded-lg overflow-hidden ">
                         <img
                           src={
-                            selectedModel === "claude"
+                            selectedModel === "subconscious-glm"
+                              ? "/subconscious.svg"
+                              : selectedModel === "claude"
                               ? "/claude-ai-icon.svg"
                               : "/gemini.svg"
                           }
-                          alt={ selectedModel === "claude" ? "Claude" : "Gemini" }
+                          alt={
+                            selectedModel === "subconscious-glm"
+                              ? "GLM 5.2"
+                              : selectedModel === "claude"
+                              ? "Claude"
+                              : "Gemini"
+                          }
                           className="w-4 h-4"
                           onError={ (e) => {
                             const target = e.target as HTMLImageElement;
@@ -663,7 +671,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                       </div>
                       {/* Model Name */ }
                       <span className="text-sm font-medium text-foreground hidden sm:block">
-                        { selectedModel === "claude" ? "Claude" : "Gemini" }
+                        {
+                          selectedModel === "subconscious-glm"
+                            ? "GLM 5.2"
+                            : selectedModel === "claude"
+                            ? "Claude"
+                            : "Gemini"
+                        }
                       </span>
                     </div>
                     <ChevronDown
@@ -674,51 +688,38 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
                   {/* Model Selector Dropdown - Simple original design */ }
                   { showModelSelector && (
-                    <div className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100]">
-                      <button
-                        type="button"
-                        onClick={ () => {
-                          setSelectedModel("claude");
-                          setShowModelSelector(false);
-                        } }
-                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-t-lg"
-                      >
-                        <img
-                          src="/claude-ai-icon.svg"
-                          alt="Claude"
-                          className="w-4 h-4 mr-2"
-                          onError={ (e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                          } }
-                        />
-                        <span>Claude</span>
-                        { selectedModel === "claude" && (
-                          <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                        ) }
-                      </button>
-                      <button
-                        type="button"
-                        onClick={ () => {
-                          setSelectedModel("gemini");
-                          setShowModelSelector(false);
-                        } }
-                        className="w-full flex items-center px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 rounded-b-lg"
-                      >
-                        <img
-                          src="/gemini.svg"
-                          alt="Gemini"
-                          className="w-4 h-4 mr-2"
-                          onError={ (e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                          } }
-                        />
-                        <span>Gemini</span>
-                        { selectedModel === "gemini" && (
-                          <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
-                        ) }
-                      </button>
+                    <div className="absolute bottom-full right-0 sm:right-auto sm:left-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[100] overflow-hidden">
+                      {([
+                        { id: "subconscious-glm", name: "GLM 5.2", icon: "/subconscious.svg" },
+                        { id: "claude", name: "Claude", icon: "/claude-ai-icon.svg" },
+                        { id: "gemini", name: "Gemini", icon: "/gemini.svg" }
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedModel(opt.id);
+                            setShowModelSelector(false);
+                          }}
+                          className={`w-full flex items-center px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors duration-200 ${
+                            selectedModel === opt.id ? "bg-accent/40" : ""
+                          }`}
+                        >
+                          <img
+                            src={opt.icon}
+                            alt={opt.name}
+                            className="w-4 h-4 mr-2"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                            }}
+                          />
+                          <span>{opt.name}</span>
+                          {selectedModel === opt.id && (
+                            <div className="w-2 h-2 bg-primary rounded-full ml-auto"></div>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   ) }
                 </div>
@@ -786,7 +787,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         {/* Compact Footer info - Hidden on mobile */ }
         <div className="hidden sm:flex items-center justify-center mt-3 text-xs text-muted-foreground">
           Powered by{ " " }
-          { selectedModel === "claude" ? "Claude" : "Gemini" }.
+          { selectedModel === "subconscious-glm"
+            ? "GLM 5.2"
+            : selectedModel === "claude"
+            ? "Claude"
+            : "Gemini" }.
           AI can make mistakes. Always verify important information.
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from './icons';
 
-export type AIModel = 'gemini' | 'claude';
+export type AIModel = 'gemini' | 'claude' | 'subconscious-glm';
 
 interface ModelOption {
   id: AIModel;
@@ -13,6 +13,13 @@ interface ModelOption {
 }
 
 const modelOptions: ModelOption[] = [
+  {
+    id: 'subconscious-glm',
+    name: 'GLM 5.2',
+    fullName: 'GLM 5.2',
+    icon: '/subconscious.svg',
+    color: '#CCFF00'
+  },
   {
     id: 'claude',
     name: 'Claude',

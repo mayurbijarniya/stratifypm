@@ -15,7 +15,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({ content }) =
       
       <div className="flex-1 max-w-[95%] sm:max-w-[85%]">
         <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
-          <MessageContent content={content} />
+          <MessageContent content={content} isStreaming={true} />
           
           {/* Typing indicator */}
           <div className="flex items-center space-x-2 mt-4">

@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 
 import geminiHandler from '../api/ai/gemini.js';
 import openrouterHandler from '../api/ai/openrouter.js';
+import subconsciousHandler from '../api/ai/subconscious.js';
 import exaSearchHandler from '../api/exa/search.js';
 import requestOtpHandler from '../api/auth/request-otp.js';
 import verifyOtpHandler from '../api/auth/verify-otp.js';
@@ -40,6 +41,7 @@ app.use((req, res, next) => {
 
 app.all('/api/ai/gemini', geminiHandler);
 app.all('/api/ai/openrouter', openrouterHandler);
+app.all('/api/ai/subconscious', subconsciousHandler);
 app.all('/api/exa/search', exaSearchHandler);
 
 app.all('/api/auth/request-otp', requestOtpHandler);

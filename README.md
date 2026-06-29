@@ -1,10 +1,10 @@
 # StratifyPM
 
-AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Use Claude or Gemini from one workspace.
+AI-powered assistant for product managers with strategic insights, data analysis, and PM frameworks. Use Claude, Gemini, or GLM 5.2 from one workspace.
 
 ## Features
 
-- **Multi-Model AI** - Claude and Gemini
+- **Multi-Model AI** - Claude, Gemini, and GLM 5.2 (Thinking Model)
 - **Real-time Web Search** - Current market data and trends via Exa AI
 - **PM Frameworks** - RICE scoring, competitive analysis, user research
 - **File Analysis** - Upload CSV/Excel/JSON for insights
@@ -45,6 +45,7 @@ This starts:
 |----------|-------------|----------|
 | `GEMINI_API_KEY` | Google AI Studio API key for Gemini, server-side only | Yes |
 | `OPENROUTER_API_KEY` | OpenRouter API key (powers the Claude model), server-side only | Yes |
+| `SUBCONSCIOUS_API_KEY` | Subconscious API key (powers the GLM 5.2 model), server-side only | Yes |
 | `EXA_API_KEY` | Exa AI API key for web search, server-side only | Yes |
 | `DATABASE_URL` | Neon Postgres connection string | Yes |
 | `AUTH_SECRET` | Secret for hashing OTPs and sessions | Yes |
@@ -70,7 +71,7 @@ StratifyPM uses email-based OTP authentication via Resend:
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand
 - **Backend**: Express.js, Neon PostgreSQL, cookie-parser
-- **AI**: Claude, Gemini
+- **AI**: Claude, Gemini, and GLM 5.2
 - **Web Search**: Exa AI
 - **Email**: Resend
 - **Build**: Vite

@@ -74,6 +74,7 @@ export class UnifiedAIService {
   private static instance: UnifiedAIService;
   private geminiBaseUrl: string = '/api/ai/gemini';
   private openrouterBaseUrl: string = '/api/ai/openrouter';
+  private subconsciousBaseUrl: string = '/api/ai/subconscious';
 
   // Context persistence for web search
   private webSearchCache: {
@@ -322,7 +323,7 @@ Answer (one word only):`;
 
   // Get system prompt based on model
   private getSystemPrompt(model: AIModel): string {
-    if (model === 'claude') {
+    if (model === 'claude' || model === 'subconscious-glm') {
       return `You are an expert Product Manager AI assistant specializing in strategic product decisions and market analysis.
 
 MARKET INTELLIGENCE: You may receive "CURRENT MARKET INTELLIGENCE". Use this as your primary information source *only if it is relevant* to the user's specific question. if the intelligence is irrelevant (e.g. searching for "Apple" returned fruit instead of tech), IGNORE IT and use your internal knowledge.
@@ -592,6 +593,8 @@ Remember: You're having an ongoing conversation, not answering isolated question
 
       if (model === 'gemini') {
         return await this.sendGeminiMessage(message, conversationHistory, onStream, abortSignal, webContext);
+      } else if (model === 'subconscious-glm') {
+        return await this.sendSubconsciousMessage(message, model, conversationHistory, onStream, abortSignal, webContext);
       } else {
         return await this.sendOpenRouterMessage(message, conversationHistory, onStream, abortSignal, webContext);
       }
@@ -895,6 +898,140 @@ Remember: You're having an ongoing conversation, not answering isolated question
     };
 
     const response = await fetch(this.openrouterBaseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: abortSignal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    if (onStream) {
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+
+      try {
+        while (true) {
+          if (abortSignal?.aborted) {
+            reader.cancel();
+            throw new Error('Request aborted');
+          }
+
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed: StreamChunk = JSON.parse(data);
+                const content = parsed.choices[0]?.delta?.content;
+
+                if (content) {
+                  fullResponse += content;
+                  onStream(fullResponse);
+                }
+              } catch {
+                continue;
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      return fullResponse;
+    } else {
+      // Handle non-streaming response
+      const data: ClaudeResponse = await response.json();
+      const content = data.choices[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('No content in API response');
+      }
+
+      return content;
+    }
+  }
+
+  private async sendSubconsciousMessage(
+    message: string,
+    model: AIModel,
+    conversationHistory: Array<{ role: string; content: string }> = [],
+    onStream?: (chunk: string) => void,
+    abortSignal?: AbortSignal,
+    webContext: string = ''
+  ): Promise<string> {
+    // Prepare the conversation messages for Subconscious
+    const messages = [];
+
+    // Add system message
+    messages.push({
+      role: 'system',
+      content: this.getSystemPrompt(model)
+    });
+
+    // Add conversation history
+    conversationHistory.forEach(msg => {
+      messages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      });
+    });
+
+    // Add current message with file context
+    let enhancedMessageWithFiles = message;
+    const uploadedFiles = this.getUploadedFiles();
+
+    if (uploadedFiles.length > 0) {
+      const fileContext = this.generateFileContext(uploadedFiles);
+      enhancedMessageWithFiles = `${message}\n\n${fileContext}`;
+    }
+
+    // Add web context
+    const finalMessage = enhancedMessageWithFiles + webContext;
+
+    messages.push({
+      role: 'user',
+      content: finalMessage
+    });
+
+    // Enhanced prompt for table requests
+    if (this.isTableRequest(message)) {
+      messages.push({
+        role: 'system',
+        content: "The user is requesting a table. Ensure the response contains a MARKDOWN TABLE with detailed information."
+      });
+    }
+
+    const requestBody = {
+      model: 'subconscious/glm-5.2',
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 8192,
+      stream: !!onStream,
+      chat_template_kwargs: {
+        enable_thinking: true
+      }
+    };
+
+    const response = await fetch(this.subconsciousBaseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

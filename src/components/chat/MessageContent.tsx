@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -7,22 +7,96 @@ import {
   oneDark,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useTheme } from "../../hooks/useTheme";
+import { ChevronDown, ChevronRight, Sparkles } from "../ui/icons";
+import { useAppStore } from "../../stores/appStore";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MessageContentProps {
   content: string;
   isUser?: boolean;
+  isStreaming?: boolean;
 }
 
-export const MessageContent: React.FC<MessageContentProps> = ({ content, isUser }) => {
+export const MessageContent: React.FC<MessageContentProps> = ({ content, isUser, isStreaming }) => {
   const { isDark } = useTheme();
+  const selectedModel = useAppStore((state) => state.selectedModel);
 
-  void isUser;
+  const thinkRegex = new RegExp("<think>([\\s\\S]*?)(?:</think>|$)", "i");
+  const match = content.match(thinkRegex);
+  
+  let thinking = "";
+  let mainContent = content;
+  let hasThink = false;
+  let isThinkingUnfinished = false;
+
+  if (match) {
+    hasThink = true;
+    thinking = match[1].trim();
+    isThinkingUnfinished = !content.includes("</think>");
+    mainContent = content.replace(thinkRegex, "").trim();
+  } else if (content.includes("</think>")) {
+    hasThink = true;
+    const parts = content.split("</think>");
+    thinking = parts[0].trim();
+    mainContent = parts.slice(1).join("</think>").trim();
+    isThinkingUnfinished = false;
+  } else if (selectedModel === "subconscious-glm" && !isUser && isStreaming) {
+    hasThink = true;
+    thinking = content.trim();
+    mainContent = "";
+    isThinkingUnfinished = true;
+  }
+
+  const [isExpanded, setIsExpanded] = useState(isThinkingUnfinished);
+  const [lastUnfinished, setLastUnfinished] = useState(isThinkingUnfinished);
+
+  // If thinking state changes (e.g. thinking finished streaming), auto-collapse
+  if (isThinkingUnfinished !== lastUnfinished) {
+    setIsExpanded(isThinkingUnfinished);
+    setLastUnfinished(isThinkingUnfinished);
+  }
 
   return (
     <div className="prose prose-sm max-w-none">
-      <ReactMarkdown
-        remarkPlugins={ [remarkGfm] }
-        components={ {
+      {hasThink && thinking && (
+        <div className="mb-4 rounded-xl border border-border bg-muted/30 overflow-hidden shadow-sm">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted/80 transition-colors text-left focus:outline-none"
+          >
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Sparkles className={`w-3.5 h-3.5 text-primary ${isThinkingUnfinished ? "animate-spin" : ""}`} style={isThinkingUnfinished ? { animationDuration: "3s" } : undefined} />
+              <span>{isThinkingUnfinished ? "Thinking..." : "Thinking Process"}</span>
+            </div>
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </motion.div>
+          </button>
+          <AnimatePresence initial={false}>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 py-3 border-t border-border bg-muted/10 text-sm text-muted-foreground italic leading-relaxed whitespace-pre-wrap">
+                  {thinking}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {(!hasThink || mainContent) && (
+        <ReactMarkdown
+          remarkPlugins={ [remarkGfm] }
+          components={ {
           code({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<"code"> & { inline?: boolean }) {
             const match = /language-(\w+)/.exec(className || "");
             return !inline && match ? (
@@ -191,8 +265,9 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content, isUser 
           },
         } }
       >
-        { content }
+        { mainContent }
       </ReactMarkdown>
+      )}
     </div>
   );
 };
